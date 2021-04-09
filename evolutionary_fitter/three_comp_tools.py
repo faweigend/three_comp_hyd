@@ -175,3 +175,12 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
 
     # determine return value
     return tte_nrmse, rec_nrmse
+
+def multi_to_single_objective(t, r):
+    """
+    transformation of multi-objective to single-objective
+    the euclidean distance to the ideal state of 0,0
+    :param t: tte_nrmse
+    :param r: rec_nrmse
+    """
+    return math.sqrt(t ** 2 + r ** 2)
