@@ -5,7 +5,7 @@ import three_comp_config
 from agents.three_comp_hyd_agent import ThreeCompHydAgent
 from data_structure.constant_effort_measures import ConstantEffortMeasures
 from data_structure.recovery_measures import RecoveryMeasures
-from simulation.three_comp_hyd_simulator import ThreeCompHydSimulator
+from simulate.three_comp_hyd_simulator import ThreeCompHydSimulator
 
 # bounds for all parameters of the three comp hydraulic model
 three_comp_parameter_limits = {
@@ -184,3 +184,21 @@ def multi_to_single_objective(t, r):
     :param r: rec_nrmse
     """
     return math.sqrt(t ** 2 + r ** 2)
+
+def three_comp_single_objective_function(obj_vars,
+                                         hz,
+                                         ttes: ConstantEffortMeasures,
+                                         recovery_measures: RecoveryMeasures):
+    """
+    The function how it was used in the past
+    :param obj_vars:
+    :param hz:
+    :param ttes:
+    :param recovery_measures:
+    :return: distance to ideal state of 0,0 and optional debug parameters
+    """
+    t_nrmse, r_nrmse = three_comp_two_objective_functions(obj_vars=obj_vars,
+                                                          hz=hz,
+                                                          ttes=ttes,
+                                                          recovery_measures=recovery_measures)
+    return multi_to_single_objective(t_nrmse, r_nrmse)

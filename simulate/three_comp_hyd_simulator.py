@@ -218,7 +218,6 @@ class ThreeCompHydSimulator:
         ax.plot(t, p, color='tab:blue', label="power")
         ax.plot(t, p_ae, color='tab:red', label="flow from Ae")
         ax.plot(t, p_an, color='tab:purple', label="flow from AnS to AnF")
-        # ax.plot(t, m_flow, label="m_flow")
 
         # plot tank fill levels
         ax2 = ax.twinx()
