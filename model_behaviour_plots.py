@@ -21,6 +21,7 @@ caen_combination = {
     "P8": [[120, 240, 360], [40.1, 44.8, 54.8], [3.9, 3.0, 3.8]]
 }
 
+
 def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
     """
     Plots the expenditure energy dynamics of multiple three component hydraulic model configurations
@@ -88,7 +89,7 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
     insert_ax.get_xaxis().set_ticks(detail_ts)
     insert_ax.set_xticklabels(formatted)
     insert_ax.get_yaxis().set_ticks(detail_ps)
-    insert_ax.set_yticklabels(["P{}".format(p) for p in formatted])
+    # insert_ax.set_yticklabels(["P{}".format(p) for p in formatted])
     insert_ax.set_title("detail view")
 
     # label axis and lines
