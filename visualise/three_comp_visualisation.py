@@ -21,7 +21,6 @@ class ThreeCompVisualisation:
                  animated: bool = False,
                  detail_annotations: bool = False,
                  black_and_white: bool = False):
-
         """
         Whole visualisation setup using given agent's parameters
         """

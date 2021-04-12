@@ -15,15 +15,13 @@ If you use pycharm professional, please ensure that the SciView tab is deactivat
 File => Settings => Tools => Python Scientific => Uncheck "show plots in tool window"
 ```
 
-Please ensure that the maximal number of usable CPU-cores in `config.py` is applicable. The `fit_with_pygmo.py` uses multiprocessing. 
-
 ### Usage
 
 Three demo applications are available via scripts in the base directory 
 * `interactive_simulation.py` lets you experiment with an exemplary three component hydraulic agent and 
 investigate its responses to various power demands.
-* `model_behaviour_plots.py` recreates the model behaviour plots of the results section of the paper.
+* `model_behaviour_plots.py` recreates the energy expenditure and recovery plots of the results section of the paper.
 * `fit_with_pygmo.py` uses evolutionary computation to find configurations for the three component hydraulic model that 
   makes it recreate published measures by Caen et al. (see paper). The script starts a grid search over described 
-  parameter settings for MOEA/D coupled with the asynchronous island model. Results are stored into a `data_storage` 
+  parameter settings for MOEA/D coupled with the asynchronous island model. Results are stored into a `data-storage` 
   folder in the root directory of the project.
