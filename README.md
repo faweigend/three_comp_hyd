@@ -1,10 +1,3 @@
-# Before You Start
-
-This is just a copy of the Git repository [https://github.com/faweigend/three_comp_hyd](https://github.com/faweigend/three_comp_hyd)
-
-Please check for an updated version and clone the Git instead, before you default to using this copy.
-
-
 ## A New Pathway to Approximate Energy Expenditure and Recovery of an Athlete
 
 ![Alt Text](./httpdocs/title.gif)
