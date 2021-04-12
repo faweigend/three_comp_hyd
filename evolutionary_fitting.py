@@ -80,9 +80,9 @@ if __name__ == "__main__":
 
     # fit a three component model to the agent
     fitter = PyGMOThreeCompFitter(ttes=ttes, recovery_measures=recovery_measures)
-    fitter.early_stopping = 1
+    fitter.early_stopping = 10
 
     # Grid search starts here
-    islands = [2]
+    islands = [7, 14, 21]
     for isl in islands:
         fitter.grid_search_algorithm_moead(islands=isl)

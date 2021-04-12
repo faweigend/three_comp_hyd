@@ -186,13 +186,13 @@ class PyGMOThreeCompFitter:
         decompositions = ["tchebycheff"]  # , "weighted", "bi"]
 
         # neighbours (int) – size of the weight’s neighborhood
-        neighbours = [20]  # , 10]
+        neighbours = [20]
 
         # CR (float) – crossover parameter in the Differential Evolution operator
-        crs = [1.0]  # , 0.5]
+        crs = [1.0]
 
         # F (float) – parameter for the Differential Evolution operator
-        fs = [0.5]  # , 0.1, 0.9]
+        fs = [0.5]
 
         # eta_m (float) – distribution index used by the polynomial mutation
         eta_ms = [20]
