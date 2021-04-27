@@ -19,7 +19,7 @@ File => Settings => Tools => Python Scientific => Uncheck "show plots in tool wi
 
 ### Usage
 
-Three demo applications are available via scripts in the base directory
+Following demo applications are available via scripts in the base directory
 
 * `interactive_simulation.py` lets you experiment with an exemplary three component hydraulic agent and 
 investigate its responses to various power demands.
