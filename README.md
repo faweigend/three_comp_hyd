@@ -2,6 +2,21 @@
 
 ![Alt Text](./httpdocs/title.gif)
 
+### Usage
+
+Please see the corresponding paper for further references. If you make use of this project, we would be greatful if 
+you star the repository and/or cite our paper.
+```
+@misc{weigend2021new,
+      title={A New Pathway to Approximate Energy Expenditure and Recovery of an Athlete}, 
+      author={Fabian Clemens Weigend and Jason Siegler and Oliver Obst},
+      year={2021},
+      eprint={2104.07903},
+      archivePrefix={arXiv},
+      primaryClass={cs.NE}
+}
+```
+
 ### Setup And Hints
 
 We recommend the use of a virtual environment. Simply install the package by running `pip3 install <path_to_project_root>`
@@ -17,7 +32,7 @@ If you use pycharm professional, please ensure that the SciView tab is deactivat
 File => Settings => Tools => Python Scientific => Uncheck "show plots in tool window"
 ```
 
-### Usage
+### Example Applications
 
 Following demo applications are available via scripts in the base directory
 

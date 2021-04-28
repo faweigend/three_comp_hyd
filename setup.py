@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 # This call to setup() does all the work
 setuptools.setup(
     name="three_comp_hyd",
-    version="0.0.1",
+    version="1.0.0",
     description="Implementation of the generalized Three Component Hydraulic Model",
     long_description=README,
     long_description_content_type="text/x-rst",
