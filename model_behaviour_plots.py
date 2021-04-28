@@ -8,13 +8,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
-# ground truth observations by Caen et al.
-caen_measures = {
-    "P4 - CP33": [[0, 120, 240, 360], [0, 55, 61, 70.5]],  # p4 cp33
-    "P4 - CP66": [[0, 120, 240, 360], [0, 49, 55, 58]],  # p4 cp66
-    "P8 - CP33": [[0, 120, 240, 360], [0, 42, 52, 59.5]],  # p8 cp33
-    "P8 - CP66": [[0, 120, 240, 360], [0, 38, 37.5, 50]]  # p8 cp33
-}
 # published combined cp33 and cp66 measures with std dev
 caen_combination = {
     "P4": [[120, 240, 360], [51.8, 57.7, 64.0], [2.8, 4.3, 5.8]],
@@ -89,12 +82,12 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
     insert_ax.get_xaxis().set_ticks(detail_ts)
     insert_ax.set_xticklabels(formatted)
     insert_ax.get_yaxis().set_ticks(detail_ps)
-    # insert_ax.set_yticklabels(["P{}".format(p) for p in formatted])
     insert_ax.set_title("detail view")
 
     # label axis and lines
     ax.set_xlabel("time to exhaustion (min)")
     ax.set_ylabel("intensity (watt)", labelpad=10)
+
     # insert number of models only if more than 1 was plotted
     if len(ps) > 1:
         ax.plot([], linestyle='-', linewidth=1, color=hyd_color, label="hydraulic model ({})".format(len(ps)))
@@ -117,7 +110,8 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     :param ps: three component hydraulic model configurations
     """
 
-    c_colors = ["tab:blue"] * 4
+    # caen observation and hydraulic model colors
+    c_color = "tab:blue"
     hyd_color = "tab:green"
 
     # power level and recovery level estimations for the trials
@@ -130,10 +124,6 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     exp_ps = [p_4, p_8]
     rec_ps = [cp_33, cp_66]
     rec_ts = [10, 20, 25, 30, 35, 40, 45, 50, 60, 70, 90, 110, 130, 150, 170, 240, 300, 360]
-
-    # set up the values and formatting
-    caen = list(caen_measures.values())
-    names = list(caen_measures.keys())
 
     fig = plt.figure(figsize=(8, 3.4))
     axes = []
@@ -184,7 +174,7 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
                      linestyle='None',
                      marker='o',
                      capsize=3,
-                     color=c_colors[0])
+                     color=c_color)
     axes[0].set_title("P4")
     axes[1].errorbar(caen_combination["P8"][0],
                      caen_combination["P8"][1],
@@ -193,7 +183,7 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
                      linestyle='None',
                      marker='o',
                      capsize=3,
-                     color=c_colors[1])
+                     color=c_color)
     axes[1].set_title("P8")
 
     # insert number of models only if more than 1 was plotted
