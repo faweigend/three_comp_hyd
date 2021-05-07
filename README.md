@@ -49,3 +49,6 @@ investigate its responses to various power demands.
   rations by Caen et al. The script uses the published set of best fitting parameters (30 generations, 
   40 cycles, 64 population size, 7 islands) to fit the model with the outlined evolutionary computation approach 
   (see Appendix B and C). Results are stored into a `data-storage` folder next to the root directory of the project.
+
+* `pygmo_fittings_report` Iterates over all evolutionary fitting results stored in the `data-storage` directory and creates
+  a readable `.json` overview over best fitting results, algorithm parameters, execution time, etc.
