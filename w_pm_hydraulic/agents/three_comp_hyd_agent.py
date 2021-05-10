@@ -1,6 +1,6 @@
-import three_comp_config
+from w_pm_hydraulic import three_comp_config
 
-from agents.hydraulic_agent_basis import HydraulicAgentBasis
+from w_pm_hydraulic.agents.hydraulic_agent_basis import HydraulicAgentBasis
 
 
 class ThreeCompHydAgent(HydraulicAgentBasis):

@@ -8,11 +8,11 @@ import time
 import pygmo.core as pygcore
 import numpy as np
 
-import three_comp_config
-from data_structure.constant_effort_measures import ConstantEffortMeasures
-from data_structure.recovery_measures import RecoveryMeasures
+from w_pm_hydraulic import three_comp_config
+from w_pm_hydraulic.data_structure.constant_effort_measures import ConstantEffortMeasures
+from w_pm_hydraulic.data_structure.recovery_measures import RecoveryMeasures
 
-from evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
+from w_pm_hydraulic.evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
 
 
 class PyGMOThreeCompFitter:

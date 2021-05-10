@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 
-from agents.three_comp_hyd_agent import ThreeCompHydAgent
+from w_pm_hydraulic.agents.three_comp_hyd_agent import ThreeCompHydAgent
 import matplotlib.pyplot as plt
 
 

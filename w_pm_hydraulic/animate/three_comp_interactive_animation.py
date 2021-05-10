@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 
-from visualise.three_comp_visualisation import ThreeCompVisualisation
-from animate.interactive_animation import InteractiveAnimation
-from agents.three_comp_hyd_agent import ThreeCompHydAgent
+from w_pm_hydraulic.visualise.three_comp_visualisation import ThreeCompVisualisation
+from w_pm_hydraulic.animate.interactive_animation import InteractiveAnimation
+from w_pm_hydraulic.agents.three_comp_hyd_agent import ThreeCompHydAgent
 
 
 class ThreeCompInteractiveAnimation(InteractiveAnimation, ThreeCompVisualisation):

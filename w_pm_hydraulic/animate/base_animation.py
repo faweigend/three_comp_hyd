@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.text import Text
 
-import three_comp_config
+from w_pm_hydraulic import three_comp_config
 
 
 class BaseAnimation(animation.FuncAnimation):

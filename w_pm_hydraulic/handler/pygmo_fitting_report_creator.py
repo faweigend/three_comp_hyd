@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 import config
 import numpy as np
 
-from three_comp_hyd.evolutionary_fitter.pygmo_three_comp_fitter import PyGMOThreeCompFitter
-from three_comp_hyd.evolutionary_fitter.three_comp_tools import multi_to_single_objective
-from handler.handler_base import HandlerBase
+from w_pm_hydraulic.evolutionary_fitter import PyGMOThreeCompFitter
+from w_pm_hydraulic.evolutionary_fitter import multi_to_single_objective
+from w_pm_hydraulic.handler.handler_base import HandlerBase
 
 
 class PyGMOFittingReportCreator(HandlerBase):
