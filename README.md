@@ -19,7 +19,7 @@ you star the repository and/or cite our paper.
 
 ### Setup And Hints
 
-We recommend the use of a virtual environment. Simply install the package by running `pip3 install <path_to_project_root>`
+We recommend the use of a virtual environment. Simply install the package by running `pip3 install -e <path_to_project_root>`
 
 Required packages are listed in `requirements.txt` and should be installed automatically:
 ```
@@ -34,7 +34,7 @@ File => Settings => Tools => Python Scientific => Uncheck "show plots in tool wi
 
 ### Example Applications
 
-Following demo applications are available via scripts in the base directory
+Following demo applications are available via scripts in the `example_scripts` directory
 
 * `interactive_simulation.py` lets you experiment with an exemplary three component hydraulic agent and 
 investigate its responses to various power demands.

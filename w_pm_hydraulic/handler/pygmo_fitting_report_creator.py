@@ -15,7 +15,7 @@ from w_pm_hydraulic.handler.handler_base import HandlerBase
 
 class PyGMOFittingReportCreator(HandlerBase):
     """
-    Creates a full study report from athlete data
+    Summarises evolutionary fittings created with PYGMO
     """
     dir_path_addition = "PYGMO_FITTING_REPORT_CREATOR"
 
