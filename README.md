@@ -43,12 +43,12 @@ investigate its responses to various power demands.
 
 * `grid_search_evolutionary_parameters.py` starts a grid search over described parameter settings for MOEA/D coupled 
   with the asynchronous island model by Pygmo. One fitting per parameter combination as summarised in Table 3 of the Appendix 
-  are estimated. Results are stored into a `data-storage` folder next to the root directory of the project.
+  are estimated. Results are stored into a `data-storage` folder in the root directory of the project.
   
-* `evolutionary_fitting` Runs 10 fittings on an athlete usinig the in the script defined parameters for CP, W' and recovery 
+* `evolutionary_fitting` Runs 10 fittings on an athlete using the in the script defined parameters for CP, W' and recovery 
   rations by Caen et al. The script uses the published set of best fitting parameters (30 generations, 
   40 cycles, 64 population size, 7 islands) to fit the model with the outlined evolutionary computation approach 
-  (see Appendix B and C). Results are stored into a `data-storage` folder next to the root directory of the project.
+  (see Appendix B and C). Results are stored into a `data-storage` folder in the root directory of the project.
 
 * `pygmo_fittings_report` Iterates over all evolutionary fitting results stored in the `data-storage` directory and creates
   a readable `.json` overview over best fitting results, algorithm parameters, execution time, etc.
