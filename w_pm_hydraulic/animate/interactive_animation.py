@@ -7,7 +7,7 @@ import matplotlib.widgets
 
 class InteractiveAnimation(BaseAnimation):
     """
-    An animation that iteratively executes a set of commands on given agent
+    An animation that adds buttons to affect the simulation during playtime
     """
 
     def __init__(self, figure, agent):
