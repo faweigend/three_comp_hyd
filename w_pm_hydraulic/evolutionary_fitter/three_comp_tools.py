@@ -224,7 +224,7 @@ def prepare_standard_tte_measures(w_p: float, cp: float):
     ttes = SimpleTTEMeasures("{}_{}_setting_0".format(w_p, cp))
     for t in tte_ts:
         # create pairs with two param CP fomula
-        ttes.add_pair(t, (w_p + t * cp) / t)
+        ttes.add_pair(t, round((w_p + t * cp) / t, 2))
     # return simple TTEs object
     return ttes
 
