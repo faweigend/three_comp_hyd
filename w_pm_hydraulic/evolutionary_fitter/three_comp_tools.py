@@ -3,8 +3,8 @@ import numpy as np
 
 from w_pm_hydraulic import three_comp_config
 from w_pm_hydraulic.agents.three_comp_hyd_agent import ThreeCompHydAgent
-from w_pm_hydraulic.data_structure.constant_effort_measures import ConstantEffortMeasures
-from w_pm_hydraulic.data_structure.recovery_measures import RecoveryMeasures
+from w_pm_hydraulic.data_structure.simple_tte_measures import SimpleTTEMeasures
+from w_pm_hydraulic.data_structure.simple_rec_measures import SimpleRecMeasures
 from w_pm_hydraulic.simulate.three_comp_hyd_simulator import ThreeCompHydSimulator
 
 # bounds for all parameters of the three comp hydraulic model
@@ -25,16 +25,19 @@ class MultiObjectiveThreeCompUDP:
     A user defined multi-objective problem (UDP) to solve the three comp fitting with PyGMO
     """
 
-    def __init__(self, ttes: ConstantEffortMeasures, recovery_measures: RecoveryMeasures):
+    def __init__(self,
+                 ttes: SimpleTTEMeasures,
+                 recovery_measures: SimpleRecMeasures):
         """
         init needs a couple parameters to be able to call the objective function
         :param ttes: standardised time to exhaustion measures to use
         :param recovery_measures: standardised recovery ratio measures to use
         """
+
         self.__hz = 1  # hz
         self.__limits = three_comp_parameter_limits  # limits
         self.__ttes = ttes  # tte_ps
-        self.__recovery_measures = recovery_measures  # recovery_trials
+        self.__recs = recovery_measures  # recovery_trials
 
         # transform limits dict into object that returns bounds in expected format
         self.__bounds = ([x[0] for x in self.__limits.values()],
@@ -76,7 +79,7 @@ class MultiObjectiveThreeCompUDP:
             tte_nrmse, rec_nrmse = three_comp_two_objective_functions(obj_vars=x,
                                                                       hz=self.__hz,
                                                                       ttes=self.__ttes,
-                                                                      recovery_measures=self.__recovery_measures)
+                                                                      recovery_measures=self.__recs)
 
         # UserWarnings indicate that exhaustion was not reached
         # or recovery was too long
@@ -99,9 +102,11 @@ class MultiObjectiveThreeCompUDP:
         some additional info regarding the parameters in use
         :return:
         """
-        return {"phi_constraint": three_comp_config.three_comp_phi_constraint,
-                "ttes": self.__ttes.as_dict(),
-                "recs": self.__recovery_measures.name}
+        return {
+            "phi_constraint": three_comp_config.three_comp_phi_constraint,
+            "ttes": str(self.__ttes),
+            "recs": str(self.__recs),
+        }
 
     def get_name(self):
         """
@@ -119,8 +124,8 @@ class MultiObjectiveThreeCompUDP:
 
 
 def three_comp_two_objective_functions(obj_vars, hz: int,
-                                       ttes: ConstantEffortMeasures,
-                                       recovery_measures: RecoveryMeasures):
+                                       ttes: SimpleTTEMeasures,
+                                       recovery_measures: SimpleRecMeasures):
     """
     Two objective functions for recovery and expenditure error
     that get all required params as arguments
@@ -159,12 +164,12 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
     tte_nrmse = math.sqrt(sum(tte_se) / len(tte_se)) / np.mean(ttes_exp)
 
     # compare all available recovery ratio measures
-    for p_exp, p_rec, t_rec, expected in recovery_measures.iterate_all_measures():
+    for p_exp, p_rec, t_rec, expected in recovery_measures.iterate_measures():
         # use the simulator
         achieved = ThreeCompHydSimulator.get_recovery_ratio_caen(three_comp_agent,
                                                                  p_exp=p_exp,
                                                                  p_rec=p_rec,
-                                                                 t_rec=t_rec) * 0.01
+                                                                 t_rec=t_rec)
 
         # add the squared difference
         rec_se.append(pow(expected - achieved, 2))
@@ -176,6 +181,7 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
     # determine return value
     return tte_nrmse, rec_nrmse
 
+
 def multi_to_single_objective(t, r):
     """
     transformation of multi-objective to single-objective
@@ -185,10 +191,11 @@ def multi_to_single_objective(t, r):
     """
     return math.sqrt(t ** 2 + r ** 2)
 
+
 def three_comp_single_objective_function(obj_vars,
                                          hz,
-                                         ttes: ConstantEffortMeasures,
-                                         recovery_measures: RecoveryMeasures):
+                                         ttes: SimpleTTEMeasures,
+                                         recovery_measures: SimpleRecMeasures):
     """
     The function how it was used in the past
     :param obj_vars:
@@ -204,57 +211,55 @@ def three_comp_single_objective_function(obj_vars,
     return multi_to_single_objective(t_nrmse, r_nrmse)
 
 
-def prepare_tte_measures(w_p, cp):
+def prepare_standard_tte_measures(w_p: float, cp: float):
     """
     creates TTE measures as a ConstantEffortMeasures object
+    :param w_p: W' measure
+    :param cp: CP measure
+    :return SimpleTTEMeasures Object
     """
     # different TTE settings to check which one makes the model recreate the hyperbolic curve the best
-    tte_t_setting = [120, 130, 140, 150, 170, 190, 210, 250, 310, 400, 600, 1200]  # setting_0
-    tte_ts = tte_t_setting
-    tte_ps = [(w_p + x * cp) / x for x in tte_ts]
-    return ConstantEffortMeasures(times=tte_ts, measures=tte_ps,
-                                  name="{}_{}_setting_0".format(w_p, cp))
+    tte_ts = [120, 130, 140, 150, 170, 190, 210, 250, 310, 400, 600, 1200]  # setting_0
+    # name according to current convention
+    ttes = SimpleTTEMeasures("{}_{}_setting_0".format(w_p, cp))
+    for t in tte_ts:
+        # create pairs with two param CP fomula
+        ttes.add_pair(t, (w_p + t * cp) / t)
+    # return simple TTEs object
+    return ttes
 
 
 def prepare_caen_recovery_ratios(w_p: float, cp: float):
     """
-    creates recovery ratio data according to published data by Caen et al.
+    returnes recovery ratio data according to published data by Caen et al.
     https://insights.ovid.com/crossref?an=00005768-201908000-00022
+    :param w_p: W'
+    :param cp: CP
+    :return SimpleRecMeasures Object
     """
-
-    # originally read from a csv. For demo purposes we moved the content into this script
-    # sub, test, wb_power, r_power, r_time, r_percent
-    caen_data = [['p4', 'cp33', 120, 55.0],
-                 ['p4', 'cp33', 240, 61.0],
-                 ['p4', 'cp33', 360, 70.5],
-                 ['p4', 'cp66', 120, 49.0],
-                 ['p4', 'cp66', 240, 55.0],
-                 ['p4', 'cp66', 360, 58.0],
-                 ['p8', 'cp33', 120, 42.0],
-                 ['p8', 'cp33', 240, 52.0],
-                 ['p8', 'cp33', 360, 59.5],
-                 ['p8', 'cp66', 120, 38.0],
-                 ['p8', 'cp66', 240, 37.5],
-                 ['p8', 'cp66', 360, 50.0]]
-
-    # fills available test data for listed subjects into here
-    rms = RecoveryMeasures("caen")
-
+    # name for returned measures
+    name = "caen"
     # estimate intensities
     p4 = round(cp + w_p / 240, 2)  # predicted exhaustion after 4 min
     p8 = round(cp + w_p / 480, 2)  # predicted exhaustion after 8 min
     cp33 = round(cp * 0.33, 2)
     cp66 = round(cp * 0.66, 2)
-
-    # read recovery ratios
-    for data_row in caen_data:
-        # get intensities and times from labels
-        p_power = p4 if 'p4' in data_row[0] else p8
-        r_power = cp33 if 'cp33' in data_row[1] else cp66
-
-        # create new test in conventional format
-        rms.add_measure(p_power=p_power,
-                        r_power=r_power,
-                        r_time=int(data_row[2]),
-                        recovery_percent=float(data_row[3]))
-    return rms
+    # sub, test, wb_power, r_power, r_time, recovery_percent
+    caen_data = [[p4, cp33, 120, 55.0],
+                 [p4, cp33, 240, 61.0],
+                 [p4, cp33, 360, 70.5],
+                 [p4, cp66, 120, 49.0],
+                 [p4, cp66, 240, 55.0],
+                 [p4, cp66, 360, 58.0],
+                 [p8, cp33, 120, 42.0],
+                 [p8, cp33, 240, 52.0],
+                 [p8, cp33, 360, 59.5],
+                 [p8, cp66, 120, 38.0],
+                 [p8, cp66, 240, 37.5],
+                 [p8, cp66, 360, 50.0]]
+    # name indicates used measures
+    recs = SimpleRecMeasures("caen")
+    for p_exp, p_rec, t_rec, r_percent in caen_data:
+        recs.add_measure(p_power=p_rec, r_power=p_rec, r_time=t_rec, recovery_percent=r_percent)
+    # return simple recs object
+    return recs

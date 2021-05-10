@@ -9,8 +9,8 @@ import pygmo.core as pygcore
 import numpy as np
 
 from w_pm_hydraulic import three_comp_config
-from w_pm_hydraulic.data_structure.constant_effort_measures import ConstantEffortMeasures
-from w_pm_hydraulic.data_structure.recovery_measures import RecoveryMeasures
+from w_pm_hydraulic.data_structure.simple_tte_measures import SimpleTTEMeasures
+from w_pm_hydraulic.data_structure.simple_rec_measures import SimpleRecMeasures
 
 from w_pm_hydraulic.evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
 
@@ -23,7 +23,7 @@ class PyGMOThreeCompFitter:
     # this handler's addition to the directory path
     dir_path_addition = "THREE_COMP_PYGMO_FIT"
 
-    def __init__(self, ttes: ConstantEffortMeasures, recovery_measures: RecoveryMeasures, log_level: int = 0):
+    def __init__(self, ttes: SimpleTTEMeasures, recovery_measures: SimpleRecMeasures, log_level: int = 0):
         """
         constructor with basic parameters
         :param ttes: traditional ttes to fit expenditure to
