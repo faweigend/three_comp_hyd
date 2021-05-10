@@ -1,9 +1,7 @@
 import logging
 
-from data_structure.constant_effort_measures import ConstantEffortMeasures
-from data_structure.recovery_measures import RecoveryMeasures
-from evolutionary_fitter.pygmo_three_comp_fitter import PyGMOThreeCompFitter
-from evolutionary_fitter.three_comp_tools import prepare_caen_recovery_ratios, prepare_tte_measures
+from w_pm_hydraulic.evolutionary_fitter.pygmo_three_comp_fitter import PyGMOThreeCompFitter
+from w_pm_hydraulic.evolutionary_fitter.three_comp_tools import prepare_caen_recovery_ratios, prepare_tte_measures
 
 if __name__ == "__main__":
     # set logging level to highest level

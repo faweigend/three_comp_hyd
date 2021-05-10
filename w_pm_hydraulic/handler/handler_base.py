@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-import config
+import w_pm_hydraulic.three_comp_config as config
 
 
 class HandlerBase:

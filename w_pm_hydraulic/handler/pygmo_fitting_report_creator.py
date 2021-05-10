@@ -5,12 +5,12 @@ from collections import defaultdict
 
 import matplotlib.pyplot as plt
 
-import config
+import w_pm_hydraulic.three_comp_config as config
 import numpy as np
 
-from three_comp_hyd.evolutionary_fitter.pygmo_three_comp_fitter import PyGMOThreeCompFitter
-from three_comp_hyd.evolutionary_fitter.three_comp_tools import multi_to_single_objective
-from handler.handler_base import HandlerBase
+from w_pm_hydraulic.evolutionary_fitter.pygmo_three_comp_fitter import PyGMOThreeCompFitter
+from w_pm_hydraulic.evolutionary_fitter.three_comp_tools import multi_to_single_objective
+from w_pm_hydraulic.handler.handler_base import HandlerBase
 
 
 class PyGMOFittingReportCreator(HandlerBase):
@@ -431,9 +431,16 @@ class PyGMOFittingReportCreator(HandlerBase):
         :return:
         """
 
-        # get setup directories
-        root, setups, _ = next(os.walk(os.path.join(config.paths["data_storage"],
-                                                    PyGMOThreeCompFitter.dir_path_addition)))
+        path = os.path.join(config.paths["data_storage"],
+                            PyGMOThreeCompFitter.dir_path_addition)
+        try:
+            # get setup directories
+            root, setups, _ = next(os.walk(path))
+        except StopIteration:
+            logging.warning(
+                "No fittings found in {} to create report on".format(path))
+            return
+
         # get full path from fitter directory to file
         dirs_ind = root.rfind(PyGMOThreeCompFitter.dir_path_addition) + len(
             PyGMOThreeCompFitter.dir_path_addition) + 1

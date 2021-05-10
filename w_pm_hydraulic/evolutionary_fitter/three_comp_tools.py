@@ -1,11 +1,11 @@
 import math
 import numpy as np
 
-import three_comp_config
-from agents.three_comp_hyd_agent import ThreeCompHydAgent
-from data_structure.constant_effort_measures import ConstantEffortMeasures
-from data_structure.recovery_measures import RecoveryMeasures
-from simulate.three_comp_hyd_simulator import ThreeCompHydSimulator
+from w_pm_hydraulic import three_comp_config
+from w_pm_hydraulic.agents.three_comp_hyd_agent import ThreeCompHydAgent
+from w_pm_hydraulic.data_structure.constant_effort_measures import ConstantEffortMeasures
+from w_pm_hydraulic.data_structure.recovery_measures import RecoveryMeasures
+from w_pm_hydraulic.simulate.three_comp_hyd_simulator import ThreeCompHydSimulator
 
 # bounds for all parameters of the three comp hydraulic model
 three_comp_parameter_limits = {
