@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-from w_pm_hydraulic.animate import BaseAnimation
-from w_pm_hydraulic.agents import ThreeCompHydAgent
+from w_pm_hydraulic.animate.base_animation import BaseAnimation
+from w_pm_hydraulic.agents.three_comp_hyd_agent import ThreeCompHydAgent
 from w_pm_hydraulic.visualise.three_comp_visualisation import ThreeCompVisualisation
 
 

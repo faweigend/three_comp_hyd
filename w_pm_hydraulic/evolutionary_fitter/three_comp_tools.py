@@ -1,10 +1,10 @@
 import math
-import numpy as np
 
+import numpy as np
 from w_pm_hydraulic import three_comp_config
 from w_pm_hydraulic.agents.three_comp_hyd_agent import ThreeCompHydAgent
-from w_pm_hydraulic.data_structure.simple_tte_measures import SimpleTTEMeasures
 from w_pm_hydraulic.data_structure.simple_rec_measures import SimpleRecMeasures
+from w_pm_hydraulic.data_structure.simple_tte_measures import SimpleTTEMeasures
 from w_pm_hydraulic.simulate.three_comp_hyd_simulator import ThreeCompHydSimulator
 
 # bounds for all parameters of the three comp hydraulic model
@@ -260,6 +260,6 @@ def prepare_caen_recovery_ratios(w_p: float, cp: float):
     # name indicates used measures
     recs = SimpleRecMeasures("caen")
     for p_exp, p_rec, t_rec, r_percent in caen_data:
-        recs.add_measure(p_power=p_rec, r_power=p_rec, r_time=t_rec, recovery_percent=r_percent)
+        recs.add_measure(p_power=p_exp, r_power=p_rec, r_time=t_rec, recovery_percent=r_percent)
     # return simple recs object
     return recs
