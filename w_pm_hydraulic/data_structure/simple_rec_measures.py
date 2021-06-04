@@ -39,6 +39,7 @@ class SimpleRecMeasures:
         for p_exp, p_rec, t_rec, expected in list(self.__measures):
             yield p_exp, p_rec, t_rec, expected
 
+    @property
     def name(self):
         """return the defined name"""
         return self.__name

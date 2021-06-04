@@ -154,8 +154,11 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
     # compare tte times
     for tte_t, tte_p in ttes.iterate_pairs():
         # use the simulator
-        tte = ThreeCompHydSimulator.do_a_tte(agent=three_comp_agent,
-                                             p_exp=tte_p)
+        try:
+            tte = ThreeCompHydSimulator.do_a_tte(agent=three_comp_agent,
+                                                 p_exp=tte_p)
+        except UserWarning:
+            tte = 5000
         # square time difference
         tte_se.append(pow(tte - tte_t, 2))
         ttes_exp.append(tte_t)
@@ -166,11 +169,13 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
     # compare all available recovery ratio measures
     for p_exp, p_rec, t_rec, expected in recovery_measures.iterate_measures():
         # use the simulator
-        achieved = ThreeCompHydSimulator.get_recovery_ratio_caen(three_comp_agent,
-                                                                 p_exp=p_exp,
-                                                                 p_rec=p_rec,
-                                                                 t_rec=t_rec)
-
+        try:
+            achieved = ThreeCompHydSimulator.get_recovery_ratio_caen(three_comp_agent,
+                                                                     p_exp=p_exp,
+                                                                     p_rec=p_rec,
+                                                                     t_rec=t_rec)
+        except UserWarning:
+            achieved = 200
         # add the squared difference
         rec_se.append(pow(expected - achieved, 2))
         recs_exp.append(expected)
