@@ -32,10 +32,11 @@ you star the repository and/or cite our paper.
 
 ### Setup
 
-If you simply want to use the package, you may want to install it via `pip3 install threecomphyd`
+If you simply want to use the package, you may want to install it via `pip3 install threecomphyd` without the need 
+for a manual download. 
 
-If you downloaded the source files from this [GitHub repository](https://github.com/faweigend/three_comp_hyd), 
-you can install the project as a package by running `pip3 install -e <path_to_project_root>`
+If you downloaded the source files, e.g., from this [GitHub repository](https://github.com/faweigend/three_comp_hyd), 
+you can install the project with a similar procedure as a package by running `pip3 install -e <path_to_project_root>`.
 
 
 ### Usage Hints
