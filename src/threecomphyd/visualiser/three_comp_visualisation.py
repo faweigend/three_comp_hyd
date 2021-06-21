@@ -35,14 +35,14 @@ class ThreeCompVisualisation:
             fig = None
             self._ax1 = axis
 
-        if black_and_white is True:
+        if black_and_white:
             self.__ae_color = (0.7, 0.7, 0.7)
             self.__anf_color = (0.5, 0.5, 0.5)
             self.__ans_color = (0.3, 0.3, 0.3)
             self.__ann_color = (0, 0, 0)
             self.__p_color = (0.5, 0.5, 0.5)
 
-        elif black_and_white is False:
+        elif not black_and_white:
             self.__ae_color = "tab:cyan"
             self.__anf_color = "tab:orange"
             self.__ans_color = "tab:red"
@@ -78,7 +78,7 @@ class ThreeCompVisualisation:
         self.__set_basic_layout()
 
         # now the animation components
-        if self._animated is True:
+        if self._animated:
             # Ae flow
             self._arr_o_flow = None
             self._ann_o_flow = None
@@ -100,7 +100,7 @@ class ThreeCompVisualisation:
 
         # add layout for detailed annotations
         # detail annotation add greek letters for distances and positions
-        if self.__detail_annotations is True:
+        if self.__detail_annotations:
             self.__set_detailed_annotations_layout()
             self._ax1.set_xlim(0, 1.05)
             self._ax1.set_ylim(0, 1.2)
@@ -108,7 +108,7 @@ class ThreeCompVisualisation:
             self._ax1.set_xlim(0, 1.0)
             self._ax1.set_ylim(0, 1.2)
 
-        if self.__detail_annotations is True and self._animated is True:
+        if self.__detail_annotations and self._animated:
             raise UserWarning("Detailed annotations and animation cannot be combined")
 
         self._ax1.set_axis_off()
@@ -489,7 +489,7 @@ class ThreeCompVisualisation:
         :return: an iterable of artists
         """
 
-        if self._animated is False:
+        if not self._animated:
             raise UserWarning("Animation flag has to be enabled in order to use this function")
 
         # perform one step

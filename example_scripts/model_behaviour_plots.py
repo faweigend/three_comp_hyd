@@ -2,7 +2,7 @@ import logging
 import itertools
 
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
-from threecomphyd.simulate.three_comp_hyd_simulator import ThreeCompHydSimulator
+from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulator
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -325,5 +325,7 @@ if __name__ == "__main__":
         ]
     ]
 
+    logging.info("Start Exhaustion Comparison")
     multiple_exhaustion_comparison_overview(w_p=w_p, cp=cp, ps=ps)
+    logging.info("Start Recovery Comparison")
     multiple_caen_recovery_overview(w_p=w_p, cp=cp, ps=ps)

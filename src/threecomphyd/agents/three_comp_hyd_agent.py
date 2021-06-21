@@ -1,9 +1,9 @@
 from threecomphyd import three_comp_config
 
-from threecomphyd.agents.hydraulic_agent_basis import HydraulicAgentBasis
+from threecomphyd.agents.hyd_agent_basis import HydAgentBasis
 
 
-class ThreeCompHydAgent(HydraulicAgentBasis):
+class ThreeCompHydAgent(HydAgentBasis):
     """
     Implementation of the adjusted version of Morton's generalised three component model of human bioenergetics.
     The numeric procedures by Sundström were used and adapted to some of Morton's procedures.

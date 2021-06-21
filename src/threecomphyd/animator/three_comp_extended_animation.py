@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
-from threecomphyd.animate.base_animation import BaseAnimation
-from threecomphyd.visualise.three_comp_visualisation import ThreeCompVisualisation
+from threecomphyd.animator.base_animation import BaseAnimation
+from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 
 
 class ThreeCompExtendedAnimation(BaseAnimation, ThreeCompVisualisation):

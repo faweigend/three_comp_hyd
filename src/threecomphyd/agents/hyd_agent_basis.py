@@ -1,9 +1,10 @@
 from abc import abstractmethod
 
 
-class HydraulicAgentBasis:
+class HydAgentBasis:
     """
-    This is an abstract class and defines the structure for all hydraulic agents.
+    Basis for Hydraulic Agents.
+    This is an abstract class.
     Provided are functions for dynamic power outputs and commands for simulations.
     Hydraulic agents allow real time estimations.
     """

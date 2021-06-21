@@ -5,7 +5,7 @@ from threecomphyd import three_comp_config
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 from threecomphyd.data_structure.simple_rec_measures import SimpleRecMeasures
 from threecomphyd.data_structure.simple_tte_measures import SimpleTTEMeasures
-from threecomphyd.simulate.three_comp_hyd_simulator import ThreeCompHydSimulator
+from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulator
 
 # bounds for all parameters of the three comp hydraulic model
 three_comp_parameter_limits = {
