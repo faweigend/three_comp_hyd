@@ -1,6 +1,6 @@
 import logging
 
-from threecomphyd.animate.three_comp_interactive_animation import ThreeCompInteractiveAnimation
+from threecomphyd.animator.three_comp_interactive_animation import ThreeCompInteractiveAnimation
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 
 if __name__ == "__main__":

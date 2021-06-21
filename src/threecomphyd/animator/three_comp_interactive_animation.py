@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
-from threecomphyd.visualise.three_comp_visualisation import ThreeCompVisualisation
-from threecomphyd.animate.interactive_animation import InteractiveAnimation
+from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
+from threecomphyd.animator.interactive_animation import InteractiveAnimation
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 
 
