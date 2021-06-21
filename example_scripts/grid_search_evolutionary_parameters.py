@@ -1,7 +1,7 @@
 import logging
 
-from w_pm_hydraulic.evolutionary_fitter.pygmo_three_comp_fitter import PyGMOThreeCompFitter
-from w_pm_hydraulic.evolutionary_fitter.three_comp_tools import prepare_caen_recovery_ratios, prepare_standard_tte_measures
+from threecomphyd.evolutionary_fitter.pygmo_three_comp_fitter import PyGMOThreeCompFitter
+from threecomphyd.evolutionary_fitter.three_comp_tools import prepare_caen_recovery_ratios, prepare_standard_tte_measures
 
 if __name__ == "__main__":
     # set logging level to highest level

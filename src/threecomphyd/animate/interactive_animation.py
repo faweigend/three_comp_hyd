@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from w_pm_hydraulic.animate.base_animation import BaseAnimation
+from threecomphyd.animate.base_animation import BaseAnimation
 import mpl_toolkits.axes_grid1
 import matplotlib.widgets
 

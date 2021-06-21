@@ -1,8 +1,8 @@
 import logging
 import itertools
 
-from w_pm_hydraulic.agents.three_comp_hyd_agent import ThreeCompHydAgent
-from w_pm_hydraulic.simulate.three_comp_hyd_simulator import ThreeCompHydSimulator
+from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
+from threecomphyd.simulate.three_comp_hyd_simulator import ThreeCompHydSimulator
 
 import numpy as np
 import matplotlib.pyplot as plt
