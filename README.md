@@ -1,4 +1,9 @@
+
+![](./httpdocs/title.gif)
+
 # threecomphyd
+
+[![PyPI](https://img.shields.io/pypi/v/threecomphyd.svg?style=for-the-badge)](https://pypi.python.org/pypi/threecomphyd)
 
 This package provides tools to model performance of athletes. The name `threecomphyd` stands for 
 __Three Component Hydraulic__, which is the performance modeling approach in focus. 
@@ -6,8 +11,6 @@ __Three Component Hydraulic__, which is the performance modeling approach in foc
 We provide a simulation agent and example simulations, functionalities for debug plots, and an evolutionary fitting process to fit a model to individual athletes. 
 Example scripts in the [GitHub repository](https://github.com/faweigend/three_comp_hyd) serve as instructions on 
 how to use all core applications.
-
-![](./httpdocs/title.gif)
 
 ### Publication
 
