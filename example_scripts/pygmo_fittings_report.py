@@ -1,5 +1,5 @@
 import logging
-from w_pm_hydraulic.handler.pygmo_fitting_report_creator import PyGMOFittingReportCreator
+from threecomphyd.handler.pygmo_fitting_report_creator import PyGMOFittingReportCreator
 
 if __name__ == "__main__":
     # set logging level to highest level

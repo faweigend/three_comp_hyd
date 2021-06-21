@@ -1,7 +1,7 @@
 import logging
 
-from w_pm_hydraulic.animate.three_comp_interactive_animation import ThreeCompInteractiveAnimation
-from w_pm_hydraulic.agents.three_comp_hyd_agent import ThreeCompHydAgent
+from threecomphyd.animate.three_comp_interactive_animation import ThreeCompInteractiveAnimation
+from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 
 if __name__ == "__main__":
     # set logging level to highest level

@@ -2,7 +2,7 @@ import math
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-from w_pm_hydraulic.agents.three_comp_hyd_agent import ThreeCompHydAgent
+from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 
 from matplotlib.text import Text
 from matplotlib.patches import Rectangle

@@ -8,11 +8,11 @@ import time
 import pygmo.core as pygcore
 import numpy as np
 
-from w_pm_hydraulic import three_comp_config
-from w_pm_hydraulic.data_structure.simple_tte_measures import SimpleTTEMeasures
-from w_pm_hydraulic.data_structure.simple_rec_measures import SimpleRecMeasures
+from threecomphyd import three_comp_config
+from threecomphyd.data_structure.simple_tte_measures import SimpleTTEMeasures
+from threecomphyd.data_structure.simple_rec_measures import SimpleRecMeasures
 
-from w_pm_hydraulic.evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
+from threecomphyd.evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
 
 
 class PyGMOThreeCompFitter:

@@ -1,10 +1,19 @@
-## A New Pathway to Approximate Energy Expenditure and Recovery of an Athlete
+# threecomphyd
 
-![Alt Text](./httpdocs/title.gif)
+This package provides tools to model performance of athletes. The name `threecomphyd` stands for 
+__Three Component Hydraulic__, which is the performance modeling approach in focus. 
 
-### Usage
+We provide a simulation agent and example simulations, functionalities for debug plots, and an evolutionary fitting process to fit a model to individual athletes. 
+Example scripts in the [GitHub repository](https://github.com/faweigend/three_comp_hyd) serve as instructions on 
+how to use all core applications.
 
-Please see the corresponding paper for further references. If you make use of this project, we would be greatful if 
+![](./httpdocs/title.gif)
+
+### Publication
+
+Please see the corresponding paper 
+[__A New Pathway to Approximate Energy Expenditure and Recovery of an Athlete__](https://arxiv.org/abs/2104.07903) for 
+further references. If you make use of this project, we would be grateful if 
 you star the repository and/or cite our paper.
 ```
 @misc{weigend2021new,
@@ -17,17 +26,17 @@ you star the repository and/or cite our paper.
 }
 ```
 
-### Setup And Hints
+### Setup
 
-We recommend the use of a virtual environment. Simply install this project as a package by running `pip3 install -e <path_to_project_root>`
+If you simply want to use the package, you may want to install it via `pip3 install threecomphyd`
 
-Required packages are listed in `requirements.txt` and should be installed automatically:
-```
-matplotlib
-pygmo
-```
+If you downloaded the source files from this [GitHub repository](https://github.com/faweigend/three_comp_hyd), 
+you can install the project as a package by running `pip3 install -e <path_to_project_root>`
 
-If you use pycharm professional, please ensure that the SciView tab is deactivated when running interactive animations.
+
+### Usage Hints
+
+If you use pycharm professional, please ensure that the `SciView` tab is deactivated when running interactive animations.
 ```
 File => Settings => Tools => Python Scientific => Uncheck "show plots in tool window"
 ```
