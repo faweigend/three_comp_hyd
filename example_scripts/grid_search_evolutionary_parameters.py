@@ -8,8 +8,11 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    # group averages from Caen et al. https://insights.ovid.com/crossref?an=00005768-201908000-00022
-    caen = (18200, 248)
+    # group averages from Caen et al. 2019
+    caen = (
+        18200, # W'
+        248 # CP
+    )
 
     # define wp cp combination in use
     comb = caen

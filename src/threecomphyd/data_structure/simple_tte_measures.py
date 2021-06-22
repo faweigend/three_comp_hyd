@@ -6,15 +6,15 @@ class SimpleTTEMeasures:
     def __init__(self, name: str):
         """
         constructor
-        :param times:
-        :param measures:
+        :param name: given name identifier
         """
-        # ensure it's cast into the right format from e.g. read json files
         self.__pairs = []
         self.__name = name
 
     def __len__(self):
-        """length definition"""
+        """
+        :return: length definition
+        """
         return len(self.__pairs)
 
     def __str__(self):
@@ -26,12 +26,16 @@ class SimpleTTEMeasures:
 
     @property
     def name(self):
-        """:return: name"""
+        """
+        :return: name
+        """
         return self.__name
 
     @property
     def pairs(self):
-        """:return: stored time values as list"""
+        """
+        :return: stored time values as list
+        """
         return self.__pairs
 
     def add_pair(self, t: float, p: float):
@@ -43,6 +47,8 @@ class SimpleTTEMeasures:
         self.__pairs.append((t, p))
 
     def iterate_pairs(self):
-        """generator for time/measure pairs"""
+        """
+        generator for time/measure pairs
+        """
         for t, p in self.__pairs:
             yield t, p

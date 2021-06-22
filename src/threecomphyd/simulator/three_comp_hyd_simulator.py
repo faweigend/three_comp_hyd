@@ -41,17 +41,17 @@ class ThreeCompHydSimulator:
         return wb1_t
 
     @staticmethod
-    def get_recovery_ratio_caen(agent: ThreeCompHydAgent, p_exp, p_rec, t_rec):
+    def get_recovery_ratio_wb1_wb2(agent: ThreeCompHydAgent, p_exp, p_rec, t_rec):
         """
-        Returns recovery ratio of given agent according to Caen et al.'s WB1 -> RB -> WB2 protocol.
+        Returns recovery ratio of given agent according to WB1 -> RB -> WB2 protocol.
         Recovery ratio estimations for given exp, rec intensity and time
-        :param agent:
-        :param p_exp:
-        :param p_rec:
-        :param t_rec:
+        :param agent: three component hydraulic agent to use
+        :param p_exp: work bout intensity
+        :param p_rec: recovery bout intensity
+        :param t_rec: recovery bout duration
         :return: ratio in percent
         """
-        # Use the caen trials for recovery estimations in the differential case
+
         hz = agent.hz
         agent.reset()
 
@@ -118,8 +118,7 @@ class ThreeCompHydSimulator:
                                                 anf=anf,
                                                 ans=ans,
                                                 p_ae=p_ae,
-                                                p_an=p_an,
-                                                m_flow=m_flow)
+                                                p_an=p_an)
 
         # return parameters
         return h, g, anf, ans, p_ae, p_an, m_flow, w_p_bal
@@ -147,7 +146,7 @@ class ThreeCompHydSimulator:
             steps += 1
 
         if plot is True:
-            ThreeCompHydSimulator.plot_dynamics(t, p, anf, ans, p_ae, p_an, m_flow)
+            ThreeCompHydSimulator.plot_dynamics(t, p, anf, ans, p_ae, p_an)
 
         return agent.get_time()
 
@@ -199,13 +198,13 @@ class ThreeCompHydSimulator:
 
         # plot the parameter overview if required
         if plot is True:
-            ThreeCompHydSimulator.plot_dynamics(t, p, anf, ans, p_h, p_g, m_flow)
+            ThreeCompHydSimulator.plot_dynamics(t, p, anf, ans, p_h, p_g)
 
         # return time till exhaustion and time till recovery
         return tte, ttr
 
     @staticmethod
-    def plot_dynamics(t, p, anf, ans, p_ae, p_an, m_flow):
+    def plot_dynamics(t, p, anf, ans, p_ae, p_an):
         """
         Debugging plots to look at developed power curves
         """

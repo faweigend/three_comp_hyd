@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-import threecomphyd.three_comp_config as config
+import threecomphyd.config as config
 
 
 class HandlerBase:

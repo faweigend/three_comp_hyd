@@ -1,4 +1,4 @@
-from threecomphyd import three_comp_config
+from threecomphyd import config
 
 from threecomphyd.agents.hyd_agent_basis import HydAgentBasis
 
@@ -35,7 +35,7 @@ class ThreeCompHydAgent(HydAgentBasis):
         if self.__height_ans <= 0:
             raise UserWarning("AnS has negative height: Theta {} Gamma {} Phi {}".format(the, gam, phi))
 
-        if three_comp_config.three_comp_phi_constraint is True:
+        if config.three_comp_phi_constraint is True:
             # the "hitting the wall" constraint that says glycogen can be depleted below VO2 MAX
             if self.__phi > self.__gamma:
                 raise UserWarning("phi not smaller gamma")
@@ -232,7 +232,7 @@ class ThreeCompHydAgent(HydAgentBasis):
         getter for phi_constraint flag
         :return boolean ture or false
         """
-        return three_comp_config.three_comp_phi_constraint
+        return config.three_comp_phi_constraint
 
     @property
     def a_anf(self):

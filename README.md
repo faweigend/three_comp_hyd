@@ -56,7 +56,7 @@ investigate its responses to various power demands.
 * `model_behaviour_plots.py` recreates the energy expenditure and recovery plots of the results section of the paper.
 
 * `pygmo_fittings_report` Iterates over all evolutionary fitting results stored in the `data-storage` directory and creates
-  a readable `.json` overview over best fitting results, algorithm parameters, execution time, etc.
+  a readable `.json` overview over best fitting results, configurations, algorithm parameters, execution time, etc.
   
 WARNING! the following scripts require a system with a minimum of 7 CPU cores for the evolutionary fitting, or even 21 
 CPU cores for the grid search approach.
