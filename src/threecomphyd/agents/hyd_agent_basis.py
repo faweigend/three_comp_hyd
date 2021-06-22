@@ -100,6 +100,5 @@ class HydAgentBasis:
     @abstractmethod
     def is_equilibrium(self):
         """
-        returns if energy storages are at a constant state
-        :return:
+        :return: if energy storages are at a constant state
         """

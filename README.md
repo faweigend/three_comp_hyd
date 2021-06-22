@@ -55,6 +55,12 @@ investigate its responses to various power demands.
 
 * `model_behaviour_plots.py` recreates the energy expenditure and recovery plots of the results section of the paper.
 
+* `pygmo_fittings_report` Iterates over all evolutionary fitting results stored in the `data-storage` directory and creates
+  a readable `.json` overview over best fitting results, configurations, algorithm parameters, execution time, etc.
+  
+WARNING! the following scripts require a system with a minimum of 7 CPU cores for the evolutionary fitting, or even 21 
+CPU cores for the grid search approach.
+
 * `grid_search_evolutionary_parameters.py` starts a grid search over described parameter settings for MOEA/D coupled 
   with the asynchronous island model by Pygmo. One fitting per parameter combination as summarised in Table 3 of the Appendix 
   are estimated. Results are stored into a `data-storage` folder in the root directory of the project.
@@ -64,5 +70,3 @@ investigate its responses to various power demands.
   40 cycles, 64 population size, 7 islands) to fit the model with the outlined evolutionary computation approach 
   (see Appendix B and C). Results are stored into a `data-storage` folder in the root directory of the project.
 
-* `pygmo_fittings_report` Iterates over all evolutionary fitting results stored in the `data-storage` directory and creates
-  a readable `.json` overview over best fitting results, algorithm parameters, execution time, etc.

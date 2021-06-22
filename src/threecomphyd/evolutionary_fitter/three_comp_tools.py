@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-from threecomphyd import three_comp_config
+from threecomphyd import config
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 from threecomphyd.data_structure.simple_rec_measures import SimpleRecMeasures
 from threecomphyd.data_structure.simple_tte_measures import SimpleTTEMeasures
@@ -48,7 +48,7 @@ class MultiObjectiveThreeCompUDP:
         creates a suitable initial guess configuration
         :param cp: critical power that usually corresponds to Ae flow
         :param w_p: W' that is correlated to capacities of tanks
-        :return:
+        :return: initial configuration guess as a list
         """
         # set up an initial configuration with sensibly distributed values
         i_x = [
@@ -100,10 +100,10 @@ class MultiObjectiveThreeCompUDP:
     def get_additional_info(self):
         """
         some additional info regarding the parameters in use
-        :return:
+        :return: additional info in a dictionary
         """
         return {
-            "phi_constraint": three_comp_config.three_comp_phi_constraint,
+            "phi_constraint": config.three_comp_phi_constraint,
             "ttes": str(self.__ttes),
             "recs": str(self.__recs),
         }
@@ -114,7 +114,7 @@ class MultiObjectiveThreeCompUDP:
         :return: name string
         """
         # adds the phi constraint information to the name
-        return "MultiObjectiveThreeComp_{}".format(three_comp_config.three_comp_phi_constraint)
+        return "MultiObjectiveThreeComp_{}".format(config.three_comp_phi_constraint)
 
     def get_nobj(self):
         """
@@ -170,10 +170,10 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
     for p_exp, p_rec, t_rec, expected in recovery_measures.iterate_measures():
         # use the simulator
         try:
-            achieved = ThreeCompHydSimulator.get_recovery_ratio_caen(three_comp_agent,
-                                                                     p_exp=p_exp,
-                                                                     p_rec=p_rec,
-                                                                     t_rec=t_rec)
+            achieved = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(three_comp_agent,
+                                                                        p_exp=p_exp,
+                                                                        p_rec=p_rec,
+                                                                        t_rec=t_rec)
         except UserWarning:
             achieved = 200
         # add the squared difference
@@ -236,8 +236,7 @@ def prepare_standard_tte_measures(w_p: float, cp: float):
 
 def prepare_caen_recovery_ratios(w_p: float, cp: float):
     """
-    returnes recovery ratio data according to published data by Caen et al.
-    https://insights.ovid.com/crossref?an=00005768-201908000-00022
+    returns recovery ratio data according to published data by Caen et al. 2019
     :param w_p: W'
     :param cp: CP
     :return SimpleRecMeasures Object

@@ -13,7 +13,7 @@ from matplotlib import rcParams
 
 class ThreeCompVisualisation:
     """
-    basis to visualise power flow within the hydraulics model as an animation or simulation
+    Basis to visualise power flow within the hydraulics model as an animation or simulation
     """
 
     def __init__(self, agent: ThreeCompHydAgent,
@@ -316,7 +316,6 @@ class ThreeCompVisualisation:
     def __set_animation_layout(self):
         """
         Adds layout components that are required for an animation
-        :return:
         """
 
         offset = self.__offset
@@ -368,7 +367,6 @@ class ThreeCompVisualisation:
     def __set_basic_layout(self):
         """
         updates position estimations and layout
-        :return:
         """
 
         # get sizes from agent
@@ -435,8 +433,7 @@ class ThreeCompVisualisation:
     def update_basic_layout(self, agent):
         """
         updates tank positions and sizes according to new agent
-        :param agent:
-        :return:
+        :param agent: agent to be visualised
         """
 
         self._agent = agent
@@ -485,7 +482,7 @@ class ThreeCompVisualisation:
         """
         For animations and simulations.
         The function to call at each frame.
-        :param frame_number: frame number
+        :param frame_number: frame number has to be taken because of parent class method
         :return: an iterable of artists
         """
 

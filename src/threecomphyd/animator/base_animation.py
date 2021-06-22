@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.text import Text
 
-from threecomphyd import three_comp_config
+from threecomphyd import config
 
 
 class BaseAnimation(animation.FuncAnimation):
@@ -130,7 +130,7 @@ class BaseAnimation(animation.FuncAnimation):
         :return:
         """
         self.save_count = frames
-        dirpath = os.path.join(three_comp_config.paths["data_storage"], "animations")
+        dirpath = os.path.join(config.paths["data_storage"], "animations")
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
         # Set up formatting for the movie files
@@ -144,7 +144,7 @@ class BaseAnimation(animation.FuncAnimation):
         :param frames:
         :return:
         """
-        dirpath = os.path.join(three_comp_config.paths["data_storage"], "animations")
+        dirpath = os.path.join(config.paths["data_storage"], "animations")
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
         # Set up formatting for the movie files

@@ -9,7 +9,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    # define (W', CP) combination in use
+    # define (W', CP) combination in use. Insert your parameters here.
     comb = (
         18200,  # W'
         248  # CP

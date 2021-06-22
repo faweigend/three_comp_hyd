@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import matplotlib.pyplot as plt
 
-import threecomphyd.three_comp_config as config
+import threecomphyd.config as config
 import numpy as np
 
 from threecomphyd.evolutionary_fitter.pygmo_three_comp_fitter import PyGMOThreeCompFitter

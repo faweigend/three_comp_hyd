@@ -6,6 +6,7 @@ class SimpleRecMeasures:
     def __init__(self, name: str):
         """
         constructor
+        :param name: name identifier
         """
         self.__name = name
         self.__measures = []
@@ -28,7 +29,9 @@ class SimpleRecMeasures:
         return "{} : \n {}".format(self.__name, self.__measures)
 
     def __len__(self):
-        """length definition"""
+        """
+        :return: length definition
+        """
         return len(self.__measures)
 
     def iterate_measures(self):
@@ -41,5 +44,7 @@ class SimpleRecMeasures:
 
     @property
     def name(self):
-        """return the defined name"""
+        """
+        :return: the defined name
+        """
         return self.__name

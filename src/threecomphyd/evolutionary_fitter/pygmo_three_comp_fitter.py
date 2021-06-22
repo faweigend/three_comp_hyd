@@ -8,7 +8,7 @@ import time
 import pygmo.core as pygcore
 import numpy as np
 
-from threecomphyd import three_comp_config
+from threecomphyd import config
 from threecomphyd.data_structure.simple_tte_measures import SimpleTTEMeasures
 from threecomphyd.data_structure.simple_rec_measures import SimpleRecMeasures
 
@@ -19,7 +19,6 @@ class PyGMOThreeCompFitter:
     """
     fits the three component hydraulic model to exercise data
     """
-
     # this handler's addition to the directory path
     dir_path_addition = "THREE_COMP_PYGMO_FIT"
 
@@ -44,12 +43,16 @@ class PyGMOThreeCompFitter:
 
     @property
     def early_stopping(self):
-        """simple getter for early stopping"""
+        """
+        :return: integer indicating when early stopping is triggered
+        """
         return self.__early_stopping
 
     @early_stopping.setter
-    def early_stopping(self, early_stopping):
-        """ simple setter for early stopping"""
+    def early_stopping(self, early_stopping: int):
+        """
+        :param early_stopping: simple setter for when early stopping triggers
+        """
         self.__early_stopping = early_stopping
 
     def __save_fitting_result(self, data, comb, algo, topo):
@@ -57,6 +60,8 @@ class PyGMOThreeCompFitter:
         standardised storage of grid search results
         :param data:
         :param comb:
+        :param algo:
+        :param topo:
         """
 
         # save algorithm parameters
@@ -248,7 +253,7 @@ class PyGMOThreeCompFitter:
                                             algorithm: pygcore.algorithm,
                                             topology: pygcore.topology):
         """
-        Run a fitting that makes use of the parallelised islands.
+        Run a fitting that makes use of the parallelized islands.
         It saves the evolved fronts and corresponding configurations
         :param cycles: number of cycles through number of gen steps
         :param pop_size: population size
@@ -295,8 +300,10 @@ class PyGMOThreeCompFitter:
         fronts = {}
 
         def get_parteo_fronts():
-            """extracts best non-dominated fronts from
-            all islands and returns overview in a dict"""
+            """
+            extracts best non-dominated fronts from
+            all islands and returns overview in a dict
+            """
             isle_fronts = {}
             for j, isle in enumerate(archi):
                 # get island population
@@ -431,4 +438,4 @@ class PyGMOThreeCompFitter:
         Simple getter for the data storage path
         :return: path
         """
-        return os.path.join(three_comp_config.paths["data_storage"], self._dir_path_addition)
+        return os.path.join(config.paths["data_storage"], self._dir_path_addition)

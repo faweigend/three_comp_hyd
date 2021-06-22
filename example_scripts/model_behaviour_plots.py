@@ -126,12 +126,9 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     rec_ts = [10, 20, 25, 30, 35, 40, 45, 50, 60, 70, 90, 110, 130, 150, 170, 240, 300, 360]
 
     fig = plt.figure(figsize=(8, 3.4))
-    axes = []
-
     # using combined CP33 and CP66 measures
     # only two plots with combined recovery intensities
-    axes.append(fig.add_subplot(1, 2, 1))
-    axes.append(fig.add_subplot(1, 2, 2))
+    axes = [fig.add_subplot(1, 2, 1), fig.add_subplot(1, 2, 2)]
 
     # add three component model data
     for p in ps:
@@ -141,12 +138,12 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
 
         # data will be stored in here
         three_comp_data = []
-        # let the created agend do all the trial combinations
+        # let the created agent run all the trial combinations
         combs = list(itertools.product(exp_ps, rec_ps))
         for comb in combs:
             rec_times, rec_percent = [0], [0]
             for rt in rec_ts:
-                ratio = ThreeCompHydSimulator.get_recovery_ratio_caen(three_comp_agent, comb[0], comb[1], rt)
+                ratio = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(three_comp_agent, comb[0], comb[1], rt)
                 rec_times.append(rt)
                 rec_percent.append(ratio)
             three_comp_data.append([rec_times, rec_percent])
