@@ -241,8 +241,6 @@ def prepare_caen_recovery_ratios(w_p: float, cp: float):
     :param cp: CP
     :return SimpleRecMeasures Object
     """
-    # name for returned measures
-    name = "caen"
     # estimate intensities
     p4 = round(cp + w_p / 240, 2)  # predicted exhaustion after 4 min
     p8 = round(cp + w_p / 480, 2)  # predicted exhaustion after 8 min
