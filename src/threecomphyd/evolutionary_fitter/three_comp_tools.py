@@ -57,9 +57,9 @@ class MultiObjectiveThreeCompUDP:
             np.random.normal(1, 0.4) * cp,  # max flow from Ae should be related to CP
             np.random.normal(1, 0.4) * cp * 10,  # max flow from AnS is expected to be high
             np.random.normal(1, 0.4) * cp * 0.1,  # max recovery flow is expected to be low
+            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
+            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
             np.random.normal(1, 0.4) * 0.5,  # for a curvelinear expenditure dynamic the pipe has to be halfway or lower
-            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
-            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
         ]
         # ensure values are within limits
         for i, i_x_e in enumerate(i_x):
