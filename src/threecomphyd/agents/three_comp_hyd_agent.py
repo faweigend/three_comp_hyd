@@ -111,12 +111,12 @@ class ThreeCompHydAgent(HydAgentBasis):
 
         # step 2 a: determine oxygen energy flow (p_{Ae})
         # level AnF above pipe exit. Scale contribution according to h level
-        if 0 <= self.__h <= (1 - self.__phi):
-            # contribution through R1 scales with maximal flow capacity
+        if 0 <= self.__h < (1 - self.__phi):
+            # contribution from Ae scales with maximal flow capacity
             self.__p_ae = self.__m_ae * self.__h / (1 - self.__phi)
         # at maximum rate because level h of AnF is below pipe exit of Ae
         elif (1 - self.__phi) <= self.__h:
-            # max contribution R1 = m_o
+            # max contribution R1 = m_ae
             self.__p_ae = self.__m_ae
         else:
             raise_detailed_error_report()
@@ -128,7 +128,7 @@ class ThreeCompHydAgent(HydAgentBasis):
         # [no change] AnS empty and level AnF below pipe exit
         elif self.__h >= (1 - self.__gamma) and self.__g == self.__height_ans:
             self.__p_an = 0.0
-        # [no change] h at par with g
+        # [no change] h at equal with g
         elif self.__h == (self.__g + self.__theta):
             self.__p_an = 0.0
         else:
@@ -142,7 +142,7 @@ class ThreeCompHydAgent(HydAgentBasis):
             elif (self.__g + self.__theta) < self.__h < (1 - self.__gamma):
                 # h is more than g+theta thus the difference is positive
                 self.__p_an = self.__m_ans * ((self.__h - (self.__g + self.__theta)) / self.__height_ans)
-            # [utilise max] if level AnF below AnS pipe exit and AnS not empty
+            # [utilise max] if level AnF below or at AnS pipe exit and AnS not empty
             elif (1 - self.__gamma) <= self.__h and self.__g < self.__height_ans:
                 # the only thing that affects flow is the amount of remaining liquid (pressure)
                 self.__p_an = self.__m_ans * ((self.__height_ans - self.__g) / self.__height_ans)
@@ -164,8 +164,10 @@ class ThreeCompHydAgent(HydAgentBasis):
                 self.__p_an = min(self.__p_an, (self.__height_ans - self.__g) * self.__a_ans)
 
         # level AnS is adapted to estimated change
+        # g increases as p_An flows out
         self.__g += self.__p_an / self.__a_ans / self._hz
         # refill or deplete AnF according to AnS flow and Power demand
+        # h decreases as p_Ae and p_An flow in
         self.__h -= (self.__p_ae + self.__p_an) / self.__a_anf / self._hz
 
         # step 3: account for rounding errors and set exhaustion flag
