@@ -43,7 +43,7 @@ class MultiObjectiveThreeCompUDP:
         self.__bounds = ([x[0] for x in self.__limits.values()],
                          [x[1] for x in self.__limits.values()])
 
-    def create_educated_initial_guess(self, cp: float = 250.0, w_p: float = 200000.0):
+    def create_educated_initial_guess(self, cp: float = 250.0, w_p: float = 50000.0):
         """
         creates a suitable initial guess configuration
         :param cp: critical power that usually corresponds to Ae flow
@@ -62,11 +62,9 @@ class MultiObjectiveThreeCompUDP:
             np.random.normal(1, 0.4) * 0.5,  # for a curvelinear expenditure dynamic the pipe has to be halfway or lower
         ]
         # ensure values are within limits
-        for i, i_x_e in enumerate(i_x):
-            # lower bound
-            i_x[i] = max(self.__bounds[0][i], i_x_e)
-            # upper bound
-            i_x[i] = min(self.__bounds[1][i], i_x_e)
+        for i in range(len(i_x)):
+            i_x[i] = max(self.__bounds[0][i], i_x[i])  # lower bound
+            i_x[i] = min(self.__bounds[1][i], i_x[i])  # upper bound
         return i_x
 
     def fitness(self, x):
