@@ -8,7 +8,6 @@ class ODEThreeCompHydSimulator:
     """
     Simulates Three Component Hydraulic Model responses using Ordinary Differential Equations
     """
-    tolerance = 1.49012e-8
 
     @staticmethod
     def phase_a1(p: float, conf: list) -> (float, float, float):
