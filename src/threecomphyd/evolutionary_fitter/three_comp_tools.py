@@ -43,7 +43,7 @@ class MultiObjectiveThreeCompUDP:
         self.__bounds = ([x[0] for x in self.__limits.values()],
                          [x[1] for x in self.__limits.values()])
 
-    def create_educated_initial_guess(self, cp: float = 250.0, w_p: float = 200000.0):
+    def create_educated_initial_guess(self, cp: float = 250.0, w_p: float = 50000.0):
         """
         creates a suitable initial guess configuration
         :param cp: critical power that usually corresponds to Ae flow
@@ -57,16 +57,14 @@ class MultiObjectiveThreeCompUDP:
             np.random.normal(1, 0.4) * cp,  # max flow from Ae should be related to CP
             np.random.normal(1, 0.4) * cp * 10,  # max flow from AnS is expected to be high
             np.random.normal(1, 0.4) * cp * 0.1,  # max recovery flow is expected to be low
+            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
+            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
             np.random.normal(1, 0.4) * 0.5,  # for a curvelinear expenditure dynamic the pipe has to be halfway or lower
-            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
-            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
         ]
         # ensure values are within limits
-        for i, i_x_e in enumerate(i_x):
-            # lower bound
-            i_x[i] = max(self.__bounds[0][i], i_x_e)
-            # upper bound
-            i_x[i] = min(self.__bounds[1][i], i_x_e)
+        for i in range(len(i_x)):
+            i_x[i] = max(self.__bounds[0][i], i_x[i])  # lower bound
+            i_x[i] = min(self.__bounds[1][i], i_x[i])  # upper bound
         return i_x
 
     def fitness(self, x):
@@ -241,8 +239,6 @@ def prepare_caen_recovery_ratios(w_p: float, cp: float):
     :param cp: CP
     :return SimpleRecMeasures Object
     """
-    # name for returned measures
-    name = "caen"
     # estimate intensities
     p4 = round(cp + w_p / 240, 2)  # predicted exhaustion after 4 min
     p8 = round(cp + w_p / 480, 2)  # predicted exhaustion after 8 min
