@@ -62,12 +62,14 @@ def test_procedure(hz, eps, conf, agent):
     for i, t in enumerate(ts):
         try:
             agent.reset()
-            for _ in range(int(t * hz)):
+            for _ in range(int(round(t * hz))):
                 agent.set_power(p)
                 agent.perform_one_step()
 
             g_diff = agent.get_g() - gts[i]
             h_diff = agent.get_h() - hts[i]
+            # print("error phase {}. h is off by {}".format(i + 1, h_diff))
+            # print("error phase {}. g is off by {}".format(i + 1, g_diff))
             assert abs(h_diff) < eps, "error phase {}. h is off by {}".format(i + 1, h_diff)
             assert abs(g_diff) < eps, "error phase {}. g is off by {}".format(i + 1, g_diff)
         except AssertionError as e:
@@ -82,15 +84,21 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     # estimations per second for discrete agent
-    hz = 50
+    hz = 100
     # required precision of discrete to differential agent
-    eps = 0.001
+    eps = 0.0001
 
     udp = MultiObjectiveThreeCompUDP(None, None)
 
     example_conf = udp.create_educated_initial_guess()
-    # example_conf = [23300.62830028783, 55208.70561675477, 81.80334699080105, 4484.892862385766, 28.970996944175734,
-    #                 0.24068111663641112, 0.2755929224243251, 0.5794389684110414]
+    # example_conf =  [15021.785191487204, 40177.64712294647, 261.6719508403627, 3292.148542348498, 41.81050507575445, 0.24621701417812314, 0.23688759866161735, 0.31117164164526034]
+    # example_conf = [9514.740288582507, 65647.39956250248, 130.7003311770526, 4032.783980729493, 40.700090552043754,
+    #                 0.36558373229156543, 0.18079431363534032, 0.8814530286203209]
+    # example_conf = [20409.661337284382, 68400.5919305085, 22.91122107670973, 1674.8953998582301, 10.090793349034278,
+    #                 0.09540964848746722, 0.0754656005957027, 0.5277055169053692]
+
+    # example_conf = [11842.40873575802, 66678.34427155198, 254.65770817627214, 3308.703276921823, 34.225650319734704,
+    #                 0.3535049658149634, 0.2453871731326824, 0.7281633626474274]
 
     # create three component hydraulic agent with example configuration
     agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],

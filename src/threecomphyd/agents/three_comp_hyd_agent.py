@@ -311,11 +311,23 @@ class ThreeCompHydAgent(HydAgentBasis):
         """
         return self.__g
 
+    def set_g(self, g):
+        """
+        setter for state of depletion of vessel AnS
+        """
+        self.__g = g
+
     def get_h(self):
         """
         :return state of depletion of vessel AnF
         """
         return self.__h
+
+    def set_h(self, h):
+        """
+        setter for state of depletion of vessel AnF
+        """
+        self.__h = h
 
     def get_p_ae(self):
         """
