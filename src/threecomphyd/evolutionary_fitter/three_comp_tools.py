@@ -9,8 +9,8 @@ from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulato
 
 # bounds for all parameters of the three comp hydraulic model
 three_comp_parameter_limits = {
-    "a_anf": [1000, 500000],
-    "a_ans": [1000, 500000],
+    "a_anf": [5000, 500000],
+    "a_ans": [5000, 500000],
     "m_ae": [1, 5000],
     "m_ans": [1, 5000],
     "m_anf": [1, 5000],

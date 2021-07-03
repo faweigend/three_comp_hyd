@@ -60,22 +60,19 @@ def test_procedure(hz, eps, conf, agent):
     gts = [gt1, gt2, gt3, gt4, gt5, gt6]
 
     for i, t in enumerate(ts):
-        try:
-            agent.reset()
-            for _ in range(int(round(t * hz))):
-                agent.set_power(p)
-                agent.perform_one_step()
+        agent.reset()
+        for _ in range(int(round(t * hz))):
+            agent.set_power(p)
+            agent.perform_one_step()
 
-            g_diff = agent.get_g() - gts[i]
-            h_diff = agent.get_h() - hts[i]
-            # print("error phase {}. h is off by {}".format(i + 1, h_diff))
-            # print("error phase {}. g is off by {}".format(i + 1, g_diff))
-            assert abs(h_diff) < eps, "error phase {}. h is off by {}".format(i + 1, h_diff)
-            assert abs(g_diff) < eps, "error phase {}. g is off by {}".format(i + 1, g_diff)
-        except AssertionError as e:
-            logging.info(e)
+        g_diff = agent.get_g() - gts[i]
+        h_diff = agent.get_h() - hts[i]
+        # print("error phase {}. h is off by {}".format(i + 1, h_diff))
+        # print("error phase {}. g is off by {}".format(i + 1, g_diff))
+        assert abs(h_diff) < eps, "error phase {}. h is off by {}".format(i + 1, h_diff)
+        assert abs(g_diff) < eps, "error phase {}. g is off by {}".format(i + 1, g_diff)
 
-    logging.info(conf)
+
 
 
 if __name__ == "__main__":
@@ -84,27 +81,18 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     # estimations per second for discrete agent
-    hz = 100
+    hz = 150
     # required precision of discrete to differential agent
-    eps = 0.0001
+    eps = 0.001
 
-    udp = MultiObjectiveThreeCompUDP(None, None)
+    while True:
+        udp = MultiObjectiveThreeCompUDP(None, None)
 
-    example_conf = udp.create_educated_initial_guess()
-    # example_conf =  [15021.785191487204, 40177.64712294647, 261.6719508403627, 3292.148542348498, 41.81050507575445, 0.24621701417812314, 0.23688759866161735, 0.31117164164526034]
-    # example_conf = [9514.740288582507, 65647.39956250248, 130.7003311770526, 4032.783980729493, 40.700090552043754,
-    #                 0.36558373229156543, 0.18079431363534032, 0.8814530286203209]
-    # example_conf = [20409.661337284382, 68400.5919305085, 22.91122107670973, 1674.8953998582301, 10.090793349034278,
-    #                 0.09540964848746722, 0.0754656005957027, 0.5277055169053692]
+        example_conf = udp.create_educated_initial_guess()
+        logging.info(example_conf)
+        # create three component hydraulic agent with example configuration
+        agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
+                                  m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
+                                  gam=example_conf[6], phi=example_conf[7])
 
-    # example_conf = [11842.40873575802, 66678.34427155198, 254.65770817627214, 3308.703276921823, 34.225650319734704,
-    #                 0.3535049658149634, 0.2453871731326824, 0.7281633626474274]
-
-    # create three component hydraulic agent with example configuration
-    agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
-                              m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
-                              gam=example_conf[6], phi=example_conf[7])
-
-    ThreeCompVisualisation(agent)
-
-    test_procedure(hz, eps, example_conf, agent)
+        test_procedure(hz, eps, example_conf, agent)

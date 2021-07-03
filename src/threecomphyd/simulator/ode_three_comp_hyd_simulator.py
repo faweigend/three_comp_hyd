@@ -71,13 +71,13 @@ class ODEThreeCompHydSimulator:
         r1 = 0.5 * (-np.sqrt(a ** 2 - 4 * b) - a)
         r2 = 0.5 * (np.sqrt(a ** 2 - 4 * b) - a)
 
-        def a3_gt(c1, c2, t):
-            # the general solution for g(t)
-            return c1 * np.exp(r1 * t) + c2 * np.exp(r2 * t) + c / b
-
         # c1 and c2 can be determined with g(t2) = g'(t2) = 0
         s_c1 = -c / (b * (1 - r1 / r2)) * np.exp(-r1 * t2)
         s_c2 = s_c1 * np.exp(r1 * t2) * np.exp(-r2 * t2) * -r1 / r2
+
+        def a3_gt(t):
+            # the general solution for g(t)
+            return s_c1 * np.exp(r1 * t) + s_c2 * np.exp(r2 * t) + c / b
 
         # substitute into EQ(9) for h
         def a3_ht(t):
@@ -90,11 +90,11 @@ class ODEThreeCompHydSimulator:
 
         # check if equilibrium in this phase
         if ht2 <= a3_ht(np.inf) <= ht3:
-            return np.inf, a3_ht(np.inf), a3_gt(s_c1, s_c2, np.inf)
+            return np.inf, a3_ht(np.inf), a3_gt(np.inf)
         else:
             t3 = optimize.newton(lambda t: ht3 - a3_ht(t), x0=np.array([t2]))[0]
             # use t3 to get g(t3)
-            return t3, ht3, a3_gt(s_c1, s_c2, t3)
+            return t3, ht3, a3_gt(t3)
 
     @staticmethod
     def phase_a4(t3: float, ht3: float, gt3: float, p: float, conf: list) -> (float, float, float):
@@ -111,36 +111,36 @@ class ODEThreeCompHydSimulator:
         if gamma >= phi:
             return t3, ht3, gt3
 
-        # b is not needed by simplifying b/a as (p-m_ae)/(a_anf + a_ans)
+        # b/a can be simplified as (p-m_ae)/(a_anf + a_ans)
         a = (a_anf + a_ans) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
         b = (p - m_ae) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
-
-        def a4_gt(c1, c2, t):
-            # general solution for g(t)
-            return t * b / a + c2 + c1 / a * np.exp(-a * t)
-
-        def a4_dgt(c1, t):
-            # first derivative g'(t)
-            return b / a - c1 * np.exp(-a * t)
 
         # derivative g'(t3) can be calculated manually
         dgt3 = m_ans * (ht3 - gt3 - theta) / (a_ans * (1 - theta - gamma))
 
         # which then allows to derive c1 and c2
-        s_c1 = (b / a - dgt3) * np.exp(a * t3)
-        s_c2 = (-t3 * b + dgt3) / a - b / a ** 2 + gt3
+        s_c1 = ((p - m_ae) / (a_anf + a_ans) - dgt3) * np.exp(a * t3)
+        s_c2 = (-t3 * b + dgt3) / a - (p - m_ae) / ((a_anf + a_ans) * a) + gt3
+
+        def a4_gt(t):
+            # general solution for g(t)
+            return t * (p - m_ae) / (a_anf + a_ans) + s_c2 + s_c1 / a * np.exp(-a * t)
+
+        def a4_dgt(t):
+            # first derivative g'(t)
+            return (p - m_ae) / (a_anf + a_ans) - s_c1 * np.exp(-a * t)
 
         def a4_ht(t):
             # EQ(9) with constants for g(t) and g'(t)
-            return a_ans * (1 - theta - gamma) / m_ans * a4_dgt(s_c1, t) + a4_gt(s_c1, s_c2, t) + theta
+            return a_ans * (1 - theta - gamma) / m_ans * a4_dgt(t) + a4_gt(t) + theta
 
         ht4 = 1 - gamma
         # check if equilibrium in this phase
         if ht3 <= a4_ht(np.inf) <= ht4:
-            return np.inf, a4_ht(np.inf), a4_gt(s_c1, s_c2, np.inf)
+            return np.inf, a4_ht(np.inf), a4_gt(np.inf)
         else:
             t4 = optimize.newton(lambda t: ht4 - a4_ht(t), x0=np.array([t3]))[0]
-            return t4, ht4, a4_gt(s_c1, s_c2, t4)
+            return t4, ht4, a4_gt(t4)
 
     @staticmethod
     def phase_a5(t4: float, ht4: float, gt4: float, p: float, conf: list) -> (float, float, float):
@@ -157,41 +157,33 @@ class ODEThreeCompHydSimulator:
         if phi >= gamma:
             return t4, ht4, gt4
 
-        def a5_gt(c, t):
-            # generalised g(t) for phase A5
-            return (1 - theta - gamma) + c * math.exp(-m_ans * t / ((1 - theta - gamma) * a_ans))
+        # g(t4) = gt4 can be solved for c
+        s_cg = (gt4 - (1 - theta - gamma)) / np.exp(-m_ans * t4 / ((1 - theta - gamma) * a_ans))
 
-        # find values for positive and negative signs
-        pos = (theta + gamma - 2) / math.exp(-m_ans * t4 / ((1 - theta - gamma) * a_ans))
-        neg = (theta + gamma) / math.exp(-m_ans * t4 / ((1 - theta - gamma) * a_ans))
-        s_cg = optimize.brentq(lambda c: gt4 - a5_gt(c, t4), a=pos, b=neg)
+        def a5_gt(t):
+            # generalised g(t) for phase A5
+            return (1 - theta - gamma) + s_cg * math.exp(-m_ans * t / ((1 - theta - gamma) * a_ans))
 
         # as defined for EQ(21)
         k = m_ans / ((1 - theta - gamma) * a_ans)
-        # g not necessary as g/a = p*(1-phi)/m_ae
         a = -m_ae / ((1 - phi) * a_anf)
+        # g/a = p*(1-phi)/m_ae
         b = m_ans * s_cg / ((1 - theta - gamma) * a_anf)
 
-        def a5_ht(c, t):
-            return (-b * math.exp(-k * t) / (a + k)) + p * (1 - phi) / m_ae + (c * math.exp(a * t))
-
-        mp = math.exp(a * t4)  # multiplied part of a5_ht(t4) : c * mp
-        fp = a5_ht(0, t4)  # first part in a5_ht(t4) : fp + c*mp
-        pos = (-fp + 1) / mp
-        neg = (-fp - 1) / mp
         # find c that matches h(t4) = ht4
-        s_ch = optimize.brentq(lambda c: ht4 - a5_ht(c, t4), a=pos, b=neg)
+        s_ch = (ht4 + b * math.exp(-k * t4) / (a + k) - p * (1 - phi) / m_ae) * np.exp(-a * t4)
+
+        def a5_ht(t):
+            return -b * math.exp(-k * t) / (a + k) + p * (1 - phi) / m_ae + s_ch * math.exp(a * t)
 
         ht5 = 1 - phi
         # check if equilibrium in this phase
-        if ht4 <= a5_ht(np.inf, s_ch) <= ht5:
-            return np.inf, a5_ht(np.inf, s_ch), a5_gt(s_cg, np.inf)
+        if ht4 <= a5_ht(np.inf) <= ht5:
+            return np.inf, a5_ht(np.inf), a5_gt(np.inf)
         else:
-            # solve for time point where phase A5 ends h(t5)=(1-phi)
-            t5 = optimize.newton(lambda t: ht5 - a5_ht(s_ch, t), x0=np.array([t4]))[0]
-            # t5 = optimize.fsolve(lambda t: ht5 - a5_ht(s_ch, t), x0=np.array([t4]))[0]
-            # t5 = optimize.minimize(lambda t: np.abs(ht5 - a5_ht(s_ch, t)), x0=np.array([t4]))['x'][0]
-            return t5, ht5, a5_gt(s_cg, t5)
+            # solve for time point where phase A5 ends h(t5) = 1-phi
+            t5 = optimize.newton(lambda t: ht5 - a5_ht(t), x0=np.array([t4]))[0]
+            return t5, ht5, a5_gt(t5)
 
     @staticmethod
     def phase_a6(t5: float, ht5: float, gt5: float, p: float, conf: list) -> (float, float, float):
@@ -203,35 +195,26 @@ class ODEThreeCompHydSimulator:
         theta = conf[5]
         gamma = conf[6]
 
-        def a6_gt(c, t):
-            # generalised g(t) for phase A6
-            return (1 - theta - gamma) + c * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
+        # g(t5) = gt5 can be solved for c
+        s_cg = (gt5 - (1 - theta - gamma)) / np.exp(-m_ans * t5 / ((1 - theta - gamma) * a_ans))
 
-        # find values for positive and negative signs
-        pos = (theta + gamma - 2) / math.exp((-m_ans * t5) / ((1 - theta - gamma) * a_ans))
-        neg = (theta + gamma) / math.exp((-m_ans * t5) / ((1 - theta - gamma) * a_ans))
-        s_cg = optimize.brentq(lambda c: gt5 - a6_gt(c, t5), a=pos, b=neg)
+        def a6_gt(t):
+            # generalised g(t) for phase A6
+            return (1 - theta - gamma) + s_cg * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
 
         k = m_ans / ((1 - theta - gamma) * a_ans)
         a = -m_ae / a_anf
         b = (m_ans * s_cg) / ((1 - theta - gamma) * a_anf)
         g = p / a_anf
 
-        def a6_ht(cx, t):
-            # generalised h(t) for phase A6
-            return t * (a + g) - ((b * math.exp(-k * t)) / k) + cx
+        # h(t5) = ht5 can be solved for c
+        s_ch = -t5 * (a + g) + ((b * math.exp(-k * t5)) / k) + ht5
 
-        fp = a6_ht(0, t5)  # get first part of equation for t5 to estimate limits for sign change
-        if fp >= 0:
-            pos = ht5 + 1
-            neg = -fp
-        else:
-            pos = -fp + ht5 + 1
-            neg = 0
-        # find ch that matches h(t5) = ht5
-        s_ch = optimize.brentq(lambda c: ht5 - a6_ht(c, t5), a=pos, b=neg)
+        def a6_ht(t):
+            # generalised h(t) for phase A6
+            return t * (a + g) - ((b * math.exp(-k * t)) / k) + s_ch
 
         ht6 = 1.0
         # find end of phase A6. The time point where h(t6)=1
-        t6 = optimize.newton(lambda t: ht6 - a6_ht(s_ch, t), x0=np.array([t5]))[0]
-        return t6, ht6, a6_gt(s_cg, t6)
+        t6 = optimize.newton(lambda t: ht6 - a6_ht(t), x0=np.array([t5]))[0]
+        return t6, ht6, a6_gt(t6)
