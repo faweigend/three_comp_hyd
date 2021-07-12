@@ -13,7 +13,7 @@ evolutionary fitting process to fit a model to individual athletes.
 
 ### Publication
 
-Please see the corresponding paper on [__ACM__](https://dl.acm.org/doi/pdf/10.1145/3449726.3459469) or the prerpint on
+Please see the corresponding paper on [__ACM__](https://dl.acm.org/doi/10.1145/3449726.3459469) or the prerpint on
 [__ArXiv__](https://arxiv.org/abs/2104.07903) for further references. If you make use of this project, 
 we would be grateful if you star the repository and/or cite our paper.
 
