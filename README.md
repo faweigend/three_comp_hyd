@@ -1,4 +1,4 @@
-![](./httpdocs/title.gif)
+[![](./httpdocs/screenshot_video.png)](https://www.youtube.com/watch?v=jZK_Dh1xWds)
 
 # threecomphyd
 
@@ -13,19 +13,25 @@ evolutionary fitting process to fit a model to individual athletes.
 
 ### Publication
 
-Please see the corresponding paper
-[__A New Pathway to Approximate Energy Expenditure and Recovery of an Athlete__](https://arxiv.org/abs/2104.07903) for
-further references. If you make use of this project, we would be grateful if you star the repository and/or cite our
-paper.
+Please see the corresponding paper on [__ACM__](https://dl.acm.org/doi/pdf/10.1145/3449726.3459469) or the prerpint on
+[__ArXiv__](https://arxiv.org/abs/2104.07903) for further references. If you make use of this project, 
+we would be grateful if you star the repository and/or cite our paper.
 
 ```
-@misc{weigend2021new,
-      title={A New Pathway to Approximate Energy Expenditure and Recovery of an Athlete}, 
-      author={Fabian Clemens Weigend and Jason Siegler and Oliver Obst},
-      year={2021},
-      eprint={2104.07903},
-      archivePrefix={arXiv},
-      primaryClass={cs.NE}
+@inproceedings{10.1145/3449726.3459469,
+      author = {Weigend, Fabian Clemens and Siegler, Jason and Obst, Oliver},
+      title = {A New Pathway to Approximate Energy Expenditure and Recovery of an Athlete},
+      year = {2021},
+      isbn = {9781450383516},
+      publisher = {Association for Computing Machinery},
+      address = {New York, NY, USA},
+      url = {https://doi.org/10.1145/3449726.3459469},
+      doi = {10.1145/3449726.3459469},
+      pages = {325–326},
+      numpages = {2},
+      keywords = {optimization, performance modeling, metabolic response modeling},
+      location = {Lille, France},
+      series = {GECCO '21}
 }
 ```
 
@@ -40,6 +46,11 @@ you can install the project with a similar procedure as a package by running `pi
 ### Usage Hints
 
 Some hints on how to handle provided example applications in the `example_scripts` directory.
+
+#### Tkinter on Linux Systems
+
+On Linux systems make sure `tkinter` for python3 is installed via the package manager to be 
+able to see plots and animations.
 
 #### SciView in Pycharm-Professional
 If you use pycharm professional, please ensure that you deactivate the `SciView` tab when running interactive
