@@ -246,7 +246,7 @@ def prepare_caen_recovery_ratios(w_p: float, cp: float):
     p8 = round(cp + w_p / 480, 2)  # predicted exhaustion after 8 min
     cp33 = round(cp * 0.33, 2)
     cp66 = round(cp * 0.66, 2)
-    # sub, test, wb_power, r_power, r_time, recovery_percent
+    # sub, test, p_work, p_rec, r_time, recovery_percent
     caen_data = [[p4, cp33, 120, 55.0],
                  [p4, cp33, 240, 61.0],
                  [p4, cp33, 360, 70.5],
@@ -261,7 +261,7 @@ def prepare_caen_recovery_ratios(w_p: float, cp: float):
                  [p8, cp66, 360, 50.0]]
     # name indicates used measures
     recs = SimpleRecMeasures("caen")
-    for p_exp, p_rec, t_rec, r_percent in caen_data:
-        recs.add_measure(p_power=p_exp, r_power=p_rec, r_time=t_rec, recovery_percent=r_percent)
+    for p_work, p_rec, t_rec, r_percent in caen_data:
+        recs.add_measure(p_work=p_work, p_rec=p_rec, r_time=t_rec, recovery_percent=r_percent)
     # return simple recs object
     return recs
