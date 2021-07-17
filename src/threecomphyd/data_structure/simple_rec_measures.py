@@ -37,7 +37,7 @@ class SimpleRecMeasures:
     def iterate_measures(self):
         """
         iterates through all measures and returns the essential values for the objective function
-        :return: p_exp, p_rec, t_rec, expected
+        :return: p_work, p_rec, t_rec, expected
         """
         for p_exp, p_rec, t_rec, expected in list(self.__measures):
             yield p_exp, p_rec, t_rec, expected
