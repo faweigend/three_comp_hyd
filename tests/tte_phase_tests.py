@@ -69,22 +69,11 @@ def test_procedure(hz, eps, conf, agent):
         h_diff = agent.get_h() - hts[i]
         # print("error phase {}. h is off by {}".format(i + 1, h_diff))
         # print("error phase {}. g is off by {}".format(i + 1, g_diff))
-        assert abs(h_diff) < eps, "error phase {}. h is off by {}".format(i + 1, h_diff)
         assert abs(g_diff) < eps, "error phase {}. g is off by {}".format(i + 1, g_diff)
+        assert abs(h_diff) < eps, "error phase {}. h is off by {}".format(i + 1, h_diff)
 
 
-
-
-if __name__ == "__main__":
-    # set logging level to highest level
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
-
-    # estimations per second for discrete agent
-    hz = 150
-    # required precision of discrete to differential agent
-    eps = 0.001
-
+def the_loop(hz: int = 250, eps: float = 0.001):
     while True:
         udp = MultiObjectiveThreeCompUDP(None, None)
 
@@ -96,3 +85,29 @@ if __name__ == "__main__":
                                   gam=example_conf[6], phi=example_conf[7])
 
         test_procedure(hz, eps, example_conf, agent)
+
+
+if __name__ == "__main__":
+    # set logging level to highest level
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
+
+    # estimations per second for discrete agent
+    hz = 250
+    # required precision of discrete to differential agent
+    eps = 0.005
+
+    # the_loop(hz, eps)
+
+    example_conf = [5000, 53133.06670527823, 332.98870744202634, 4717.909662627442, 12.975264125113473,
+                    0.17417286563111362, 0.2375006803695677, 0.2908045985003225]
+    # example_conf = [9581.23047165942, 90743.2215076573, 327.6150272718813, 2043.9625552044683, 12.186334615899417,
+    #                 0.29402816909441, 0.19588603394320103, 0.0753503316221355]
+    # create three component hydraulic agent with example configuration
+    agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
+                              m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
+                              gam=example_conf[6], phi=example_conf[7])
+
+    ThreeCompVisualisation(agent)
+
+    test_procedure(hz, eps, example_conf, agent)

@@ -92,7 +92,7 @@ class ODEThreeCompHydSimulator:
         if ht2 <= a3_ht(np.inf) <= ht3:
             return np.inf, a3_ht(np.inf), a3_gt(np.inf)
         else:
-            t3 = optimize.newton(lambda t: ht3 - a3_ht(t), x0=np.array([t2]))[0]
+            t3 = optimize.fsolve(lambda t: ht3 - a3_ht(t), x0=np.array([t2]))[0]
             # use t3 to get g(t3)
             return t3, ht3, a3_gt(t3)
 
@@ -139,7 +139,7 @@ class ODEThreeCompHydSimulator:
         if ht3 <= a4_ht(np.inf) <= ht4:
             return np.inf, a4_ht(np.inf), a4_gt(np.inf)
         else:
-            t4 = optimize.newton(lambda t: ht4 - a4_ht(t), x0=np.array([t3]))[0]
+            t4 = optimize.fsolve(lambda t: ht4 - a4_ht(t), x0=np.array([t3]))[0]
             return t4, ht4, a4_gt(t4)
 
     @staticmethod
@@ -158,23 +158,23 @@ class ODEThreeCompHydSimulator:
             return t4, ht4, gt4
 
         # g(t4) = gt4 can be solved for c
-        s_cg = (gt4 - (1 - theta - gamma)) / np.exp(-m_ans * t4 / ((1 - theta - gamma) * a_ans))
+        s_cg = (gt4 - (1 - theta - gamma)) * np.exp((m_ans * t4) / ((1 - theta - gamma) * a_ans))
 
         def a5_gt(t):
             # generalised g(t) for phase A5
-            return (1 - theta - gamma) + s_cg * math.exp(-m_ans * t / ((1 - theta - gamma) * a_ans))
+            return (1 - theta - gamma) + s_cg * np.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
 
         # as defined for EQ(21)
         k = m_ans / ((1 - theta - gamma) * a_ans)
         a = -m_ae / ((1 - phi) * a_anf)
-        # g/a = p*(1-phi)/m_ae
+        g = p / a_anf
         b = m_ans * s_cg / ((1 - theta - gamma) * a_anf)
 
         # find c that matches h(t4) = ht4
-        s_ch = (ht4 + b * math.exp(-k * t4) / (a + k) - p * (1 - phi) / m_ae) * np.exp(-a * t4)
+        s_ch = (ht4 + b / ((a + k) * np.exp(k) ** t4) + g / a) / np.exp(a) ** t4
 
         def a5_ht(t):
-            return -b * math.exp(-k * t) / (a + k) + p * (1 - phi) / m_ae + s_ch * math.exp(a * t)
+            return -b / ((a + k) * np.exp(k) ** t) + s_ch * np.exp(a) ** t - g / a
 
         ht5 = 1 - phi
         # check if equilibrium in this phase
@@ -182,7 +182,7 @@ class ODEThreeCompHydSimulator:
             return np.inf, a5_ht(np.inf), a5_gt(np.inf)
         else:
             # solve for time point where phase A5 ends h(t5) = 1-phi
-            t5 = optimize.newton(lambda t: ht5 - a5_ht(t), x0=np.array([t4]))[0]
+            t5 = optimize.fsolve(lambda t: a5_ht(t) - ht5, x0=np.array([t4]))[0]
             return t5, ht5, a5_gt(t5)
 
     @staticmethod
@@ -216,5 +216,16 @@ class ODEThreeCompHydSimulator:
 
         ht6 = 1.0
         # find end of phase A6. The time point where h(t6)=1
-        t6 = optimize.newton(lambda t: ht6 - a6_ht(t), x0=np.array([t5]))[0]
+        t6 = optimize.fsolve(lambda t: ht6 - a6_ht(t), x0=np.array([t5]))[0]
+
+        a5_ts = []
+        for it in range(int(t5), int(t5 * 2)):
+            a5_ts.append(a6_ht(it) - ht6)
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        ax.plot(range(int(t5), int(t5 * 2)), a5_ts)
+        ax.axhline(0)
+        ax.axvline(t6)
+        plt.show()
+
         return t6, ht6, a6_gt(t6)
