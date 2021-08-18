@@ -203,29 +203,33 @@ class ODEThreeCompHydSimulator:
             return (1 - theta - gamma) + s_cg * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
 
         k = m_ans / ((1 - theta - gamma) * a_ans)
-        a = -m_ae / a_anf
+        #a = -m_ae / a_anf
         b = (m_ans * s_cg) / ((1 - theta - gamma) * a_anf)
-        g = p / a_anf
+        #g = p / a_anf
+        ag = (p-m_ae)/a_anf
 
         # h(t5) = ht5 can be solved for c
-        s_ch = -t5 * (a + g) + ((b * math.exp(-k * t5)) / k) + ht5
+        s_ch = -t5 * ag + ((b * math.exp(-k * t5)) / k) + ht5
 
         def a6_ht(t):
             # generalised h(t) for phase A6
-            return t * (a + g) - ((b * math.exp(-k * t)) / k) + s_ch
+            return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
 
         ht6 = 1.0
+        # estimate an intitial guess that assumes no contribution from g
+        initial_guess = (ht6 - s_ch)/ag
         # find end of phase A6. The time point where h(t6)=1
-        t6 = optimize.fsolve(lambda t: ht6 - a6_ht(t), x0=np.array([t5]))[0]
+        t6 = optimize.fsolve(lambda t: ht6 - a6_ht(t), x0=np.array([initial_guess]))[0]
 
-        a5_ts = []
-        for it in range(int(t5), int(t5 * 2)):
-            a5_ts.append(a6_ht(it) - ht6)
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots()
-        ax.plot(range(int(t5), int(t5 * 2)), a5_ts)
-        ax.axhline(0)
-        ax.axvline(t6)
-        plt.show()
+        # import matplotlib.pyplot as plt
+        # a5_ts = []
+        # for it in range(int(t5), int(t6 + (t6-t5))):
+        #     a5_ts.append(a6_ht(it) - ht6)
+        #
+        # fig, ax = plt.subplots()
+        # ax.plot(range(int(t5), int(t6 + (t6-t5))), a5_ts)
+        # ax.axhline(0)
+        # ax.axvline(t6)
+        # plt.show()
 
         return t6, ht6, a6_gt(t6)

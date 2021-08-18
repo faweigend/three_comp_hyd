@@ -97,7 +97,7 @@ if __name__ == "__main__":
     # required precision of discrete to differential agent
     eps = 0.005
 
-    # the_loop(hz, eps)
+    the_loop(hz, eps)
 
     example_conf = [5000, 53133.06670527823, 332.98870744202634, 4717.909662627442, 12.975264125113473,
                     0.17417286563111362, 0.2375006803695677, 0.2908045985003225]
