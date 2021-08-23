@@ -1,3 +1,4 @@
+import logging
 import math
 
 import numpy as np
@@ -8,6 +9,43 @@ class ODEThreeCompHydSimulator:
     """
     Simulates Three Component Hydraulic Model responses using Ordinary Differential Equations
     """
+
+    @staticmethod
+    def tte(p_exp: float, conf: list, max_time: int = 5000) -> (float, float, float):
+
+        # A1
+        t1, ht1, gt1 = ODEThreeCompHydSimulator.phase_a1(p=p_exp, conf=conf)
+        if t1 == np.inf or t1 > max_time:
+            logging.info("EQUILIBRIUM IN A1: t: {} h: {} g: {}".format(t1, ht1, gt1))
+            return t1, ht1, gt1
+
+        t2, ht2, gt2 = ODEThreeCompHydSimulator.phase_a2(t1=t1, ht1=ht1, gt1=gt1, p=p_exp, conf=conf)
+
+        # A3
+        t3, ht3, gt3 = ODEThreeCompHydSimulator.phase_a3(t2=t2, ht2=ht2, gt2=gt2, p=p_exp, conf=conf)
+        if t3 == np.inf or t3 > max_time:
+            logging.info("EQUILIBRIUM IN A3: t: {} h: {} g: {}".format(t3, ht3, gt3))
+            return t2, ht2, gt2
+
+        # A4
+        t4, ht4, gt4 = ODEThreeCompHydSimulator.phase_a4(t3=t3, ht3=ht3, gt3=gt3, p=p_exp, conf=conf)
+        if t4 == np.inf or t4 > max_time:
+            logging.info("EQUILIBRIUM IN A4: t: {} h: {} g: {}".format(t4, ht4, gt4))
+            return t4, ht4, gt4
+
+        # A5
+        t5, ht5, gt5 = ODEThreeCompHydSimulator.phase_a5(t4=t4, ht4=ht4, gt4=gt4, p=p_exp, conf=conf)
+        if t5 == np.inf or t5 > max_time:
+            logging.info("EQUILIBRIUM IN A5: t: {} h: {} g: {}".format(t5, ht5, gt5))
+            return t5, ht5, gt5
+
+        # A6
+        t6, ht6, gt6 = ODEThreeCompHydSimulator.phase_a6(t5=t5, ht5=ht5, gt5=gt5, p=p_exp, conf=conf)
+        if t6 == np.inf or t6 > max_time:
+            logging.info("EQUILIBRIUM IN A6: t: {} h: {} g: {}".format(t6, ht6, gt6))
+            return t6, ht6, gt6
+
+        return t6, ht6, gt6
 
     @staticmethod
     def phase_a1(p: float, conf: list) -> (float, float, float):
@@ -60,12 +98,19 @@ class ODEThreeCompHydSimulator:
             return t2, ht2, gt2
 
         # taken from Equation 11 by Morton 1986
-        a = (m_ae * a_ans * (1 - theta - gamma) + m_ans * (a_anf + a_ans) * (1 - phi)) / (
-                a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
-        b = m_ae * m_ans / (
-                a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
-        c = m_ans * (p * (1 - phi) - m_ae * theta) / (
-                a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
+        # a = (m_ae * a_ans * (1 - theta - gamma) + m_ans * (a_anf + a_ans) * (1 - phi)) / (
+        #         a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
+
+        # my simplified form
+        a = m_ae / (a_anf * (1 - phi)) + \
+            m_ans / (a_ans * (1 - theta - gamma)) + \
+            m_ans / (a_anf * (1 - theta - gamma))
+
+        b = m_ae * m_ans / \
+            (a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
+
+        c = m_ans * (p * (1 - phi) - m_ae * theta) / \
+            (a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
 
         # wolfram alpha gave these estimations as solutions for l''(t) + a*l'(t) + b*l(t) = c
         r1 = 0.5 * (-np.sqrt(a ** 2 - 4 * b) - a)
@@ -203,10 +248,10 @@ class ODEThreeCompHydSimulator:
             return (1 - theta - gamma) + s_cg * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
 
         k = m_ans / ((1 - theta - gamma) * a_ans)
-        #a = -m_ae / a_anf
+        # a = -m_ae / a_anf
         b = (m_ans * s_cg) / ((1 - theta - gamma) * a_anf)
-        #g = p / a_anf
-        ag = (p-m_ae)/a_anf
+        # g = p / a_anf
+        ag = (p - m_ae) / a_anf
 
         # h(t5) = ht5 can be solved for c
         s_ch = -t5 * ag + ((b * math.exp(-k * t5)) / k) + ht5
@@ -217,7 +262,7 @@ class ODEThreeCompHydSimulator:
 
         ht6 = 1.0
         # estimate an intitial guess that assumes no contribution from g
-        initial_guess = (ht6 - s_ch)/ag
+        initial_guess = (ht6 - s_ch) / ag
         # find end of phase A6. The time point where h(t6)=1
         t6 = optimize.fsolve(lambda t: ht6 - a6_ht(t), x0=np.array([initial_guess]))[0]
 

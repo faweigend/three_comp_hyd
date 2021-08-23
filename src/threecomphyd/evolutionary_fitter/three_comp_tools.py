@@ -11,9 +11,9 @@ from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulato
 three_comp_parameter_limits = {
     "a_anf": [5000, 500000],
     "a_ans": [5000, 500000],
-    "m_ae": [1, 5000],
-    "m_ans": [1, 5000],
-    "m_anf": [1, 5000],
+    "m_ae": [1, 2000],
+    "m_ans": [1, 2000],
+    "m_anf": [1, 2000],
     "theta": [0.01, 0.99],
     "gamma": [0.01, 0.99],
     "phi": [0.01, 0.99]
@@ -55,12 +55,18 @@ class MultiObjectiveThreeCompUDP:
             np.random.normal(1, 0.4) * w_p * 0.3,  # size AnF is expected to be smaller than AnS
             np.random.normal(1, 0.4) * w_p,  # size AnS is expected to be larger and correlated to W'
             np.random.normal(1, 0.4) * cp,  # max flow from Ae should be related to CP
-            np.random.normal(1, 0.4) * cp * 10,  # max flow from AnS is expected to be high
+            np.random.normal(1, 0.4) * cp,  # max flow from AnS
             np.random.normal(1, 0.4) * cp * 0.1,  # max recovery flow is expected to be low
-            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
-            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
-            np.random.normal(1, 0.4) * 0.5,  # for a curvelinear expenditure dynamic the pipe has to be halfway or lower
+            np.random.normal(1, 0.4) * 0.25,  # theta: top of AnS
+            np.random.normal(1, 0.4) * 0.25,  # gamma: 1 - bottom of AnS
+            np.random.normal(1, 0.4) * 0.5,  # phi: for a curvelinear expenditure the pipe should be halfway or lower
         ]
+
+        # make sure AnS has a positive cross-sectional area
+        while i_x[5] + i_x[6] > 0.99:
+            i_x[5] = np.random.normal(1, 0.4) * 0.25  # theta
+            i_x[6] = np.random.normal(1, 0.4) * 0.25  # gamma
+
         # ensure values are within limits
         for i in range(len(i_x)):
             i_x[i] = max(self.__bounds[0][i], i_x[i])  # lower bound

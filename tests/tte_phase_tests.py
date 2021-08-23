@@ -12,14 +12,13 @@ import numpy as np
 # warnings.filterwarnings("error")
 
 
-def test_procedure(hz, eps, conf, agent):
-    p = 350
-
+def tte_test_procedure(p, hz, eps, conf, agent, log_level=0):
     # all TTE phases
+    max_time = 5000
 
     # A1
     t1, ht1, gt1 = ODEThreeCompHydSimulator.phase_a1(p=p, conf=conf)
-    if t1 == np.inf:
+    if t1 == np.inf or t1 > max_time:
         logging.info("EQUILIBRIUM IN A1: t: {} h: {} g: {}".format(t1, ht1, gt1))
         return
     logging.info("A1: {}".format(t1))
@@ -29,28 +28,28 @@ def test_procedure(hz, eps, conf, agent):
 
     # A3
     t3, ht3, gt3 = ODEThreeCompHydSimulator.phase_a3(t2=t2, ht2=ht2, gt2=gt2, p=p, conf=conf)
-    if t3 == np.inf:
+    if t3 == np.inf or t3 > max_time:
         logging.info("EQUILIBRIUM IN A3: t: {} h: {} g: {}".format(t3, ht3, gt3))
         return
     logging.info("A3: {}".format(t3))
 
     # A4
     t4, ht4, gt4 = ODEThreeCompHydSimulator.phase_a4(t3=t3, ht3=ht3, gt3=gt3, p=p, conf=conf)
-    if t4 == np.inf:
+    if t4 == np.inf or t4 > max_time:
         logging.info("EQUILIBRIUM IN A4: t: {} h: {} g: {}".format(t4, ht4, gt4))
         return
     logging.info("A4: {}".format(t4))
 
     # A5
     t5, ht5, gt5 = ODEThreeCompHydSimulator.phase_a5(t4=t4, ht4=ht4, gt4=gt4, p=p, conf=conf)
-    if t5 == np.inf:
+    if t5 == np.inf or t5 > max_time:
         logging.info("EQUILIBRIUM IN A5: t: {} h: {} g: {}".format(t5, ht5, gt5))
         return
     logging.info("A5: {}".format(t5))
 
     # A6
     t6, ht6, gt6 = ODEThreeCompHydSimulator.phase_a6(t5=t5, ht5=ht5, gt5=gt5, p=p, conf=conf)
-    if t6 == np.inf:
+    if t6 == np.inf or t6 > max_time:
         logging.info("EQUILIBRIUM IN A6: t: {} h: {} g: {}".format(t6, ht6, gt6))
         return
     logging.info("A6: {}".format(t6))
@@ -67,13 +66,22 @@ def test_procedure(hz, eps, conf, agent):
 
         g_diff = agent.get_g() - gts[i]
         h_diff = agent.get_h() - hts[i]
-        # print("error phase {}. h is off by {}".format(i + 1, h_diff))
-        # print("error phase {}. g is off by {}".format(i + 1, g_diff))
+
+        if log_level >= 2:
+            print("error phase {}. h is off by {}".format(i + 1, h_diff))
+            print("error phase {}. g is off by {}".format(i + 1, g_diff))
+
         assert abs(g_diff) < eps, "error phase {}. g is off by {}".format(i + 1, g_diff)
         assert abs(h_diff) < eps, "error phase {}. h is off by {}".format(i + 1, h_diff)
 
 
-def the_loop(hz: int = 250, eps: float = 0.001):
+def the_loop(p: float = 350.0,
+             hz: int = 250,
+             eps: float = 0.001):
+    """
+    creates random agents and tests the discretised against the differential one
+    """
+
     while True:
         udp = MultiObjectiveThreeCompUDP(None, None)
 
@@ -83,26 +91,20 @@ def the_loop(hz: int = 250, eps: float = 0.001):
         agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
                                   m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
                                   gam=example_conf[6], phi=example_conf[7])
+        tte_test_procedure(p, hz, eps, example_conf, agent)
 
-        test_procedure(hz, eps, example_conf, agent)
 
+def test_one_config(example_conf=None):
+    """
+    tests given configuration and puts out some more details
+    """
 
-if __name__ == "__main__":
-    # set logging level to highest level
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
+    # just a default value
+    if example_conf is None:
+        example_conf = [23673.002563739556, 19264.71349151817, 349.17619370868493,
+                        387.84166460276015, 25.973978416729608,
+                        0.3003437353302002, 0.317490719771348, 0.6722371555886124]
 
-    # estimations per second for discrete agent
-    hz = 250
-    # required precision of discrete to differential agent
-    eps = 0.005
-
-    the_loop(hz, eps)
-
-    example_conf = [5000, 53133.06670527823, 332.98870744202634, 4717.909662627442, 12.975264125113473,
-                    0.17417286563111362, 0.2375006803695677, 0.2908045985003225]
-    # example_conf = [9581.23047165942, 90743.2215076573, 327.6150272718813, 2043.9625552044683, 12.186334615899417,
-    #                 0.29402816909441, 0.19588603394320103, 0.0753503316221355]
     # create three component hydraulic agent with example configuration
     agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
                               m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
@@ -110,4 +112,18 @@ if __name__ == "__main__":
 
     ThreeCompVisualisation(agent)
 
-    test_procedure(hz, eps, example_conf, agent)
+    tte_test_procedure(p, hz, eps, example_conf, agent, log_level=2)
+
+
+if __name__ == "__main__":
+    # set logging level to highest level
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
+
+    p = 350
+    # estimations per second for discrete agent
+    hz = 250
+    # required precision of discrete to differential agent
+    eps = 0.005
+
+    the_loop(p=p, hz=hz, eps=eps)
