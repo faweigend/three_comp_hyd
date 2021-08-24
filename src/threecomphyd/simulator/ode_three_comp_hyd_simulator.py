@@ -231,8 +231,65 @@ class ODEThreeCompHydSimulator:
             return t5, ht5, a5_gt(t5)
 
     @staticmethod
-    def phase_a6(t5: float, ht5: float, gt5: float, p: float, conf: list) -> (float, float, float):
+    def phase_a6_rec(gt6: float, p_rec: float, conf: list):
+        """
+        recovery from exhaustive exercise. Assumes h reached 1.0 and resets time to 0.
+        :param gt6: start g(t=0)
+        :param p_rec: constant recovery intensity
+        :param conf: hydraulic model configuration
+        :return: [time at which A6 rec ends, h(rt6), g(rt6)]
+        """
+        a_anf = conf[0]
+        a_ans = conf[1]
+        m_ae = conf[2]
+        m_ans = conf[3]
+        theta = conf[5]
+        gamma = conf[6]
+        phi = conf[7]
 
+        t6 = 0
+        ht6 = 1.0
+
+        # g(t6) = gt6 can be solved for c
+        s_cg = (gt6 - (1 - theta - gamma)) / np.exp(-m_ans * t6 / ((1 - theta - gamma) * a_ans))
+
+        def a6_gt(t):
+            # generalised g(t) for phase A6
+            return (1 - theta - gamma) + s_cg * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
+
+        k = m_ans / ((1 - theta - gamma) * a_ans)
+        # a = -m_ae / a_anf
+        b = (m_ans * s_cg) / ((1 - theta - gamma) * a_anf)
+        # g = p / a_anf
+        ag = (p_rec - m_ae) / a_anf
+
+        # h(t6) = 1 can be solved for c
+        s_ch = -t6 * ag + ((b * math.exp(-k * t6)) / k) + ht6
+
+        def a6_ht(t):
+            # generalised h(t) for recovery phase A6
+            return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
+
+        # TODO: needs a check for 1-phi
+        ht4 = 1 - gamma
+        # estimate an initial guess that assumes no contribution from g
+        initial_guess = 0
+
+        rt6 = optimize.fsolve(lambda t: a6_ht(t) - ht4, x0=np.array([initial_guess]))[0]
+
+        return rt6, ht4, a6_gt(rt6)
+
+    @staticmethod
+    def phase_a6(t5: float, ht5: float, gt5: float, p: float, conf: list) -> (float, float, float):
+        """
+        Final phase A6 of a time to exhaustion trial. Expects inputs from Phase A5.
+        :param t5: time at which A5 ended
+        :param ht5: h(t5)
+        :param gt5: g(t5)
+        :param p: constant power output
+        :param conf: configuration of hydraulic model
+        :return: [t6: time until h=1, h(t6)=1, g(t6)]
+        """
         a_anf = conf[0]
         a_ans = conf[1]
         m_ae = conf[2]
@@ -265,16 +322,5 @@ class ODEThreeCompHydSimulator:
         initial_guess = (ht6 - s_ch) / ag
         # find end of phase A6. The time point where h(t6)=1
         t6 = optimize.fsolve(lambda t: ht6 - a6_ht(t), x0=np.array([initial_guess]))[0]
-
-        # import matplotlib.pyplot as plt
-        # a5_ts = []
-        # for it in range(int(t5), int(t6 + (t6-t5))):
-        #     a5_ts.append(a6_ht(it) - ht6)
-        #
-        # fig, ax = plt.subplots()
-        # ax.plot(range(int(t5), int(t6 + (t6-t5))), a5_ts)
-        # ax.axhline(0)
-        # ax.axvline(t6)
-        # plt.show()
 
         return t6, ht6, a6_gt(t6)
