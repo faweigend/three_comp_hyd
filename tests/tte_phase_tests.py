@@ -91,6 +91,8 @@ def the_loop(p: float = 350.0,
         agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
                                   m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
                                   gam=example_conf[6], phi=example_conf[7])
+
+        ThreeCompVisualisation(agent)
         tte_test_procedure(p, hz, eps, example_conf, agent)
 
 

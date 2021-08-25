@@ -40,6 +40,7 @@ if __name__ == "__main__":
     a_ans = conf[1]
     m_ae = conf[2]
     m_ans = conf[3]
+    m_anf = conf[4]
     theta = conf[5]
     gamma = conf[6]
     phi = conf[7]
@@ -49,26 +50,32 @@ if __name__ == "__main__":
     ht4 = 0.6475620355865783
     gt4 = 0.15679831105786776
 
-    # b/a can be simplified as (p-m_ae)/(a_anf + a_ans)
-    a = (a_anf + a_ans) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
-    b = (p_rec - m_ae) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
+    # if g is above h (flow from AnS into AnF)
+    a_gh = (a_anf + a_ans) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
+    b_gh = (p_rec - m_ae) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
 
-    # derivative g'(t3) can be calculated manually
-    dgt3 = m_ans * (ht3 - gt3 - theta) / (a_ans * (1 - theta - gamma))
+    # derivative g'(t4) can be calculated manually
+    dgt4_gh = m_ans * (ht4 - gt4 - theta) / (a_ans * (1 - theta - gamma))
 
     # which then allows to derive c1 and c2
-    s_c1 = ((p_rec - m_ae) / (a_anf + a_ans) - dgt3) * np.exp(a * t3)
-    s_c2 = (-t3 * b + dgt3) / a - (p_rec - m_ae) / ((a_anf + a_ans) * a) + gt3
+    s_c1_gh = ((p_rec - m_ae) / (a_anf + a_ans) - dgt4_gh) * np.exp(a_gh * t4)
+    s_c2_gh = (-t4 * b_gh + dgt4_gh) / a_gh - (p_rec - m_ae) / ((a_anf + a_ans) * a_gh) + gt4
 
+
+    # if h is above g (flow from AnF into AnS)
+    # a_hg = (a_anf + a_ans) * m_anf / (a_anf * a_ans * (1 - gamma))
+    # b_hg = (p_rec - m_ae) * m_anf / (a_anf * a_ans * (1 - gamma))
+    #
+    # dgt4_hg = -m_anf * (gt4 + theta - ht4) / (a_ans * (1 - gamma))
 
     def a4_gt(t):
         # general solution for g(t)
-        return t * (p_rec - m_ae) / (a_anf + a_ans) + s_c2 + s_c1 / a * np.exp(-a * t)
+        return t * (p_rec - m_ae) / (a_anf + a_ans) + s_c2_gh + s_c1_gh / a_gh * np.exp(-a_gh * t)
 
 
     def a4_dgt(t):
         # first derivative g'(t)
-        return (p_rec - m_ae) / (a_anf + a_ans) - s_c1 * np.exp(-a * t)
+        return (p_rec - m_ae) / (a_anf + a_ans) - s_c1_gh * np.exp(-a_gh * t)
 
 
     def a4_ht(t):
@@ -76,22 +83,27 @@ if __name__ == "__main__":
         return a_ans * (1 - theta - gamma) / m_ans * a4_dgt(t) + a4_gt(t) + theta
 
 
-    ht4 = 1 - gamma
+    ht_end = 1 - phi
     # check if equilibrium in this phase
-    if ht3 <= a4_ht(np.inf) <= ht4:
-        return np.inf, a4_ht(np.inf), a4_gt(np.inf)
-    else:
-        t4 = optimize.fsolve(lambda t: ht4 - a4_ht(t), x0=np.array([t3]))[0]
-        return t4, ht4, a4_gt(t4)
+
+    t_end = optimize.fsolve(lambda t: ht_end - a4_ht(t), x0=np.array([0]))[0]
+    gt_end = a4_gt(t_end)
+
+    print(t_end)
+    print(gt4 + theta, ht4)
+    print(gt_end + theta, ht_end, a4_ht(t_end))
 
     agent.reset()
     agent.set_g(gt4)
     agent.set_h(ht4)
     agent.set_power(p_rec)
 
-    for i in range(int(rt6+1)):
+    for i in range(int(t_end)):
+        print("step {}".format(i))
+        print("h: ", a4_ht(i) - agent.get_h())
+        print("g: ", a4_gt(i) - agent.get_g())
         for s in range(agent.hz):
             agent.perform_one_step()
 
-    print("h: ", a6_ht(rt6) - agent.get_h())
-    print("g: ", a6_gt(rt6) - agent.get_g())
+    print("h: ", a4_ht(int(t_end)) - agent.get_h())
+    print("g: ", a4_gt(int(t_end)) - agent.get_g())
