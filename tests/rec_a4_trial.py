@@ -1,17 +1,9 @@
-import math
-
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
-from threecomphyd.evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
-from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
-from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 from scipy import optimize
 
 import logging
-import warnings
 
 import numpy as np
-
-# warnings.filterwarnings("error")
 
 if __name__ == "__main__":
     # set logging level to highest level
@@ -20,7 +12,7 @@ if __name__ == "__main__":
 
     p_exp = 350
     p_rec = 100
-    t_rec = 240
+
     # estimations per second for discrete agent
     hz = 250
 
@@ -89,19 +81,12 @@ if __name__ == "__main__":
     t_end = optimize.fsolve(lambda t: ht_end - a4_ht(t), x0=np.array([0]))[0]
     gt_end = a4_gt(t_end)
 
-    print(t_end)
-    print(gt4 + theta, ht4)
-    print(gt_end + theta, ht_end, a4_ht(t_end))
-
     agent.reset()
     agent.set_g(gt4)
     agent.set_h(ht4)
     agent.set_power(p_rec)
 
     for i in range(int(t_end)):
-        print("step {}".format(i))
-        print("h: ", a4_ht(i) - agent.get_h())
-        print("g: ", a4_gt(i) - agent.get_g())
         for s in range(agent.hz):
             agent.perform_one_step()
 

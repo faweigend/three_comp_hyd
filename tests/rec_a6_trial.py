@@ -1,17 +1,11 @@
 import math
 
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
-from threecomphyd.evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
-from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
-from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 from scipy import optimize
 
 import logging
-import warnings
 
 import numpy as np
-
-# warnings.filterwarnings("error")
 
 if __name__ == "__main__":
     # set logging level to highest level
@@ -20,7 +14,7 @@ if __name__ == "__main__":
 
     p_exp = 350
     p_rec = 100
-    t_rec = 240
+
     # estimations per second for discrete agent
     hz = 250
 
@@ -69,6 +63,7 @@ if __name__ == "__main__":
         # generalised h(t) for recovery phase A6
         return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
 
+
     ht4 = 1 - gamma
     # estimate an initial guess that assumes no contribution from g
     initial_guess = 0
@@ -79,7 +74,7 @@ if __name__ == "__main__":
     agent.set_h(1.0)
     agent.set_power(p_rec)
 
-    for i in range(int(rt6+1)):
+    for i in range(int(rt6 + 1)):
         for s in range(agent.hz):
             agent.perform_one_step()
 
