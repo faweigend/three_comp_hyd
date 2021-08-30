@@ -76,6 +76,7 @@ class ThreeCompVisualisation:
 
         # finish the basic layout
         self.__set_basic_layout()
+        self.update_basic_layout(agent)
 
         # now the animation components
         if self._animated:
@@ -477,6 +478,10 @@ class ThreeCompVisualisation:
         self._ann_ans.set_position(xy=(ans_left + (ans_width / 2), gamma_o + (ans_height / 2) - 0.02))
         self._r2.set_xdata([ans_left, ans_left - 0.1])
         self._r2.set_ydata([gamma_o, gamma_o])
+
+        # update levels
+        self._h.set_height(1 - self._agent.get_h())
+        self._g.set_height(self._agent.height_ans - self._agent.get_g())
 
     def update_animation_data(self, frame_number):
         """

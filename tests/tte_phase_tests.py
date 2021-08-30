@@ -103,9 +103,9 @@ def test_one_config(example_conf=None):
 
     # just a default value
     if example_conf is None:
-        example_conf = [23673.002563739556, 19264.71349151817, 349.17619370868493,
-                        387.84166460276015, 25.973978416729608,
-                        0.3003437353302002, 0.317490719771348, 0.6722371555886124]
+        example_conf = [15101.24769778409, 86209.27743067988, 52.71702367096787,
+                        363.2970828395908, 38.27073086773415, 0.14892228099402588,
+                        0.3524379644134216, 0.4580228306857272]
 
     # create three component hydraulic agent with example configuration
     agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
@@ -127,5 +127,7 @@ if __name__ == "__main__":
     hz = 250
     # required precision of discrete to differential agent
     eps = 0.005
+
+    test_one_config()
 
     the_loop(p=p, hz=hz, eps=eps)

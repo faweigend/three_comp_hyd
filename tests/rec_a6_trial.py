@@ -6,6 +6,7 @@ from scipy import optimize
 import logging
 
 import numpy as np
+from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 
 if __name__ == "__main__":
     # set logging level to highest level
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     # estimations per second for discrete agent
     hz = 250
 
-    conf = [15101.24769778409, 86209.27743067988, 52.71702367096787,
+    conf = [15101.24769778409, 86209.27743067988, 252.71702367096787,
             363.2970828395908, 38.27073086773415, 0.14892228099402588,
             0.3524379644134216, 0.4580228306857272]
 
@@ -72,11 +73,15 @@ if __name__ == "__main__":
     agent.reset()
     agent.set_g(gt6)
     agent.set_h(1.0)
+    ThreeCompVisualisation(agent)
     agent.set_power(p_rec)
 
-    for i in range(int(rt6 + 1)):
-        for s in range(agent.hz):
-            agent.perform_one_step()
+    for _ in range(int(rt6 * agent.hz)):
+        agent.perform_one_step()
 
-    print("h: ", a6_ht(rt6) - agent.get_h())
-    print("g: ", a6_gt(rt6) - agent.get_g())
+    logging.info("predicted time: {} \n"
+                 "diff h: {}\n"
+                 "diff g: {}".format(rt6,
+                                     a6_ht(rt6) - agent.get_h(),
+                                     a6_gt(rt6) - agent.get_g()))
+    ThreeCompVisualisation(agent)

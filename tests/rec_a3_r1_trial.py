@@ -4,6 +4,7 @@ from scipy import optimize
 import logging
 
 import numpy as np
+from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 
 if __name__ == "__main__":
     # set logging level to highest level
@@ -16,7 +17,7 @@ if __name__ == "__main__":
     # estimations per second for discrete agent
     hz = 250
 
-    conf = [15101.24769778409, 86209.27743067988, 52.71702367096787,
+    conf = [15101.24769778409, 86209.27743067988, 252.71702367096787,
             363.2970828395908, 38.27073086773415, 0.14892228099402588,
             0.3524379644134216, 0.4580228306857272]
 
@@ -27,10 +28,9 @@ if __name__ == "__main__":
                               m_anf=conf[4], the=conf[5],
                               gam=conf[6], phi=conf[7])
 
-    t3_exp = 200.58698045085373
     t3 = 0
-    ht3 = 0.7294083375575103
-    gt3 = 0.31236471544758654
+    ht3 = 0.5419771693142728
+    gt3 = 0.07416467522715564
 
     a_anf = conf[0]
     a_ans = conf[1]
@@ -49,10 +49,7 @@ if __name__ == "__main__":
     b = m_ae * m_ans / \
         (a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
 
-    c = m_ans * (p_exp * (1 - phi) - m_ae * theta) / \
-        (a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
-    
-    # a new c' for p_rec
+    # c' for p_rec
     c_p = m_ans * (p_rec * (1 - phi) - m_ae * theta) / \
           (a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
 
@@ -60,49 +57,44 @@ if __name__ == "__main__":
     r1 = 0.5 * (-np.sqrt(a ** 2 - 4 * b) - a)
     r2 = 0.5 * (np.sqrt(a ** 2 - 4 * b) - a)
 
-    # derive the solution from a tte with p_exp
-    s_c1 = -c / (b * (1 - r1 / r2)) * np.exp(-r1 * t3_exp)
-    s_c2 = s_c1 * np.exp(r1 * t3_exp) * np.exp(-r2 * t3_exp) * -r1 / r2
+    # uses Al dt/dl part of EQ(8) solved for c2
+    # r1 * c1 * exp(r1*t3) + r2 * c2 * exp(r2*t3) = m_ans * (ht3 - gt3 - theta)) / (a_ans * r2 * (1 - theta - gamma))
+    # and then substituted in EQ(14) and solved for c1
+    s_c1 = ((m_ans * (ht3 - gt3 - theta)) / (a_ans * r2 * (1 - theta - gamma)) + c_p / b - gt3) / \
+           (np.exp(r2 * t3) * (r1 / r2 - 1))
 
-    # use tte solution to determine c1' and c2'
-    s_c1_p = (gt3 - c_p / b) / ((1 - r1 / r2) * np.exp(-r1 * t3))
-    s_c2_p = (r1 * s_c1 * np.exp(r1 * t3_exp) +
-              r2 * s_c2 * np.exp(r2 * t3_exp) -
-              r1 * s_c1_p * np.exp(r1 * t3_exp)) / \
-             (r2 * np.exp(r2 * t3_exp))
+    # uses EQ(14) with solution for c1 and solves for c2
+    s_c2 = (gt3 - s_c1 * np.exp(r1 * t3) - (c_p / b)) / np.exp(r2 * t3)
+
 
     def a3_gt(t):
         # the general solution for g(t)
-        return s_c1_p * np.exp(r1 * t) + s_c2_p * np.exp(r2 * t) + c / b
+        return s_c1 * np.exp(r1 * t) + s_c2 * np.exp(r2 * t) + c_p / b
 
 
     # substitute into EQ(9) for h
     def a3_ht(t):
-        k1 = a_ans * (1 - theta - gamma) / m_ans * s_c1_p * r1 + s_c1_p
-        k2 = a_ans * (1 - theta - gamma) / m_ans * s_c2_p * r2 + s_c2_p
-        return k1 * np.exp(r1 * t) + k2 * np.exp(r2 * t) + c / b + theta
+        k1 = a_ans * (1 - theta - gamma) / m_ans * s_c1 * r1 + s_c1
+        k2 = a_ans * (1 - theta - gamma) / m_ans * s_c2 * r2 + s_c2
+        return k1 * np.exp(r1 * t) + k2 * np.exp(r2 * t) + c_p / b + theta
 
 
-    eq_gh = optimize.fsolve(lambda t: (a3_gt(t) + theta) - a3_ht(t), x0=np.array([0]))[0]
+    # find the point where h(t) == g(t)
+    eq_gh = optimize.fsolve(lambda t: (a3_gt(t) + theta) - a3_ht(t), x0=np.array([1]))[0]
 
-
-    print(a3_gt(0) + theta, a3_ht(0))
-    print(gt3 + theta, ht3)
-
-    print(eq_gh)
-    print(a3_gt(eq_gh) + theta, a3_ht(eq_gh))
-
+    # check in simulation
     agent.reset()
     agent.set_g(gt3)
     agent.set_h(ht3)
+    ThreeCompVisualisation(agent)
     agent.set_power(p_rec)
 
-    # for i in range(int(eq_gh)):
-    #     print("step {}".format(i))
-    #     print("h: ", a3_ht(int(eq_gh)) - agent.get_h())
-    #     print("g: ", a3_gt(int(eq_gh)) - agent.get_g())
-    #     for s in range(agent.hz):
-    #         agent.perform_one_step()
-    #
-    # print("h: ", a3_ht(int(eq_gh)) - agent.get_h())
-    # print("g: ", a3_gt(int(eq_gh)) - agent.get_g())
+    for _ in range(int(eq_gh * agent.hz)):
+        agent.perform_one_step()
+
+    logging.info("predicted time: {} \n"
+                 "diff h: {}\n"
+                 "diff g: {}".format(eq_gh,
+                                     a3_ht(eq_gh) - agent.get_h(),
+                                     a3_gt(eq_gh) - agent.get_g()))
+    ThreeCompVisualisation(agent)
