@@ -134,18 +134,17 @@ class ThreeCompHydAgent(HydAgentBasis):
         else:
             # [restore] if level AnF above level AnS and AnS is not full
             if self.__h < (self.__g + self.__theta) and self.__g > 0:
-                # h is less than g + theta and thus the difference is negative
-                self.__p_an = self.__m_anf * ((self.__h - (self.__g + self.__theta)) / self.__height_ans)
-                # cap the flow, because the diff can become greater than height_ans
-                self.__p_an = max(self.__p_an, -self.__m_anf)
+                # see EQ (16) in Morton (1986)
+                self.__p_an = -self.__m_anf * (self.__g + self.__theta - self.__h) / (1 - self.__gamma)
             # [utilise] if level AnS above level AnF and level AnF above pipe exit of AnS
             elif (self.__g + self.__theta) < self.__h < (1 - self.__gamma):
-                # h is more than g+theta thus the difference is positive
-                self.__p_an = self.__m_ans * ((self.__h - (self.__g + self.__theta)) / self.__height_ans)
+                # EQ (9) in Morton (1986)
+                self.__p_an = self.__m_ans * (self.__h - self.__g - self.__theta) / self.__height_ans
             # [utilise max] if level AnF below or at AnS pipe exit and AnS not empty
             elif (1 - self.__gamma) <= self.__h and self.__g < self.__height_ans:
                 # the only thing that affects flow is the amount of remaining liquid (pressure)
-                self.__p_an = self.__m_ans * ((self.__height_ans - self.__g) / self.__height_ans)
+                # EQ (20) Morton (1986)
+                self.__p_an = self.__m_ans * (self.__height_ans - self.__g) / self.__height_ans
             else:
                 raise_detailed_error_report()
 
