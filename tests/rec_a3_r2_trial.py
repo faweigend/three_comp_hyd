@@ -12,10 +12,10 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     p_exp = 350
-    p_rec = 100
+    p_rec = 0
 
     # estimations per second for discrete agent
-    hz = 250
+    hz = 500
 
     conf = [15101.24769778409, 86209.27743067988, 252.71702367096787,
             363.2970828395908, 38.27073086773415, 0.14892228099402588,
@@ -28,9 +28,10 @@ if __name__ == "__main__":
                               m_anf=conf[4], the=conf[5],
                               gam=conf[6], phi=conf[7])
 
+    # End of A3 R1
     t3 = 0
-    ht3 = 0.5419771693142728
-    gt3 = 0.07416467522715564
+    ht3 = 0.25051681084552113
+    gt3 = 0.10159452985149524
 
     a_anf = conf[0]
     a_ans = conf[1]
@@ -41,26 +42,26 @@ if __name__ == "__main__":
     gamma = conf[6]
     phi = conf[7]
 
-    # my simplified form
+    # EQ 16 and 17 substituted in EQ 8
     a = m_ae / (a_anf * (1 - phi)) + \
-        m_ans / (a_ans * (1 - theta - gamma)) + \
-        m_ans / (a_anf * (1 - theta - gamma))
+        m_anf / (a_ans * (1 - gamma)) + \
+        m_anf / (a_anf * (1 - gamma))
 
-    b = m_ae * m_ans / \
-        (a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
+    b = m_ae * m_anf / \
+        (a_anf * a_ans * (1 - phi) * (1 - gamma))
 
-    # c' for p_rec
-    c = m_ans * (p_rec * (1 - phi) - m_ae * theta) / \
-        (a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
+    # c = (p_rec - (m_ae * theta) / (1 - phi)) * m_anf / \
+    #     (a_anf * a_ans * (1 - gamma))
+    c = m_anf * (p_rec * (1 - phi) - m_ae * theta) / \
+        (a_anf * a_ans * (1 - phi) * (1 - gamma))
 
     # wolfram alpha gave these estimations as solutions for l''(t) + a*l'(t) + b*l(t) = c
     r1 = 0.5 * (-np.sqrt(a ** 2 - 4 * b) - a)
     r2 = 0.5 * (np.sqrt(a ** 2 - 4 * b) - a)
 
-    # uses Al dt/dl part of EQ(8) solved for c2
-    # r1 * c1 * exp(r1*t3) + r2 * c2 * exp(r2*t3) = m_ans * (ht3 - gt3 - theta)) / (a_ans * r2 * (1 - theta - gamma))
+    # uses Al dt/dl part of EQ(16) == dl/dt of EQ(14) solved for c2
     # and then substituted in EQ(14) and solved for c1
-    s_c1 = (c / b + (m_ans * (ht3 - gt3 - theta)) / (a_ans * r2 * (1 - theta - gamma)) - gt3) / \
+    s_c1 = (c / b - (m_anf * (gt3 + theta - ht3)) / (a_ans * r2 * (1 - gamma)) - gt3) / \
            (np.exp(r1 * t3) * (r1 / r2 - 1))
 
     # uses EQ(14) with solution for c1 and solves for c2
@@ -74,13 +75,14 @@ if __name__ == "__main__":
 
     # substitute into EQ(9) for h
     def a3_ht(t):
-        k1 = a_ans * (1 - theta - gamma) / m_ans * s_c1 * r1 + s_c1
-        k2 = a_ans * (1 - theta - gamma) / m_ans * s_c2 * r2 + s_c2
+        k1 = a_ans * (1 - gamma) / m_anf * s_c1 * r1 + s_c1
+        k2 = a_ans * (1 - gamma) / m_anf * s_c2 * r2 + s_c2
         return k1 * np.exp(r1 * t) + k2 * np.exp(r2 * t) + c / b + theta
 
 
-    # find the point where h(t) == g(t)
-    eq_gh = optimize.fsolve(lambda t: (a3_gt(t) + theta) - a3_ht(t), x0=np.array([0]))[0]
+    # find the point where g(t) == 0
+    eq_gh = optimize.fsolve(lambda t: a3_gt(t), x0=np.array([0]))[0]
+    print(eq_gh)
 
     # check in simulation
     agent.reset()
@@ -88,15 +90,23 @@ if __name__ == "__main__":
     agent.set_h(ht3)
     ThreeCompVisualisation(agent)
     agent.set_power(p_rec)
-    print(a3_ht(eq_gh))
-    print(a3_gt(eq_gh))
 
-    for _ in range(int(eq_gh * agent.hz)):
+    for i in range(int(eq_gh * agent.hz)):
+        # if i % agent.hz == 0:
+        #     logging.info("predicted time: {} \n"
+        #                  "diff h: {}\n"
+        #                  "diff g: {}".format(i,
+        #                                      a3_ht(i / agent.hz) - agent.get_h(),
+        #                                      a3_gt(i / agent.hz) - agent.get_g()))
         agent.perform_one_step()
 
     logging.info("predicted time: {} \n"
-                 "diff h: {}\n"
-                 "diff g: {}".format(eq_gh,
-                                     a3_ht(eq_gh) - agent.get_h(),
-                                     a3_gt(eq_gh) - agent.get_g()))
+                 "diff h: {} - {} = {}\n"
+                 "diff g: {} - {} = {}".format(eq_gh,
+                                               a3_ht(eq_gh),
+                                               agent.get_h(),
+                                               a3_ht(eq_gh) - agent.get_h(),
+                                               a3_gt(eq_gh),
+                                               agent.get_g(),
+                                               a3_gt(eq_gh) - agent.get_g()))
     ThreeCompVisualisation(agent)
