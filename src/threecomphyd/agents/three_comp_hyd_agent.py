@@ -121,6 +121,9 @@ class ThreeCompHydAgent(HydAgentBasis):
         else:
             raise_detailed_error_report()
 
+        # multiply with delta t1
+        self.__p_ae = self.__p_ae / self._hz
+
         # step 2 b: determine the slow component energy flow (p_{An})
         # [no change] AnS full and level AnF above level AnS
         if self.__h <= self.__theta and self.__g == 0:
@@ -133,7 +136,7 @@ class ThreeCompHydAgent(HydAgentBasis):
             self.__p_an = 0.0
         else:
             # [restore] if level AnF above level AnS and AnS is not full
-            if self.__h < (self.__g + self.__theta) and self.__g > 0:
+            if self.__h < self.__g + self.__theta and self.__g > 0:
                 # see EQ (16) in Morton (1986)
                 self.__p_an = -self.__m_anf * (self.__g + self.__theta - self.__h) / (1 - self.__gamma)
             # [utilise] if level AnS above level AnF and level AnF above pipe exit of AnS
@@ -152,6 +155,9 @@ class ThreeCompHydAgent(HydAgentBasis):
             self.__m_flow = ((self.__h - (self.__g + self.__theta)) / (
                     (1 / self.__a_ans) + (1 / self.__a_anf)))
 
+            # consider delta t before extreme values get capped
+            self.__p_an = self.__p_an / self._hz
+
             # Cap flow according to estimated limits
             if self.__p_an < 0:
                 self.__p_an = max(self.__p_an, self.__m_flow)
@@ -164,10 +170,10 @@ class ThreeCompHydAgent(HydAgentBasis):
 
         # level AnS is adapted to estimated change
         # g increases as p_An flows out
-        self.__g += self.__p_an / self.__a_ans / self._hz
+        self.__g += self.__p_an / self.__a_ans
         # refill or deplete AnF according to AnS flow and Power demand
         # h decreases as p_Ae and p_An flow in
-        self.__h -= (self.__p_ae + self.__p_an) / self.__a_anf / self._hz
+        self.__h -= (self.__p_ae + self.__p_an) / self.__a_anf
 
         # step 3: account for rounding errors and set exhaustion flag
         self._exhausted = self.__h >= 1.0
