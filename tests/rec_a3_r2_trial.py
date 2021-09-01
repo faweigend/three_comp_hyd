@@ -15,9 +15,9 @@ if __name__ == "__main__":
     p_rec = 0
 
     # estimations per second for discrete agent
-    hz = 500
+    hz = 1000
 
-    conf = [15101.24769778409, 86209.27743067988, 252.71702367096787,
+    conf = [5101.24769778409, 10209.27743067988, 252.71702367096787,
             363.2970828395908, 38.27073086773415, 0.14892228099402588,
             0.3524379644134216, 0.4580228306857272]
 
@@ -80,9 +80,13 @@ if __name__ == "__main__":
         return k1 * np.exp(r1 * t) + k2 * np.exp(r2 * t) + c / b + theta
 
 
+    # use the quickest possible recovery as the initial guess (assumes h=0)
+    in_c1 = (gt3 + theta) * np.exp(-m_anf * t3 / ((gamma - 1) * a_ans))
+    in_t = (gamma - 1) * a_ans * (np.log(theta) - np.log(in_c1)) / m_anf
+
     # find the point where g(t) == 0
-    eq_gh = optimize.fsolve(lambda t: a3_gt(t), x0=np.array([0]))[0]
-    print(eq_gh)
+    g0 = optimize.fsolve(lambda t: a3_gt(t), x0=np.array([in_t]))[0]
+    print(g0)
 
     # check in simulation
     agent.reset()
@@ -91,22 +95,16 @@ if __name__ == "__main__":
     ThreeCompVisualisation(agent)
     agent.set_power(p_rec)
 
-    for i in range(int(eq_gh * agent.hz)):
-        # if i % agent.hz == 0:
-        #     logging.info("predicted time: {} \n"
-        #                  "diff h: {}\n"
-        #                  "diff g: {}".format(i,
-        #                                      a3_ht(i / agent.hz) - agent.get_h(),
-        #                                      a3_gt(i / agent.hz) - agent.get_g()))
+    for _ in range(int(g0 * agent.hz)):
         agent.perform_one_step()
 
     logging.info("predicted time: {} \n"
                  "diff h: {} - {} = {}\n"
-                 "diff g: {} - {} = {}".format(eq_gh,
-                                               a3_ht(eq_gh),
+                 "diff g: {} - {} = {}".format(g0,
+                                               a3_ht(g0),
                                                agent.get_h(),
-                                               a3_ht(eq_gh) - agent.get_h(),
-                                               a3_gt(eq_gh),
+                                               a3_ht(g0) - agent.get_h(),
+                                               a3_gt(g0),
                                                agent.get_g(),
-                                               a3_gt(eq_gh) - agent.get_g()))
+                                               a3_gt(g0) - agent.get_g()))
     ThreeCompVisualisation(agent)
