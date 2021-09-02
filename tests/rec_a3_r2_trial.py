@@ -86,7 +86,6 @@ if __name__ == "__main__":
 
     # find the point where g(t) == 0
     g0 = optimize.fsolve(lambda t: a3_gt(t), x0=np.array([in_t]))[0]
-    print(g0)
 
     # check in simulation
     agent.reset()
