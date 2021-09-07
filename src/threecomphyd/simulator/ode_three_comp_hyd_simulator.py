@@ -202,7 +202,7 @@ class ODEThreeCompHydSimulator:
         if phi >= gamma:
             return t4, ht4, gt4
 
-        # g(t4) = gt4 can be solved for c
+        # g(t4) = g4 can be solved for c
         s_cg = (gt4 - (1 - theta - gamma)) * np.exp((m_ans * t4) / ((1 - theta - gamma) * a_ans))
 
         def a5_gt(t):
@@ -215,7 +215,7 @@ class ODEThreeCompHydSimulator:
         g = p / a_anf
         b = m_ans * s_cg / ((1 - theta - gamma) * a_anf)
 
-        # find c that matches h(t4) = ht4
+        # find c that matches h(t4) = h4
         s_ch = (ht4 + b / ((a + k) * np.exp(k) ** t4) + g / a) / np.exp(a) ** t4
 
         def a5_ht(t):
@@ -269,7 +269,7 @@ class ODEThreeCompHydSimulator:
             return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
 
         ht6 = 1.0
-        # estimate an intitial guess that assumes no contribution from g
+        # estimate an initial guess that assumes no contribution from g
         initial_guess = (ht6 - s_ch) / ag
         # find end of phase A6. The time point where h(t6)=1
         t6 = optimize.fsolve(lambda t: ht6 - a6_ht(t), x0=np.array([initial_guess]))[0]
@@ -280,6 +280,8 @@ class ODEThreeCompHydSimulator:
     def rec(p_rec: float, conf: list, start_h: float, start_g: float, max_time: int = 5000) -> (float, float, float):
 
         t5, h5, g5 = ODEThreeCompHydSimulator.rec_a6(t6=0, h6=start_h, g6=start_g, p_rec=p_rec, conf=conf)
+
+        t4, h4, g4 = ODEThreeCompHydSimulator.rec_a5(t5=0, h5=start_h, g5=start_g, p_rec=p_rec, conf=conf)
 
     @staticmethod
     def rec_a6(t6: float, h6: float, g6: float, p_rec: float, conf: list):
@@ -292,7 +294,7 @@ class ODEThreeCompHydSimulator:
         :param conf: hydraulic model configuration
         :return: [time at which A6 rec ends, h(rt6), g(rt6)]
         """
-        # PHASE A6
+
         a_anf = conf[0]
         a_ans = conf[1]
         m_ae = conf[2]
@@ -300,6 +302,14 @@ class ODEThreeCompHydSimulator:
         theta = conf[5]
         gamma = conf[6]
         phi = conf[7]
+
+        # A6 rec ends either at beginning of A4 or A5
+        h_target = max(1 - gamma, 1 - phi)
+
+        # check whether phase is applicable or if h is
+        # already above the end of the phase
+        if h6 <= h_target:
+            return t6, h6, g6
 
         # g(t6) = g6 can be solved for c
         s_cg = (g6 - (1 - theta - gamma)) / np.exp(-m_ans * t6 / ((1 - theta - gamma) * a_ans))
@@ -321,11 +331,108 @@ class ODEThreeCompHydSimulator:
             # generalised h(t) for recovery phase A6
             return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
 
-        # A6 rec ends either at beginning of A4 or A5
-        h_target = max(1 - gamma, 1 - phi)
-
         # estimate an initial guess that assumes no contribution from g
         initial_guess = 0
         rt6 = optimize.fsolve(lambda t: a6_ht(t) - h_target, x0=np.array([initial_guess]))[0]
 
         return rt6, h_target, a6_gt(rt6)
+
+    @staticmethod
+    def rec_a5(t5: float, h5: float, g5: float, p_rec: float, conf: list):
+        """
+        recovery from exhaustive exercise.
+        :param t5: time in seconds at which recovery starts
+        :param h5: depletion state of AnF when recovery starts
+        :param g5: depletion state of AnS when recovery starts
+        :param p_rec: constant recovery intensity
+        :param conf: hydraulic model configuration
+        :return: [time at which A6 rec ends, h(rt6), g(rt6)]
+        """
+
+        a_anf = conf[0]
+        a_ans = conf[1]
+        m_ae = conf[2]
+        m_ans = conf[3]
+        theta = conf[5]
+        gamma = conf[6]
+        phi = conf[7]
+
+        # A5 always ends when h reaches pipe exit of AnS
+        h_target = 1 - gamma
+
+        # check whether phase is applicable or if h is
+        # already above the end of the phase
+        if h5 <= h_target:
+            return t5, h5, g5
+
+        # g(t5) = g5 can be solved for c
+        s_cg = (g5 - (1 - theta - gamma)) * np.exp((m_ans * t5) / ((1 - theta - gamma) * a_ans))
+
+        def a5_gt(t):
+            # generalised g(t) for phase A5
+            return (1 - theta - gamma) + s_cg * np.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
+
+        # as defined for EQ(21)
+        k = m_ans / ((1 - theta - gamma) * a_ans)
+        a = -m_ae / ((1 - phi) * a_anf)
+        g = p_rec / a_anf
+        b = m_ans * s_cg / ((1 - theta - gamma) * a_anf)
+
+        # find c that matches h(t5) = h5
+        s_ch = (h5 + b / ((a + k) * np.exp(k) ** t5) + g / a) / np.exp(a) ** t5
+
+        def a5_ht(t):
+            return -b / ((a + k) * np.exp(k) ** t) + s_ch * np.exp(a) ** t - g / a
+
+        # estimate an initial guess that assumes no contribution from g
+        initial_guess = 0
+        rt4 = optimize.fsolve(lambda t: a5_ht(t) - h_target, x0=np.array([initial_guess]))[0]
+
+        return rt4, h_target, a5_gt(rt4)
+
+    @staticmethod
+    def rec_a4(t4: float, h4: float, g4: float, p_rec: float, conf: list):
+
+        a_anf = conf[0]
+        a_ans = conf[1]
+        m_ae = conf[2]
+        m_ans = conf[3]
+        m_anf = conf[4]
+        theta = conf[5]
+        gamma = conf[6]
+        phi = conf[7]
+
+        # if g is above h (flow from AnS into AnF)
+        a_gh = (a_anf + a_ans) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
+        b_gh = (p_rec - m_ae) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
+
+        # derivative g'(t4) can be calculated manually
+        dgt4_gh = m_ans * (h4 - g4 - theta) / (a_ans * (1 - theta - gamma))
+
+        # which then allows to derive c1 and c2
+        s_c1_gh = ((p_rec - m_ae) / (a_anf + a_ans) - dgt4_gh) * np.exp(a_gh * t4)
+        s_c2_gh = (-t4 * b_gh + dgt4_gh) / a_gh - (p_rec - m_ae) / ((a_anf + a_ans) * a_gh) + gt4
+
+        # if h is above g (flow from AnF into AnS)
+        # a_hg = (a_anf + a_ans) * m_anf / (a_anf * a_ans * (1 - gamma))
+        # b_hg = (p_rec - m_ae) * m_anf / (a_anf * a_ans * (1 - gamma))
+        #
+        # dgt4_hg = -m_anf * (g4 + theta - h4) / (a_ans * (1 - gamma))
+
+        def a4_gt(t):
+            # general solution for g(t)
+            return t * (p_rec - m_ae) / (a_anf + a_ans) + s_c2_gh + s_c1_gh / a_gh * np.exp(-a_gh * t)
+
+        def a4_dgt(t):
+            # first derivative g'(t)
+            return (p_rec - m_ae) / (a_anf + a_ans) - s_c1_gh * np.exp(-a_gh * t)
+
+        def a4_ht(t):
+            # EQ(9) with constants for g(t) and g'(t)
+            return a_ans * (1 - theta - gamma) / m_ans * a4_dgt(t) + a4_gt(t) + theta
+
+        ht_end = 1 - phi
+        # check if equilibrium in this phase
+
+        t_end = optimize.fsolve(lambda t: ht_end - a4_ht(t), x0=np.array([0]))[0]
+        gt_end = a4_gt(t_end)

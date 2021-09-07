@@ -28,7 +28,7 @@ if __name__ == "__main__":
                               m_ans=conf[3], m_anf=conf[4], the=conf[5],
                               gam=conf[6], phi=conf[7])
 
-    # PHASE A6
+    # PHASE A5
     a_anf = conf[0]
     a_ans = conf[1]
     m_ae = conf[2]
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     h5 = 1.0 - phi
     g5 = 0.1
 
-    # g(t4) = gt4 can be solved for c
+    # g(t5) = g5 can be solved for c
     s_cg = (g5 - (1 - theta - gamma)) * np.exp((m_ans * t5) / ((1 - theta - gamma) * a_ans))
 
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     g = p_rec / a_anf
     b = m_ans * s_cg / ((1 - theta - gamma) * a_anf)
 
-    # find c that matches h(t4) = ht4
+    # find c that matches h(t5) = h5
     s_ch = (h5 + b / ((a + k) * np.exp(k) ** t5) + g / a) / np.exp(a) ** t5
 
 
