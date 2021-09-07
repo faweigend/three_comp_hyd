@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # estimations per second for discrete agent
     hz = 250
 
-    conf = configurations.d
+    conf = configurations.a
 
     # create three component hydraulic agent with example configuration
     agent = ThreeCompHydAgent(hz=hz, a_anf=conf[0], a_ans=conf[1], m_ae=conf[2],
@@ -37,53 +37,51 @@ if __name__ == "__main__":
     gamma = conf[6]
     phi = conf[7]
 
-    t6 = 0
-    ht6 = 1.0
-    gt6 = 0.1
+    t5 = 0
+    h5 = 1.0 - phi
+    g5 = 0.1
 
-    # g(t6) = gt6 can be solved for c
-    s_cg = (gt6 - (1 - theta - gamma)) / np.exp(-m_ans * t6 / ((1 - theta - gamma) * a_ans))
-
-
-    def a6_gt(t):
-        # generalised g(t) for phase A6
-        return (1 - theta - gamma) + s_cg * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
+    # g(t4) = gt4 can be solved for c
+    s_cg = (g5 - (1 - theta - gamma)) * np.exp((m_ans * t5) / ((1 - theta - gamma) * a_ans))
 
 
+    def a5_gt(t):
+        # generalised g(t) for phase A5
+        return (1 - theta - gamma) + s_cg * np.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
+
+
+    # as defined for EQ(21)
     k = m_ans / ((1 - theta - gamma) * a_ans)
-    # a = -m_ae / a_anf
-    b = (m_ans * s_cg) / ((1 - theta - gamma) * a_anf)
-    # g = p / a_anf
-    ag = (p_rec - m_ae) / a_anf
+    a = -m_ae / ((1 - phi) * a_anf)
+    g = p_rec / a_anf
+    b = m_ans * s_cg / ((1 - theta - gamma) * a_anf)
 
-    # h(t6) = 1 can be solved for c
-    s_ch = -t6 * ag + ((b * math.exp(-k * t6)) / k) + ht6
-
-
-    def a6_ht(t):
-        # generalised h(t) for recovery phase A6
-        return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
+    # find c that matches h(t4) = ht4
+    s_ch = (h5 + b / ((a + k) * np.exp(k) ** t5) + g / a) / np.exp(a) ** t5
 
 
-    # A6 rec ends either at beginning of A4 or A5
-    h_target = max(1 - gamma, 1 - phi)
+    def a5_ht(t):
+        return -b / ((a + k) * np.exp(k) ** t) + s_ch * np.exp(a) ** t - g / a
+
+
+    h_target = 1 - gamma
 
     # estimate an initial guess that assumes no contribution from g
     initial_guess = 0
-    rt6 = optimize.fsolve(lambda t: a6_ht(t) - h_target, x0=np.array([initial_guess]))[0]
+    rt5 = optimize.fsolve(lambda t: a5_ht(t) - h_target, x0=np.array([initial_guess]))[0]
 
     agent.reset()
-    agent.set_g(gt6)
-    agent.set_h(1.0)
+    agent.set_g(g5)
+    agent.set_h(h5)
     ThreeCompVisualisation(agent)
     agent.set_power(p_rec)
 
-    for _ in range(int(rt6 * agent.hz)):
+    for _ in range(int(rt5 * agent.hz)):
         agent.perform_one_step()
 
     logging.info("predicted time: {} \n"
                  "diff h: {}\n"
-                 "diff g: {}".format(rt6,
-                                     a6_ht(rt6) - agent.get_h(),
-                                     a6_gt(rt6) - agent.get_g()))
+                 "diff g: {}".format(rt5,
+                                     a5_ht(rt5) - agent.get_h(),
+                                     a5_gt(rt5) - agent.get_g()))
     ThreeCompVisualisation(agent)

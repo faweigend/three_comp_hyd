@@ -14,33 +14,33 @@ class ODEThreeCompHydSimulator:
     def tte(p_exp: float, conf: list, max_time: int = 5000) -> (float, float, float):
 
         # A1
-        t1, ht1, gt1 = ODEThreeCompHydSimulator.phase_a1(p=p_exp, conf=conf)
+        t1, ht1, gt1 = ODEThreeCompHydSimulator.tte_a1(p=p_exp, conf=conf)
         if t1 == np.inf or t1 > max_time:
             logging.info("EQUILIBRIUM IN A1: t: {} h: {} g: {}".format(t1, ht1, gt1))
             return t1, ht1, gt1
 
-        t2, ht2, gt2 = ODEThreeCompHydSimulator.phase_a2(t1=t1, ht1=ht1, gt1=gt1, p=p_exp, conf=conf)
+        t2, ht2, gt2 = ODEThreeCompHydSimulator.tte_a2(t1=t1, ht1=ht1, gt1=gt1, p=p_exp, conf=conf)
 
         # A3
-        t3, ht3, gt3 = ODEThreeCompHydSimulator.phase_a3(t2=t2, ht2=ht2, gt2=gt2, p=p_exp, conf=conf)
+        t3, ht3, gt3 = ODEThreeCompHydSimulator.tte_a3(t2=t2, ht2=ht2, gt2=gt2, p=p_exp, conf=conf)
         if t3 == np.inf or t3 > max_time:
             logging.info("EQUILIBRIUM IN A3: t: {} h: {} g: {}".format(t3, ht3, gt3))
             return t2, ht2, gt2
 
         # A4
-        t4, ht4, gt4 = ODEThreeCompHydSimulator.phase_a4(t3=t3, ht3=ht3, gt3=gt3, p=p_exp, conf=conf)
+        t4, ht4, gt4 = ODEThreeCompHydSimulator.tte_a4(t3=t3, ht3=ht3, gt3=gt3, p=p_exp, conf=conf)
         if t4 == np.inf or t4 > max_time:
             logging.info("EQUILIBRIUM IN A4: t: {} h: {} g: {}".format(t4, ht4, gt4))
             return t4, ht4, gt4
 
         # A5
-        t5, ht5, gt5 = ODEThreeCompHydSimulator.phase_a5(t4=t4, ht4=ht4, gt4=gt4, p=p_exp, conf=conf)
+        t5, ht5, gt5 = ODEThreeCompHydSimulator.tte_a5(t4=t4, ht4=ht4, gt4=gt4, p=p_exp, conf=conf)
         if t5 == np.inf or t5 > max_time:
             logging.info("EQUILIBRIUM IN A5: t: {} h: {} g: {}".format(t5, ht5, gt5))
             return t5, ht5, gt5
 
         # A6
-        t6, ht6, gt6 = ODEThreeCompHydSimulator.phase_a6(t5=t5, ht5=ht5, gt5=gt5, p=p_exp, conf=conf)
+        t6, ht6, gt6 = ODEThreeCompHydSimulator.tte_a6(t5=t5, ht5=ht5, gt5=gt5, p=p_exp, conf=conf)
         if t6 == np.inf or t6 > max_time:
             logging.info("EQUILIBRIUM IN A6: t: {} h: {} g: {}".format(t6, ht6, gt6))
             return t6, ht6, gt6
@@ -48,7 +48,7 @@ class ODEThreeCompHydSimulator:
         return t6, ht6, gt6
 
     @staticmethod
-    def phase_a1(p: float, conf: list) -> (float, float, float):
+    def tte_a1(p: float, conf: list) -> (float, float, float):
 
         a_anf = conf[0]
         m_ae = conf[2]
@@ -67,7 +67,7 @@ class ODEThreeCompHydSimulator:
         return t1, min(theta, 1 - phi), 0
 
     @staticmethod
-    def phase_a2(t1: float, ht1: float, gt1: float, p: float, conf: list) -> (float, float, float):
+    def tte_a2(t1: float, ht1: float, gt1: float, p: float, conf: list) -> (float, float, float):
 
         a_anf = conf[0]
         m_ae = conf[2]
@@ -83,7 +83,7 @@ class ODEThreeCompHydSimulator:
         return t2, theta, gt1
 
     @staticmethod
-    def phase_a3(t2: float, ht2: float, gt2: float, p: float, conf: list) -> (float, float, float):
+    def tte_a3(t2: float, ht2: float, gt2: float, p: float, conf: list) -> (float, float, float):
 
         a_anf = conf[0]
         a_ans = conf[1]
@@ -142,7 +142,7 @@ class ODEThreeCompHydSimulator:
             return t3, ht3, a3_gt(t3)
 
     @staticmethod
-    def phase_a4(t3: float, ht3: float, gt3: float, p: float, conf: list) -> (float, float, float):
+    def tte_a4(t3: float, ht3: float, gt3: float, p: float, conf: list) -> (float, float, float):
 
         a_anf = conf[0]
         a_ans = conf[1]
@@ -188,7 +188,7 @@ class ODEThreeCompHydSimulator:
             return t4, ht4, a4_gt(t4)
 
     @staticmethod
-    def phase_a5(t4: float, ht4: float, gt4: float, p: float, conf: list) -> (float, float, float):
+    def tte_a5(t4: float, ht4: float, gt4: float, p: float, conf: list) -> (float, float, float):
 
         a_anf = conf[0]
         a_ans = conf[1]
@@ -231,56 +231,7 @@ class ODEThreeCompHydSimulator:
             return t5, ht5, a5_gt(t5)
 
     @staticmethod
-    def phase_a6_rec(gt6: float, p_rec: float, conf: list):
-        """
-        recovery from exhaustive exercise. Assumes h reached 1.0 and resets time to 0.
-        :param gt6: start g(t=0)
-        :param p_rec: constant recovery intensity
-        :param conf: hydraulic model configuration
-        :return: [time at which A6 rec ends, h(rt6), g(rt6)]
-        """
-        a_anf = conf[0]
-        a_ans = conf[1]
-        m_ae = conf[2]
-        m_ans = conf[3]
-        theta = conf[5]
-        gamma = conf[6]
-        phi = conf[7]
-
-        t6 = 0
-        ht6 = 1.0
-
-        # g(t6) = gt6 can be solved for c
-        s_cg = (gt6 - (1 - theta - gamma)) / np.exp(-m_ans * t6 / ((1 - theta - gamma) * a_ans))
-
-        def a6_gt(t):
-            # generalised g(t) for phase A6
-            return (1 - theta - gamma) + s_cg * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
-
-        k = m_ans / ((1 - theta - gamma) * a_ans)
-        # a = -m_ae / a_anf
-        b = (m_ans * s_cg) / ((1 - theta - gamma) * a_anf)
-        # g = p / a_anf
-        ag = (p_rec - m_ae) / a_anf
-
-        # h(t6) = 1 can be solved for c
-        s_ch = -t6 * ag + ((b * math.exp(-k * t6)) / k) + ht6
-
-        def a6_ht(t):
-            # generalised h(t) for recovery phase A6
-            return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
-
-        # TODO: needs a check for 1-phi
-        ht4 = 1 - gamma
-        # estimate an initial guess that assumes no contribution from g
-        initial_guess = 0
-
-        rt6 = optimize.fsolve(lambda t: a6_ht(t) - ht4, x0=np.array([initial_guess]))[0]
-
-        return rt6, ht4, a6_gt(rt6)
-
-    @staticmethod
-    def phase_a6(t5: float, ht5: float, gt5: float, p: float, conf: list) -> (float, float, float):
+    def tte_a6(t5: float, ht5: float, gt5: float, p: float, conf: list) -> (float, float, float):
         """
         Final phase A6 of a time to exhaustion trial. Expects inputs from Phase A5.
         :param t5: time at which A5 ended
@@ -324,3 +275,57 @@ class ODEThreeCompHydSimulator:
         t6 = optimize.fsolve(lambda t: ht6 - a6_ht(t), x0=np.array([initial_guess]))[0]
 
         return t6, ht6, a6_gt(t6)
+
+    @staticmethod
+    def rec(p_rec: float, conf: list, start_h: float, start_g: float, max_time: int = 5000) -> (float, float, float):
+
+        t5, h5, g5 = ODEThreeCompHydSimulator.rec_a6(t6=0, h6=start_h, g6=start_g, p_rec=p_rec, conf=conf)
+
+    @staticmethod
+    def rec_a6(t6: float, h6: float, g6: float, p_rec: float, conf: list):
+        """
+        recovery from exhaustive exercise.
+        :param t6: time in seconds at which recovery starts
+        :param h6: depletion state of AnF when recovery starts
+        :param g6: depletion state of AnS when recovery starts
+        :param p_rec: constant recovery intensity
+        :param conf: hydraulic model configuration
+        :return: [time at which A6 rec ends, h(rt6), g(rt6)]
+        """
+        # PHASE A6
+        a_anf = conf[0]
+        a_ans = conf[1]
+        m_ae = conf[2]
+        m_ans = conf[3]
+        theta = conf[5]
+        gamma = conf[6]
+        phi = conf[7]
+
+        # g(t6) = g6 can be solved for c
+        s_cg = (g6 - (1 - theta - gamma)) / np.exp(-m_ans * t6 / ((1 - theta - gamma) * a_ans))
+
+        def a6_gt(t):
+            # generalised g(t) for phase A6
+            return (1 - theta - gamma) + s_cg * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
+
+        k = m_ans / ((1 - theta - gamma) * a_ans)
+        # a = -m_ae / a_anf
+        b = (m_ans * s_cg) / ((1 - theta - gamma) * a_anf)
+        # g = p / a_anf
+        ag = (p_rec - m_ae) / a_anf
+
+        # h(t6) = 1 can be solved for c
+        s_ch = -t6 * ag + ((b * math.exp(-k * t6)) / k) + h6
+
+        def a6_ht(t):
+            # generalised h(t) for recovery phase A6
+            return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
+
+        # A6 rec ends either at beginning of A4 or A5
+        h_target = max(1 - gamma, 1 - phi)
+
+        # estimate an initial guess that assumes no contribution from g
+        initial_guess = 0
+        rt6 = optimize.fsolve(lambda t: a6_ht(t) - h_target, x0=np.array([initial_guess]))[0]
+
+        return rt6, h_target, a6_gt(rt6)
