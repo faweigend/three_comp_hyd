@@ -277,22 +277,48 @@ class ODEThreeCompHydSimulator:
         return t6, ht6, a6_gt(t6)
 
     @staticmethod
-    def rec(p_rec: float, conf: list, start_h: float, start_g: float, max_time: int = 5000) -> (float, float, float):
+    def rec(conf: list, start_h: float, start_g: float, p_rec: float = 0.0, t_rec: float = 5000.0) -> (
+            float, float, float):
 
-        t5, h5, g5 = ODEThreeCompHydSimulator.rec_a6(t6=0, h6=start_h, g6=start_g, p_rec=p_rec, conf=conf)
+        # A6
+        t5, h5, g5 = ODEThreeCompHydSimulator.rec_a6(t6=0, h6=start_h, g6=start_g,
+                                                     p_rec=p_rec, t_rec=t_rec, conf=conf)
+        if t5 == t_rec:
+            logging.info("RECOVERY END IN A6: t: {} h: {} g: {}".format(t5, h5, g5))
+            return t5, h5, g5
 
-        t4, h4, g4 = ODEThreeCompHydSimulator.rec_a5(t5=0, h5=start_h, g5=start_g, p_rec=p_rec, conf=conf)
+        # A5
+        t4, h4, g4 = ODEThreeCompHydSimulator.rec_a5(t5=t5, h5=h5, g5=g5,
+                                                     p_rec=p_rec, t_rec=t_rec, conf=conf)
+        if t4 == t_rec:
+            logging.info("RECOVERY END IN A5: t: {} h: {} g: {}".format(t4, h4, g4))
+            return t4, h4, g4
+
+        # A4 R1
+        t4r1, h4r1, g4r1 = ODEThreeCompHydSimulator.rec_a4_r1(t4=t4, h4=h4, g4=g4,
+                                                              p_rec=p_rec, t_rec=t_rec, conf=conf)
+        if t4r1 == t_rec:
+            logging.info("RECOVERY END IN A4 R1: t: {} h: {} g: {}".format(t4r1, h4r1, g4r1))
+            return t4r1, h4r1, g4r1
+
+        # A4 R2
+        t3, h3, g3 = ODEThreeCompHydSimulator.rec_a4_r2(t4=t4r1, h4=h4r1, g4=g4r1,
+                                                        p_rec=p_rec, t_rec=t_rec, conf=conf)
+        if t3 == t_rec:
+            logging.info("RECOVERY END IN A4 R2: t: {} h: {} g: {}".format(t3, h3, g3))
+            return t3, h3, g3
 
     @staticmethod
-    def rec_a6(t6: float, h6: float, g6: float, p_rec: float, conf: list):
+    def rec_a6(t6: float, h6: float, g6: float, p_rec: float, t_rec: float, conf: list):
         """
         recovery from exhaustive exercise.
         :param t6: time in seconds at which recovery starts
         :param h6: depletion state of AnF when recovery starts
         :param g6: depletion state of AnS when recovery starts
         :param p_rec: constant recovery intensity
+        :param t_rec: the maximal recovery time
         :param conf: hydraulic model configuration
-        :return: [time at which A6 rec ends, h(rt6), g(rt6)]
+        :return: [rt5 = min(time at which A6 rec ends, t_rec), h(rt5), g(rt5)]
         """
 
         a_anf = conf[0]
@@ -333,20 +359,24 @@ class ODEThreeCompHydSimulator:
 
         # estimate an initial guess that assumes no contribution from g
         initial_guess = 0
-        rt6 = optimize.fsolve(lambda t: a6_ht(t) - h_target, x0=np.array([initial_guess]))[0]
+        rt5 = optimize.fsolve(lambda t: a6_ht(t) - h_target, x0=np.array([initial_guess]))[0]
 
-        return rt6, h_target, a6_gt(rt6)
+        # if targeted recovery time is smaller than end of A6 estimate model state at t_rec
+        rt5 = min(t_rec, float(rt5))
+
+        return rt5, a6_ht(rt5), a6_gt(rt5)
 
     @staticmethod
-    def rec_a5(t5: float, h5: float, g5: float, p_rec: float, conf: list):
+    def rec_a5(t5: float, h5: float, g5: float, p_rec: float, t_rec: float, conf: list):
         """
         recovery from exhaustive exercise.
         :param t5: time in seconds at which recovery starts
         :param h5: depletion state of AnF when recovery starts
         :param g5: depletion state of AnS when recovery starts
         :param p_rec: constant recovery intensity
+        :param t_rec: the maximal recovery time
         :param conf: hydraulic model configuration
-        :return: [time at which A6 rec ends, h(rt6), g(rt6)]
+        :return: [rt4 = min(time at which A5 rec ends, t_rec), h(rt4), g(rt4)]
         """
 
         a_anf = conf[0]
@@ -388,19 +418,25 @@ class ODEThreeCompHydSimulator:
         initial_guess = 0
         rt4 = optimize.fsolve(lambda t: a5_ht(t) - h_target, x0=np.array([initial_guess]))[0]
 
-        return rt4, h_target, a5_gt(rt4)
+        # if targeted recovery time is smaller than end of A6 estimate model state at t_rec
+        rt4 = min(t_rec, float(rt4))
+
+        return rt4, a5_ht(rt4), a5_gt(rt4)
 
     @staticmethod
-    def rec_a4(t4: float, h4: float, g4: float, p_rec: float, conf: list):
+    def rec_a4_r1(t4: float, h4: float, g4: float, p_rec: float, t_rec: float, conf: list):
 
         a_anf = conf[0]
         a_ans = conf[1]
         m_ae = conf[2]
         m_ans = conf[3]
-        m_anf = conf[4]
         theta = conf[5]
         gamma = conf[6]
         phi = conf[7]
+
+        # A4 R1 is only applicable if g is above h and h below pipe exit of Ae
+        if h4 <= 1 - phi or g4 + theta > h4:
+            return t4, h4, g4
 
         # if g is above h (flow from AnS into AnF)
         a_gh = (a_anf + a_ans) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
@@ -409,15 +445,9 @@ class ODEThreeCompHydSimulator:
         # derivative g'(t4) can be calculated manually
         dgt4_gh = m_ans * (h4 - g4 - theta) / (a_ans * (1 - theta - gamma))
 
-        # which then allows to derive c1 and c2
+        # ... which then allows to derive c1 and c2
         s_c1_gh = ((p_rec - m_ae) / (a_anf + a_ans) - dgt4_gh) * np.exp(a_gh * t4)
-        s_c2_gh = (-t4 * b_gh + dgt4_gh) / a_gh - (p_rec - m_ae) / ((a_anf + a_ans) * a_gh) + gt4
-
-        # if h is above g (flow from AnF into AnS)
-        # a_hg = (a_anf + a_ans) * m_anf / (a_anf * a_ans * (1 - gamma))
-        # b_hg = (p_rec - m_ae) * m_anf / (a_anf * a_ans * (1 - gamma))
-        #
-        # dgt4_hg = -m_anf * (g4 + theta - h4) / (a_ans * (1 - gamma))
+        s_c2_gh = (-t4 * b_gh + dgt4_gh) / a_gh - (p_rec - m_ae) / ((a_anf + a_ans) * a_gh) + g4
 
         def a4_gt(t):
             # general solution for g(t)
@@ -431,8 +461,64 @@ class ODEThreeCompHydSimulator:
             # EQ(9) with constants for g(t) and g'(t)
             return a_ans * (1 - theta - gamma) / m_ans * a4_dgt(t) + a4_gt(t) + theta
 
-        ht_end = 1 - phi
-        # check if equilibrium in this phase
+        # phase ends when g drops below h (or if h <= 1-phi)
+        tgth = optimize.fsolve(lambda t: theta + a4_gt(t) - a4_ht(t), x0=np.array([0]))[0]
 
-        t_end = optimize.fsolve(lambda t: ht_end - a4_ht(t), x0=np.array([0]))[0]
-        gt_end = a4_gt(t_end)
+        # in case h rises above g before phase A4 ends, return time at which they are equal
+        if a4_ht(tgth) >= 1 - phi:
+            # check if targeted recovery time is before phase end time
+            tgth = min(float(tgth), t_rec)
+            return tgth, a4_ht(tgth), a4_gt(tgth)
+        # otherwise phase ends at h(t) = 1-phi
+        else:
+            t_end = optimize.fsolve(lambda t: 1 - phi - a4_ht(t), x0=np.array([0]))[0]
+            # check if targeted recovery time is before phase end time
+            t_end = min(float(t_end), t_rec)
+            return t_end, a4_ht(t_end), a4_gt(t_end)
+
+    @staticmethod
+    def rec_a4_r2(t4: float, h4: float, g4: float, p_rec: float, t_rec: float, conf: list):
+
+        a_anf = conf[0]
+        a_ans = conf[1]
+        m_ae = conf[2]
+        m_anf = conf[4]
+        theta = conf[5]
+        gamma = conf[6]
+        phi = conf[7]
+
+        # A4 R2 is only applicable if h is above g (epsilon subtracted) and h below pipe exit of Ae
+        if h4 <= 1 - phi or g4 + theta < h4 - 0.000001:
+            logging.info("skipped A4 R2. {} {}".format(h4, g4 + theta))
+            return t4, h4, g4
+
+        # if h is above g simulate flow from AnF into AnS
+        a_hg = (a_anf + a_ans) * m_anf / (a_anf * a_ans * (1 - gamma))
+        b_hg = (p_rec - m_ae) * m_anf / (a_anf * a_ans * (1 - gamma))
+
+        # derivative g'(t4) can be calculated manually from g4, t4, and h4
+        dgt4_hg = - m_anf * (g4 + theta - h4) / (a_ans * (1 - gamma))
+
+        # which then allows to derive c1 and c2
+        s_c1_gh = ((p_rec - m_ae) / (a_anf + a_ans) - dgt4_hg) * np.exp(a_hg * t4)
+        s_c2_gh = (-t4 * b_hg + dgt4_hg) / a_hg - (p_rec - m_ae) / ((a_anf + a_ans) * a_hg) + g4
+
+        def a4_gt(t):
+            # general solution for g(t)
+            return t * (p_rec - m_ae) / (a_anf + a_ans) + s_c2_gh + s_c1_gh / a_hg * np.exp(-a_hg * t)
+
+        def a4_dgt(t):
+            # first derivative g'(t)
+            return (p_rec - m_ae) / (a_anf + a_ans) - s_c1_gh * np.exp(-a_hg * t)
+
+        def a4_ht(t):
+            # EQ(16) with constants for g(t) and g'(t)
+            return a_ans * (1 - gamma) / m_anf * a4_dgt(t) + a4_gt(t) + theta
+
+        h_target = 1 - phi
+        t_end = optimize.fsolve(lambda t: h_target - a4_ht(t), x0=np.array([0]))[0]
+
+        # check if targeted recovery time is before phase end time
+        t_end = min(float(t_end), t_rec)
+
+        return t_end, a4_ht(t_end), a4_gt(t_end)

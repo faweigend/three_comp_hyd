@@ -1,6 +1,7 @@
 import logging
 
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
+from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 
 # an A configuration
@@ -29,8 +30,16 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    hz = 10
-    configs = [a, b, c, d]
+    hz = 250
+    p_exp = 350
+    p_rec = 100
+    t_rec = 15
+    eps = 0.005
+
+    configs = [#a,
+               #b,
+               #c,
+               d]
 
     for conf in configs:
         # create three component hydraulic agent with example configuration
@@ -39,4 +48,36 @@ if __name__ == "__main__":
                                   m_ae=conf[2], m_ans=conf[3],
                                   m_anf=conf[4], the=conf[5],
                                   gam=conf[6], phi=conf[7])
+        ThreeCompVisualisation(agent)
+
+        # Start with first time to exhaustion bout
+        tte, h_tte, g_tte = ODEThreeCompHydSimulator.tte(p_exp=p_exp, conf=conf)
+
+        # double-check with discrete agent
+        for _ in range(int(round(tte * hz))):
+            agent.set_power(p_exp)
+            agent.perform_one_step()
+        g_diff = agent.get_g() - g_tte
+        h_diff = agent.get_h() - h_tte
+        assert abs(g_diff) < eps, "TTE1 g is off by {}".format(g_diff)
+        assert abs(h_diff) < eps, "TTE1 h is off by {}".format(h_diff)
+
+        logging.info("TTE END t: {} h: {} g: {}".format(tte, abs(h_diff), abs(g_diff)))
+        ThreeCompVisualisation(agent)
+
+        # Now recovery
+        rec, h_rec, g_rec = ODEThreeCompHydSimulator.rec(conf=conf, start_h=h_tte,
+                                                         start_g=g_tte, p_rec=p_rec,
+                                                         t_rec=t_rec)
+
+        # double-check with discrete agent
+        for _ in range(int(round(rec * hz))):
+            agent.set_power(p_rec)
+            agent.perform_one_step()
+        g_diff = agent.get_g() - g_rec
+        h_diff = agent.get_h() - h_rec
+        assert abs(g_diff) < eps, "REC g is off by {}".format(g_diff)
+        assert abs(h_diff) < eps, "REC h is off by {}".format(h_diff)
+
+        logging.info("REC END t: {} h: {} g: {}".format(rec, abs(h_diff), abs(g_diff)))
         ThreeCompVisualisation(agent)
