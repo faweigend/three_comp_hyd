@@ -285,35 +285,35 @@ class ODEThreeCompHydSimulator:
             float, float, float):
 
         # A6
-        t5, h5, g5 = ODEThreeCompHydSimulator.rec_a6(t6=0, h6=start_h, g6=start_g,
+        t6, h6, g6 = ODEThreeCompHydSimulator.rec_a6(t6=0, h6=start_h, g6=start_g,
                                                      p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t5 == t_rec:
-            logging.info("RECOVERY END IN A6: t: {} h: {} g: {}".format(t5, h5, g5))
-            return t5, h5, g5
+        if t6 == t_rec:
+            logging.info("RECOVERY END IN A6: t: {} h: {} g: {}".format(t6, h6, g6))
+            return t6, h6, g6
 
         # A5
-        t4, h4, g4 = ODEThreeCompHydSimulator.rec_a5(t5=t5, h5=h5, g5=g5,
+        t5, h5, g5 = ODEThreeCompHydSimulator.rec_a5(t5=t6, h5=h6, g5=g6,
                                                      p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t4 == t_rec:
-            logging.info("RECOVERY END IN A5: t: {} h: {} g: {}".format(t4, h4, g4))
-            return t4, h4, g4
+        if t5 == t_rec:
+            logging.info("RECOVERY END IN A5: t: {} h: {} g: {}".format(t5, h5, g5))
+            return t5, h5, g5
 
         # A4 R1
-        t4r1, h4r1, g4r1 = ODEThreeCompHydSimulator.rec_a4_r1(t4=t4, h4=h4, g4=g4,
+        t4r1, h4r1, g4r1 = ODEThreeCompHydSimulator.rec_a4_r1(t4=t5, h4=h5, g4=g5,
                                                               p_rec=p_rec, t_rec=t_rec, conf=conf)
         if t4r1 == t_rec:
             logging.info("RECOVERY END IN A4 R1: t: {} h: {} g: {}".format(t4r1, h4r1, g4r1))
             return t4r1, h4r1, g4r1
 
         # A4 R2
-        t3, h3, g3 = ODEThreeCompHydSimulator.rec_a4_r2(t4=t4r1, h4=h4r1, g4=g4r1,
-                                                        p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t3 == t_rec:
-            logging.info("RECOVERY END IN A4 R2: t: {} h: {} g: {}".format(t3, h3, g3))
-            return t3, h3, g3
+        t4r2, h4r2, g4r2 = ODEThreeCompHydSimulator.rec_a4_r2(t4=t4r1, h4=h4r1, g4=g4r1,
+                                                              p_rec=p_rec, t_rec=t_rec, conf=conf)
+        if t4r2 == t_rec:
+            logging.info("RECOVERY END IN A4 R2: t: {} h: {} g: {}".format(t4r2, h4r2, g4r2))
+            return t4r2, h4r2, g4r2
 
         # A3 R1
-        t3r1, h3r1, g3r1 = ODEThreeCompHydSimulator.rec_a3_r1(t3=t3, h3=h3, g3=g3,
+        t3r1, h3r1, g3r1 = ODEThreeCompHydSimulator.rec_a3_r1(t3=t4r2, h3=h4r2, g3=g4r2,
                                                               p_rec=p_rec, t_rec=t_rec, conf=conf)
         if t3r1 == t_rec:
             logging.info("RECOVERY END IN A3 R1: t: {} h: {} g: {}".format(t3r1, h3r1, g3r1))
@@ -325,6 +325,20 @@ class ODEThreeCompHydSimulator:
         if t3r2 == t_rec:
             logging.info("RECOVERY END IN A3 R2: t: {} h: {} g: {}".format(t3r2, h3r2, g3r2))
             return t3r2, h3r2, g3r2
+
+        # A2
+        t2, h2 = ODEThreeCompHydSimulator.rec_a2(t2=t3r2, h2=h3r2,
+                                                 p_rec=p_rec, t_rec=t_rec, conf=conf)
+        if t2 == t_rec:
+            logging.info("RECOVERY END IN A2: t: {} h: {}".format(t2, h2))
+            return t2, h2, 0
+
+        # A1
+        t1, h1 = ODEThreeCompHydSimulator.rec_a1(t1=t2, h1=h2,
+                                                 p_rec=p_rec, t_rec=t_rec, conf=conf)
+        if t1 == t_rec:
+            logging.info("RECOVERY END IN A2: t: {} h: {}".format(t1, h1))
+            return t1, h1, 0
 
     @staticmethod
     def rec_a6(t6: float, h6: float, g6: float, p_rec: float, t_rec: float, conf: list):
@@ -698,11 +712,11 @@ class ODEThreeCompHydSimulator:
 
         # full recovery is only possible if p_rec is 0
         def a1_ht(t):
-            return p_rec * (1 - phi) / m_ae * (1 - np.exp(- m_ae * t / (a_anf * (1 - phi))))
+            return p_rec * (1 - phi) / m_ae * s_c1 * np.exp(- m_ae * t / (a_anf * (1 - phi)))
 
         # h(t) = 0 is never reached and causes a log(0) estimation. A close approximation is h(t) = epsilon
         t_end = a_anf * (1 + phi) / - m_ae * np.log(
-            0.0001 / s_c1 + p_rec * (phi + 1) / m_ae * s_c1)
+            ODEThreeCompHydSimulator.eps / s_c1 + p_rec * (phi + 1) / m_ae * s_c1)
 
         # check if targeted recovery time is before phase end time
         t_end = min(t_end, t_rec)

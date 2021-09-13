@@ -124,7 +124,6 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, hz, eps, conf, agent, log_level=0):
     a1_t, a1_h = ODEThreeCompHydSimulator.rec_a1(t1=a2_t, h1=a2_h,
                                                  p_rec=p_rec, t_rec=t_rec, conf=conf)
 
-    print(a1_t, a1_h)
     # double-check with discrete agent
     for _ in range(int(round((a1_t - a2_t) * hz))):
         agent.set_power(p_rec)

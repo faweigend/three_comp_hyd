@@ -31,7 +31,7 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     hz = 250
-    p_exp = 550
+    p_exp = 450
     p_rec = 100
     t_rec = 150
     eps = 0.005
