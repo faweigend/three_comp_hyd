@@ -22,7 +22,7 @@ c = [15101.24769778409, 86209.27743067988,  # anf, ans
 # a D configuration
 d = [15101.24769778409, 86209.27743067988,  # anf, ans
      252.71702367096787, 363.2970828395908,  # m_ae, m_ans
-     38.27073086773415, 0.64892228099402588,  # m_anf, theta
+     380.27073086773415, 0.64892228099402588,  # m_anf, theta
      0.1580228306857272, 0.6580228306857272]  # gamma, phi
 
 if __name__ == "__main__":
@@ -31,15 +31,17 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     hz = 250
-    p_exp = 350
+    p_exp = 550
     p_rec = 100
-    t_rec = 15
+    t_rec = 150
     eps = 0.005
 
-    configs = [#a,
-               #b,
-               #c,
-               d]
+    configs = [
+        # a,
+        # b,
+        # c,
+        d
+    ]
 
     for conf in configs:
         # create three component hydraulic agent with example configuration

@@ -30,8 +30,8 @@ if __name__ == "__main__":
 
     # End of A3 R1
     t3 = 0
-    ht3 = 0.25051681084552113
-    gt3 = 0.10159452985149524
+    ht3 = 0.2
+    gt3 = 0.2
 
     a_anf = conf[0]
     a_ans = conf[1]
@@ -94,8 +94,20 @@ if __name__ == "__main__":
     ThreeCompVisualisation(agent)
     agent.set_power(p_rec)
 
-    for _ in range(int(g0 * agent.hz)):
+    for i in range(int(g0 * agent.hz)):
         agent.perform_one_step()
+
+        if i % agent.hz == 0:
+            test_t = i / agent.hz
+            logging.info("predicted time: {} \n"
+                         "diff h: {} - {} = {}\n"
+                         "diff g: {} - {} = {}".format(test_t,
+                                                       a3_ht(test_t),
+                                                       agent.get_h(),
+                                                       a3_ht(test_t) - agent.get_h(),
+                                                       a3_gt(test_t),
+                                                       agent.get_g(),
+                                                       a3_gt(test_t) - agent.get_g()))
 
     logging.info("predicted time: {} \n"
                  "diff h: {} - {} = {}\n"

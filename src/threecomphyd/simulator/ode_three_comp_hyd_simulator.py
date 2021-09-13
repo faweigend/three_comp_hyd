@@ -3,12 +3,16 @@ import math
 
 import numpy as np
 from scipy import optimize
+from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 
 
 class ODEThreeCompHydSimulator:
     """
     Simulates Three Component Hydraulic Model responses using Ordinary Differential Equations
     """
+
+    # precision epsilon for threshold checks
+    eps = 0.000001
 
     @staticmethod
     def tte(p_exp: float, conf: list, max_time: int = 5000) -> (float, float, float):
@@ -308,6 +312,20 @@ class ODEThreeCompHydSimulator:
             logging.info("RECOVERY END IN A4 R2: t: {} h: {} g: {}".format(t3, h3, g3))
             return t3, h3, g3
 
+        # A3 R1
+        t3r1, h3r1, g3r1 = ODEThreeCompHydSimulator.rec_a3_r1(t3=t3, h3=h3, g3=g3,
+                                                              p_rec=p_rec, t_rec=t_rec, conf=conf)
+        if t3r1 == t_rec:
+            logging.info("RECOVERY END IN A3 R1: t: {} h: {} g: {}".format(t3r1, h3r1, g3r1))
+            return t3r1, h3r1, g3r1
+
+        # A3 R2
+        t3r2, h3r2, g3r2 = ODEThreeCompHydSimulator.rec_a3_r2(t3=t3r1, h3=h3r1, g3=g3r1,
+                                                              p_rec=p_rec, t_rec=t_rec, conf=conf)
+        if t3r2 == t_rec:
+            logging.info("RECOVERY END IN A3 R2: t: {} h: {} g: {}".format(t3r2, h3r2, g3r2))
+            return t3r2, h3r2, g3r2
+
     @staticmethod
     def rec_a6(t6: float, h6: float, g6: float, p_rec: float, t_rec: float, conf: list):
         """
@@ -334,7 +352,7 @@ class ODEThreeCompHydSimulator:
 
         # check whether phase is applicable or if h is
         # already above the end of the phase
-        if h6 <= h_target:
+        if h6 <= h_target - ODEThreeCompHydSimulator.eps:
             return t6, h6, g6
 
         # g(t6) = g6 can be solved for c
@@ -392,7 +410,7 @@ class ODEThreeCompHydSimulator:
 
         # check whether phase is applicable or if h is
         # already above the end of the phase
-        if h5 <= h_target:
+        if h5 <= h_target - ODEThreeCompHydSimulator.eps:
             return t5, h5, g5
 
         # g(t5) = g5 can be solved for c
@@ -435,7 +453,7 @@ class ODEThreeCompHydSimulator:
         phi = conf[7]
 
         # A4 R1 is only applicable if g is above h and h below pipe exit of Ae
-        if h4 <= 1 - phi or g4 + theta > h4:
+        if h4 <= 1 - phi - ODEThreeCompHydSimulator.eps or g4 + theta > h4:
             return t4, h4, g4
 
         # if g is above h (flow from AnS into AnF)
@@ -488,7 +506,8 @@ class ODEThreeCompHydSimulator:
         phi = conf[7]
 
         # A4 R2 is only applicable if h is above g (epsilon subtracted) and h below pipe exit of Ae
-        if h4 <= 1 - phi or g4 + theta < h4 - 0.000001:
+        if h4 <= 1 - phi - ODEThreeCompHydSimulator.eps or \
+                g4 + theta < h4 - ODEThreeCompHydSimulator.eps:
             logging.info("skipped A4 R2. {} {}".format(h4, g4 + theta))
             return t4, h4, g4
 
@@ -522,3 +541,170 @@ class ODEThreeCompHydSimulator:
         t_end = min(float(t_end), t_rec)
 
         return t_end, a4_ht(t_end), a4_gt(t_end)
+
+    @staticmethod
+    def rec_a3_r1(t3: float, h3: float, g3: float, p_rec: float, t_rec: float, conf: list):
+
+        a_anf = conf[0]
+        a_ans = conf[1]
+        m_ae = conf[2]
+        m_ans = conf[3]
+        theta = conf[5]
+        gamma = conf[6]
+        phi = conf[7]
+
+        # A3 starts when h <= 1-phi
+        # R1 is only applicable if g+theta < h
+        if h3 > 1 - phi + ODEThreeCompHydSimulator.eps or not g3 + theta < h3:
+            logging.info("skipped A3 R1. {} {}".format(h3, g3 + theta))
+            return t3, h3, g3
+
+        # my simplified form
+        a = m_ae / (a_anf * (1 - phi)) + \
+            m_ans / (a_ans * (1 - theta - gamma)) + \
+            m_ans / (a_anf * (1 - theta - gamma))
+
+        b = m_ae * m_ans / \
+            (a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
+
+        # c' for p_rec
+        c = m_ans * (p_rec * (1 - phi) - m_ae * theta) / \
+            (a_anf * a_ans * (1 - phi) * (1 - theta - gamma))
+
+        # wolfram alpha gave these estimations as solutions for l''(t) + a*l'(t) + b*l(t) = c
+        r1 = 0.5 * (-np.sqrt(a ** 2 - 4 * b) - a)
+        r2 = 0.5 * (np.sqrt(a ** 2 - 4 * b) - a)
+
+        # uses Al dt/dl part of EQ(8) solved for c2
+        # r1 * c1 * exp(r1*t3) + r2 * c2 * exp(r2*t3) = m_ans * (ht3 - gt3 - theta)) / (a_ans * r2 * (1 - theta - gamma))
+        # and then substituted in EQ(14) and solved for c1
+        s_c1 = (c / b + (m_ans * (h3 - g3 - theta)) / (a_ans * r2 * (1 - theta - gamma)) - g3) / \
+               (np.exp(r1 * t3) * (r1 / r2 - 1))
+
+        # uses EQ(14) with solution for c1 and solves for c2
+        s_c2 = (g3 - s_c1 * np.exp(r1 * t3) - c / b) / np.exp(r2 * t3)
+
+        def a3_gt(t):
+            # the general solution for g(t)
+            return s_c1 * np.exp(r1 * t) + s_c2 * np.exp(r2 * t) + c / b
+
+        # substitute into EQ(9) for h
+        def a3_ht(t):
+            k1 = a_ans * (1 - theta - gamma) / m_ans * s_c1 * r1 + s_c1
+            k2 = a_ans * (1 - theta - gamma) / m_ans * s_c2 * r2 + s_c2
+            return k1 * np.exp(r1 * t) + k2 * np.exp(r2 * t) + c / b + theta
+
+        # find the point where h(t) == g(t)
+        eq_gh = optimize.fsolve(lambda t: (a3_gt(t) + theta) - a3_ht(t), x0=np.array([0]))[0]
+
+        # check if targeted recovery time is before phase end time
+        t_end = min(float(eq_gh), t_rec)
+
+        return t_end, a3_ht(t_end), a3_gt(t_end)
+
+    @staticmethod
+    def rec_a3_r2(t3: float, h3: float, g3: float, p_rec: float, t_rec: float, conf: list):
+
+        a_anf = conf[0]
+        a_ans = conf[1]
+        m_ae = conf[2]
+        m_anf = conf[4]
+        theta = conf[5]
+        gamma = conf[6]
+        phi = conf[7]
+
+        # A3 starts when h <= 1-phi
+        # R2 is only applicable if g+theta >= h
+        if h3 > 1 - phi + ODEThreeCompHydSimulator.eps or not g3 + theta >= h3:
+            logging.info("skipped A3 R2. {} {}".format(h3, g3 + theta))
+            return t3, h3, g3
+
+        # EQ 16 and 17 substituted in EQ 8
+        a = m_ae / (a_anf * (1 - phi)) + \
+            m_anf / (a_ans * (1 - gamma)) + \
+            m_anf / (a_anf * (1 - gamma))
+
+        b = m_ae * m_anf / \
+            (a_anf * a_ans * (1 - phi) * (1 - gamma))
+
+        # c = (p_rec - (m_ae * theta) / (1 - phi)) * m_anf / \
+        #     (a_anf * a_ans * (1 - gamma))
+        c = m_anf * (p_rec * (1 - phi) - m_ae * theta) / \
+            (a_anf * a_ans * (1 - phi) * (1 - gamma))
+
+        # wolfram alpha gave these estimations as solutions for l''(t) + a*l'(t) + b*l(t) = c
+        r1 = 0.5 * (-np.sqrt(a ** 2 - 4 * b) - a)
+        r2 = 0.5 * (np.sqrt(a ** 2 - 4 * b) - a)
+
+        # uses Al dt/dl part of EQ(16) == dl/dt of EQ(14) solved for c2
+        # and then substituted in EQ(14) and solved for c1
+        s_c1 = (c / b - (m_anf * (g3 + theta - h3)) / (a_ans * r2 * (1 - gamma)) - g3) / \
+               (np.exp(r1 * t3) * (r1 / r2 - 1))
+
+        # uses EQ(14) with solution for c1 and solves for c2
+        s_c2 = (g3 - s_c1 * np.exp(r1 * t3) - c / b) / np.exp(r2 * t3)
+
+        def a3_gt(t):
+            # the general solution for g(t)
+            return s_c1 * np.exp(r1 * t) + s_c2 * np.exp(r2 * t) + c / b
+
+        # substitute into EQ(9) for h
+        def a3_ht(t):
+            k1 = a_ans * (1 - gamma) / m_anf * s_c1 * r1 + s_c1
+            k2 = a_ans * (1 - gamma) / m_anf * s_c2 * r2 + s_c2
+            return k1 * np.exp(r1 * t) + k2 * np.exp(r2 * t) + c / b + theta
+
+        # use the quickest possible recovery as the initial guess (assumes h=0)
+        in_c1 = (g3 + theta) * np.exp(-m_anf * t3 / ((gamma - 1) * a_ans))
+        in_t = (gamma - 1) * a_ans * (np.log(theta) - np.log(in_c1)) / m_anf
+
+        # find the point where g(t) == 0
+        g0 = optimize.fsolve(lambda t: a3_gt(t), x0=np.array([in_t]))[0]
+
+        # check if targeted recovery time is before phase end time
+        t_end = min(float(g0), t_rec)
+
+        return t_end, a3_ht(t_end), a3_gt(t_end)
+
+    @staticmethod
+    def rec_a2(t2: float, h2: float, p_rec: float, t_rec: float, conf: list):
+
+        a_anf = conf[0]
+        m_ae = conf[2]
+        phi = conf[7]
+
+        if h2 < 1 - phi:
+            logging.info("skipped A2. {}".format(h2))
+            return t2, h2
+
+        def a2_ht(t):
+            return h2 - t * (m_ae - p_rec) / a_anf
+
+        t_end = (h2 - 1 + phi) * a_anf / (m_ae - p_rec)
+
+        # check if targeted recovery time is before phase end time
+        t_end = min(t_end, t_rec)
+
+        return t_end, a2_ht(t_end)
+
+    @staticmethod
+    def rec_a1(t1: float, h1: float, p_rec: float, t_rec: float, conf: list):
+
+        a_anf = conf[0]
+        m_ae = conf[2]
+        phi = conf[7]
+
+        s_c1 = (h1 + p_rec * phi / m_ae - p_rec / m_ae) * np.exp(-m_ae * t1 / (a_anf * (phi - 1)))
+
+        # full recovery is only possible if p_rec is 0
+        def a1_ht(t):
+            return p_rec * (1 - phi) / m_ae * (1 - np.exp(- m_ae * t / (a_anf * (1 - phi))))
+
+        # h(t) = 0 is never reached and causes a log(0) estimation. A close approximation is h(t) = epsilon
+        t_end = a_anf * (1 + phi) / - m_ae * np.log(
+            0.0001 / s_c1 + p_rec * (phi + 1) / m_ae * s_c1)
+
+        # check if targeted recovery time is before phase end time
+        t_end = min(t_end, t_rec)
+
+        return t_end, a1_ht(t_end)
