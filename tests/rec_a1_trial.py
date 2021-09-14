@@ -42,15 +42,17 @@ if __name__ == "__main__":
     phi = conf[7]
 
     # our general solution to the integral
-    s_c1 = (ht1 + p_rec * phi / m_ae - p_rec / m_ae) * np.exp(-m_ae * t1 / (a_anf * (phi - 1)))
+    s_c1 = (ht1 - p_rec * (1 - phi) / m_ae) / np.exp(- m_ae * t1 / (a_anf * (1 - phi)))
+
 
     # full recovery is only possible if p_rec is 0
     # use equation (4) from morton with own addition
     def a1_ht(t):
-        return p_rec * (1 - phi) / m_ae * s_c1 * np.exp(- m_ae * t / (a_anf * (1 - phi)))
+        return s_c1 * np.exp(- m_ae * t / (a_anf * (1 - phi))) + p_rec * (1 - phi) / m_ae
+
 
     # h(t) = 0 is never reached and causes a log(0) estimation. A close approximation is h(t) = 0.0001
-    t0 = a_anf * (1 + phi) / - m_ae * np.log(0.0001 / s_c1 + p_rec * (phi + 1) / m_ae * s_c1)
+    t0 = a_anf * (1 - phi) / - m_ae * np.log(0.000001 / s_c1 - p_rec * (1 - phi) / (m_ae * s_c1))
 
     # check in simulation
     agent.reset()

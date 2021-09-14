@@ -32,16 +32,11 @@ if __name__ == "__main__":
 
     hz = 250
     p_exp = 450
-    p_rec = 100
+    p_rec = 0
     t_rec = 150
     eps = 0.005
 
-    configs = [
-        # a,
-        # b,
-        # c,
-        d
-    ]
+    configs = [a, b, c, d]
 
     for conf in configs:
         # create three component hydraulic agent with example configuration

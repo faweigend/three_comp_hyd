@@ -3,7 +3,6 @@ import math
 
 import numpy as np
 from scipy import optimize
-from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 
 
 class ODEThreeCompHydSimulator:
@@ -284,61 +283,29 @@ class ODEThreeCompHydSimulator:
     def rec(conf: list, start_h: float, start_g: float, p_rec: float = 0.0, t_rec: float = 5000.0) -> (
             float, float, float):
 
-        # A6
-        t6, h6, g6 = ODEThreeCompHydSimulator.rec_a6(t6=0, h6=start_h, g6=start_g,
-                                                     p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t6 == t_rec:
-            logging.info("RECOVERY END IN A6: t: {} h: {} g: {}".format(t6, h6, g6))
-            return t6, h6, g6
+        # now iterate through all recovery phases
+        phases = [ODEThreeCompHydSimulator.rec_a6,
+                  ODEThreeCompHydSimulator.rec_a5,
+                  ODEThreeCompHydSimulator.rec_a4_r1,
+                  ODEThreeCompHydSimulator.rec_a4_r2,
+                  ODEThreeCompHydSimulator.rec_a3_r1,
+                  ODEThreeCompHydSimulator.rec_a3_r2,
+                  ODEThreeCompHydSimulator.rec_a2,
+                  ODEThreeCompHydSimulator.rec_a1]
 
-        # A5
-        t5, h5, g5 = ODEThreeCompHydSimulator.rec_a5(t5=t6, h5=h6, g5=g6,
-                                                     p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t5 == t_rec:
-            logging.info("RECOVERY END IN A5: t: {} h: {} g: {}".format(t5, h5, g5))
-            return t5, h5, g5
+        # start time from 0 and given start fill level
+        t = 0
+        h, g = start_h, start_g
 
-        # A4 R1
-        t4r1, h4r1, g4r1 = ODEThreeCompHydSimulator.rec_a4_r1(t4=t5, h4=h5, g4=g5,
-                                                              p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t4r1 == t_rec:
-            logging.info("RECOVERY END IN A4 R1: t: {} h: {} g: {}".format(t4r1, h4r1, g4r1))
-            return t4r1, h4r1, g4r1
+        # iterate through all phases until end is reached
+        for phase in phases:
+            t, h, g = phase(t, h, g, p_rec=p_rec, t_rec=t_rec, conf=conf)
+            # logging.info("{}\nt {}\nh {}\ng {}".format(phase, t, h, g))
 
-        # A4 R2
-        t4r2, h4r2, g4r2 = ODEThreeCompHydSimulator.rec_a4_r2(t4=t4r1, h4=h4r1, g4=g4r1,
-                                                              p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t4r2 == t_rec:
-            logging.info("RECOVERY END IN A4 R2: t: {} h: {} g: {}".format(t4r2, h4r2, g4r2))
-            return t4r2, h4r2, g4r2
-
-        # A3 R1
-        t3r1, h3r1, g3r1 = ODEThreeCompHydSimulator.rec_a3_r1(t3=t4r2, h3=h4r2, g3=g4r2,
-                                                              p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t3r1 == t_rec:
-            logging.info("RECOVERY END IN A3 R1: t: {} h: {} g: {}".format(t3r1, h3r1, g3r1))
-            return t3r1, h3r1, g3r1
-
-        # A3 R2
-        t3r2, h3r2, g3r2 = ODEThreeCompHydSimulator.rec_a3_r2(t3=t3r1, h3=h3r1, g3=g3r1,
-                                                              p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t3r2 == t_rec:
-            logging.info("RECOVERY END IN A3 R2: t: {} h: {} g: {}".format(t3r2, h3r2, g3r2))
-            return t3r2, h3r2, g3r2
-
-        # A2
-        t2, h2 = ODEThreeCompHydSimulator.rec_a2(t2=t3r2, h2=h3r2,
-                                                 p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t2 == t_rec:
-            logging.info("RECOVERY END IN A2: t: {} h: {}".format(t2, h2))
-            return t2, h2, 0
-
-        # A1
-        t1, h1 = ODEThreeCompHydSimulator.rec_a1(t1=t2, h1=h2,
-                                                 p_rec=p_rec, t_rec=t_rec, conf=conf)
-        if t1 == t_rec:
-            logging.info("RECOVERY END IN A2: t: {} h: {}".format(t1, h1))
-            return t1, h1, 0
+            # if recovery time is reached return fill levels at that point
+            if t == t_rec:
+                logging.info("RECOVERY END IN {}".format(phase))
+                return t, h, g
 
     @staticmethod
     def rec_a6(t6: float, h6: float, g6: float, p_rec: float, t_rec: float, conf: list):
@@ -366,7 +333,7 @@ class ODEThreeCompHydSimulator:
 
         # check whether phase is applicable or if h is
         # already above the end of the phase
-        if h6 <= h_target - ODEThreeCompHydSimulator.eps:
+        if not h6 > h_target:
             return t6, h6, g6
 
         # g(t6) = g6 can be solved for c
@@ -424,7 +391,7 @@ class ODEThreeCompHydSimulator:
 
         # check whether phase is applicable or if h is
         # already above the end of the phase
-        if h5 <= h_target - ODEThreeCompHydSimulator.eps:
+        if not h5 > h_target:
             return t5, h5, g5
 
         # g(t5) = g5 can be solved for c
@@ -466,8 +433,10 @@ class ODEThreeCompHydSimulator:
         gamma = conf[6]
         phi = conf[7]
 
-        # A4 R1 is only applicable if g is above h and h below pipe exit of Ae
-        if h4 <= 1 - phi - ODEThreeCompHydSimulator.eps or g4 + theta > h4:
+        # A4 R1 is only applicable h below pipe exit of Ae ...
+        # ... and if g is above h (allows error of epsilon)
+        if not h4 > 1 - phi \
+                or not h4 > g4 + theta + ODEThreeCompHydSimulator.eps:
             return t4, h4, g4
 
         # if g is above h (flow from AnS into AnF)
@@ -519,10 +488,10 @@ class ODEThreeCompHydSimulator:
         gamma = conf[6]
         phi = conf[7]
 
-        # A4 R2 is only applicable if h is above g (epsilon subtracted) and h below pipe exit of Ae
-        if h4 <= 1 - phi - ODEThreeCompHydSimulator.eps or \
-                g4 + theta < h4 - ODEThreeCompHydSimulator.eps:
-            logging.info("skipped A4 R2. {} {}".format(h4, g4 + theta))
+        # A4 R2 is only applicable if h below pipe exit of Ae...
+        # ... and h is above g (error of epsilon tolerated)
+        if not h4 > 1 - phi or \
+                not h4 < g4 + theta + ODEThreeCompHydSimulator.eps:
             return t4, h4, g4
 
         # if h is above g simulate flow from AnF into AnS
@@ -549,7 +518,15 @@ class ODEThreeCompHydSimulator:
             return a_ans * (1 - gamma) / m_anf * a4_dgt(t) + a4_gt(t) + theta
 
         h_target = 1 - phi
-        t_end = optimize.fsolve(lambda t: h_target - a4_ht(t), x0=np.array([0]))[0]
+        t_end = optimize.fsolve(lambda t: h_target - a4_ht(t), x0=np.array([t4]))[0]
+
+        # A4 also ends if AnS is completely refilled
+        if a4_gt(t_end) < 0:
+            # use the quickest possible recovery as the initial guess (assumes h=0)
+            in_c1 = (g4 + theta) * np.exp(-m_anf * t4 / ((gamma - 1) * a_ans))
+            in_t = (gamma - 1) * a_ans * (np.log(theta) - np.log(in_c1)) / m_anf
+            # find time at which AnS is full
+            t_end = optimize.fsolve(lambda x: a4_gt(x), x0=np.array([in_t]))[0]
 
         # check if targeted recovery time is before phase end time
         t_end = min(float(t_end), t_rec)
@@ -567,10 +544,10 @@ class ODEThreeCompHydSimulator:
         gamma = conf[6]
         phi = conf[7]
 
-        # A3 starts when h <= 1-phi
-        # R1 is only applicable if g+theta < h
-        if h3 > 1 - phi + ODEThreeCompHydSimulator.eps or not g3 + theta < h3:
-            logging.info("skipped A3 R1. {} {}".format(h3, g3 + theta))
+        # A3 R1 is only applicable if h is above or at pipe exit of Ae...
+        # ... and g is above h (error of epsilon tolerated)
+        if not h3 <= 1 - phi + ODEThreeCompHydSimulator.eps \
+                or not h3 > g3 + theta + ODEThreeCompHydSimulator.eps:
             return t3, h3, g3
 
         # my simplified form
@@ -627,10 +604,10 @@ class ODEThreeCompHydSimulator:
         gamma = conf[6]
         phi = conf[7]
 
-        # A3 starts when h <= 1-phi
-        # R2 is only applicable if g+theta >= h
-        if h3 > 1 - phi + ODEThreeCompHydSimulator.eps or not g3 + theta >= h3:
-            logging.info("skipped A3 R2. {} {}".format(h3, g3 + theta))
+        # A3 R2 is only applicable if h is above or at pipe exit of Ae...
+        # ... and h is above g (error of epsilon tolerated)
+        if not h3 <= 1 - phi + ODEThreeCompHydSimulator.eps \
+                or not h3 < g3 + theta + ODEThreeCompHydSimulator.eps:
             return t3, h3, g3
 
         # EQ 16 and 17 substituted in EQ 8
@@ -681,44 +658,44 @@ class ODEThreeCompHydSimulator:
         return t_end, a3_ht(t_end), a3_gt(t_end)
 
     @staticmethod
-    def rec_a2(t2: float, h2: float, p_rec: float, t_rec: float, conf: list):
+    def rec_a2(t2: float, h2: float, g2: float, p_rec: float, t_rec: float, conf: list):
 
         a_anf = conf[0]
         m_ae = conf[2]
         phi = conf[7]
 
-        if h2 < 1 - phi:
-            logging.info("skipped A2. {}".format(h2))
-            return t2, h2
+        if 1 - phi > h2:
+            return t2, h2, g2
 
         def a2_ht(t):
-            return h2 - t * (m_ae - p_rec) / a_anf
+            return h2 - (t - t2) * (m_ae - p_rec) / a_anf
 
-        t_end = (h2 - 1 + phi) * a_anf / (m_ae - p_rec)
+        # the total duration of recovery phase A2 from t2 on
+        t_end = (h2 - 1 + phi) * a_anf / (m_ae - p_rec) + t2
 
         # check if targeted recovery time is before phase end time
         t_end = min(t_end, t_rec)
 
-        return t_end, a2_ht(t_end)
+        return t_end, a2_ht(t_end), g2
 
     @staticmethod
-    def rec_a1(t1: float, h1: float, p_rec: float, t_rec: float, conf: list):
+    def rec_a1(t1: float, h1: float, g1: float, p_rec: float, t_rec: float, conf: list):
 
         a_anf = conf[0]
         m_ae = conf[2]
         phi = conf[7]
 
-        s_c1 = (h1 + p_rec * phi / m_ae - p_rec / m_ae) * np.exp(-m_ae * t1 / (a_anf * (phi - 1)))
+        s_c1 = (h1 - p_rec * (1 - phi) / m_ae) / np.exp(- m_ae * t1 / (a_anf * (1 - phi)))
 
         # full recovery is only possible if p_rec is 0
         def a1_ht(t):
-            return p_rec * (1 - phi) / m_ae * s_c1 * np.exp(- m_ae * t / (a_anf * (1 - phi)))
+            return s_c1 * np.exp(- m_ae * t / (a_anf * (1 - phi))) + p_rec * (1 - phi) / m_ae
 
-        # h(t) = 0 is never reached and causes a log(0) estimation. A close approximation is h(t) = epsilon
-        t_end = a_anf * (1 + phi) / - m_ae * np.log(
-            ODEThreeCompHydSimulator.eps / s_c1 + p_rec * (phi + 1) / m_ae * s_c1)
+        # h(t) = approximately 0 (epsilon)
+        t_end = a_anf * (1 - phi) / - m_ae * np.log(
+            ODEThreeCompHydSimulator.eps / s_c1 - p_rec * (1 - phi) / (m_ae * s_c1))
 
         # check if targeted recovery time is before phase end time
         t_end = min(t_end, t_rec)
 
-        return t_end, a1_ht(t_end)
+        return t_end, a1_ht(t_end), g1
