@@ -307,6 +307,9 @@ class ODEThreeCompHydSimulator:
                 logging.info("RECOVERY END IN {}".format(phase))
                 return t, h, g
 
+        # if all phases complete full recovery is reached
+        return t, h, g
+
     @staticmethod
     def rec_a6(t6: float, h6: float, g6: float, p_rec: float, t_rec: float, conf: list):
         """
@@ -685,15 +688,14 @@ class ODEThreeCompHydSimulator:
         m_ae = conf[2]
         phi = conf[7]
 
-        s_c1 = (h1 - p_rec * (1 - phi) / m_ae) / np.exp(- m_ae * t1 / (a_anf * (1 - phi)))
-
-        # full recovery is only possible if p_rec is 0
         def a1_ht(t):
-            return s_c1 * np.exp(- m_ae * t / (a_anf * (1 - phi))) + p_rec * (1 - phi) / m_ae
+            return (h1 - p_rec * (1 - phi) / m_ae) * \
+                   np.exp(m_ae * (t1 - t) / (a_anf * (1 - phi))) + \
+                   p_rec * (1 - phi) / m_ae
 
         # h(t) = approximately 0 (epsilon)
-        t_end = a_anf * (1 - phi) / - m_ae * np.log(
-            ODEThreeCompHydSimulator.eps / s_c1 - p_rec * (1 - phi) / (m_ae * s_c1))
+        t_end = a_anf * (1 - phi) / - m_ae * (np.log(ODEThreeCompHydSimulator.eps - p_rec * (1 - phi) / m_ae) - (
+                np.log(h1 - p_rec * (1 - phi) / m_ae) + m_ae * t1 / (a_anf * (1 - phi))))
 
         # check if targeted recovery time is before phase end time
         t_end = min(t_end, t_rec)

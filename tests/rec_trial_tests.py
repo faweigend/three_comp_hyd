@@ -16,6 +16,9 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, hz, eps, conf, agent, log_level=0):
     # Start with first time to exhaustion bout
     t, h, g = ODEThreeCompHydSimulator.tte(p_exp=p_exp, conf=conf)
 
+    if t == np.inf:
+        return
+
     # double-check with discrete agent
     for _ in range(int(round(t * hz))):
         agent.set_power(p_exp)
@@ -24,7 +27,7 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, hz, eps, conf, agent, log_level=0):
     h_diff = agent.get_h() - h
     assert abs(g_diff) < eps, "TTE g is off by {}".format(g_diff)
     assert abs(h_diff) < eps, "TTE h is off by {}".format(h_diff)
-    ThreeCompVisualisation(agent)
+    # ThreeCompVisualisation(agent)
 
     # now iterate through all recovery phases
     phases = [ODEThreeCompHydSimulator.rec_a6,
@@ -46,7 +49,7 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, hz, eps, conf, agent, log_level=0):
 
         # get estimated time of phase end
         t, h, g = phase(t, h, g, p_rec=p_rec, t_rec=t_rec, conf=conf)
-        logging.info("{}\nt {}\nh {}\ng {}".format(phase, t, h, g))
+        # logging.info("{}\nt {}\nh {}\ng {}".format(phase, t, h, g))
 
         # double-check with discrete agent
         for _ in range(int(round((t - t_p) * hz))):
@@ -59,7 +62,7 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, hz, eps, conf, agent, log_level=0):
         assert abs(h_diff) < eps, "{} h is off by {}".format(phase, h_diff)
 
         # display fill-levels
-        ThreeCompVisualisation(agent)
+        # ThreeCompVisualisation(agent)
 
 
 def the_loop(p_exp: float = 350.0, p_rec: float = 100.0,
@@ -72,21 +75,17 @@ def the_loop(p_exp: float = 350.0, p_rec: float = 100.0,
         udp = MultiObjectiveThreeCompUDP(None, None)
 
         example_conf = udp.create_educated_initial_guess()
-        example_conf = [15101.24769778409, 86209.27743067988, 52.71702367096787, 363.2970828395908, 38.27073086773415,
-                        0.14892228099402588, 0.3524379644134216, 0.4580228306857272]
         logging.info(example_conf)
         # create three component hydraulic agent with example configuration
         agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
                                   m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
                                   gam=example_conf[6], phi=example_conf[7])
 
-        ThreeCompVisualisation(agent)
+        # ThreeCompVisualisation(agent)
 
         rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec,
                             hz=hz, eps=eps, conf=example_conf,
                             agent=agent, log_level=2)
-
-        break
 
 
 if __name__ == "__main__":
@@ -104,11 +103,8 @@ if __name__ == "__main__":
     eps = 0.005
 
     # a C configuration
-    c = [15101.24769778409, 86209.27743067988,  # anf, ans
-         252.71702367096787, 363.2970828395908,  # m_ae, m_ans
-         38.27073086773415, 0.14892228099402588,  # m_anf, theta
-         0.2580228306857272, 0.2580228306857272]  # gamma, phi
-
+    c = [5381.910924589501, 46699.39277057565, 458.9489361010397, 276.5611634824839, 44.10265998056244,
+         0.20621747468462412, 0.2349622469556709, 0.84093243148828]
     agent = ThreeCompHydAgent(hz=hz, a_anf=c[0], a_ans=c[1], m_ae=c[2],
                               m_ans=c[3], m_anf=c[4], the=c[5],
                               gam=c[6], phi=c[7])
@@ -117,4 +113,4 @@ if __name__ == "__main__":
                         hz=hz, eps=eps, conf=c,
                         agent=agent, log_level=2)
 
-    # the_loop(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, hz=hz, eps=eps)
+    the_loop(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, hz=hz, eps=eps)
