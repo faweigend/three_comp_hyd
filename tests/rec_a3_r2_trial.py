@@ -4,6 +4,7 @@ from scipy import optimize
 import logging
 
 import numpy as np
+from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 
 if __name__ == "__main__":
@@ -13,6 +14,7 @@ if __name__ == "__main__":
 
     p_exp = 350
     p_rec = 0
+    t_max = 5000
 
     # estimations per second for discrete agent
     hz = 250
@@ -85,7 +87,19 @@ if __name__ == "__main__":
     in_t = (gamma - 1) * a_ans * (np.log(theta) - np.log(in_c1)) / m_anf
 
     # find the point where g(t) == 0
-    g0 = optimize.fsolve(lambda t: a3_gt(t), x0=np.array([in_t]))[0]
+    import time
+
+    t0 = time.process_time_ns()
+    g0 = ODEThreeCompHydSimulator.optimize(func=lambda t: a3_gt(t),
+                                           initial_guess=t3,
+                                           max_steps=t_max)
+    t1 = time.process_time_ns()
+    print("Time elapsed own: ", t1 - t0)  # CPU seconds elapsed (floating point)
+
+    t0 = time.process_time_ns()
+    optimize.fsolve(lambda t: a3_gt(t), x0=np.array([in_t]))[0]
+    t1 = time.process_time_ns()
+    print("Time elapsed scipy: ", t1 - t0)  # CPU seconds elapsed (floating point)
 
     # check in simulation
     agent.reset()

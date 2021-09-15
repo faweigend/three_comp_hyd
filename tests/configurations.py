@@ -1,3 +1,4 @@
+import itertools
 import logging
 
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
@@ -30,22 +31,34 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    hz = 250
-    p_exp = 450
-    p_rec = 0
-    t_rec = 150
-    eps = 0.005
+    hz = 250  # delta t
+    eps = 0.001  # required precision
 
+    # setting combinations
+    p_exps = [260, 300, 421, 681]
+    rec_times = [10, 180, 240, 1800, 3600]
+    p_recs = [0, 13, 57, 130, 247]
     configs = [a, b, c, d]
 
-    for conf in configs:
+    combs = list(itertools.product(p_exps, rec_times, p_recs, configs))
+
+    # iterate through all possible setting combinations
+    for i, comb in enumerate(combs):
+        logging.info("{}/{} Comb {}".format(i, len(combs), comb))
+
+        # get settings from combination
+        p_exp = comb[0]
+        rec_time = comb[1]
+        p_rec = comb[2]
+        conf = comb[3]
+
         # create three component hydraulic agent with example configuration
         agent = ThreeCompHydAgent(hz=hz,
                                   a_anf=conf[0], a_ans=conf[1],
                                   m_ae=conf[2], m_ans=conf[3],
                                   m_anf=conf[4], the=conf[5],
                                   gam=conf[6], phi=conf[7])
-        ThreeCompVisualisation(agent)
+        # ThreeCompVisualisation(agent)
 
         # Start with first time to exhaustion bout
         tte, h_tte, g_tte = ODEThreeCompHydSimulator.tte(p_exp=p_exp, conf=conf)
@@ -59,13 +72,13 @@ if __name__ == "__main__":
         assert abs(g_diff) < eps, "TTE1 g is off by {}".format(g_diff)
         assert abs(h_diff) < eps, "TTE1 h is off by {}".format(h_diff)
 
-        logging.info("TTE END t: {} h: {} g: {}".format(tte, abs(h_diff), abs(g_diff)))
-        ThreeCompVisualisation(agent)
+        # logging.info("TTE END t: {} h: {} g: {}".format(tte, abs(h_diff), abs(g_diff)))
+        # ThreeCompVisualisation(agent)
 
         # Now recovery
         rec, h_rec, g_rec = ODEThreeCompHydSimulator.rec(conf=conf, start_h=h_tte,
                                                          start_g=g_tte, p_rec=p_rec,
-                                                         t_rec=t_rec)
+                                                         t_max=rec_time)
 
         # double-check with discrete agent
         for _ in range(int(round(rec * hz))):
@@ -76,5 +89,7 @@ if __name__ == "__main__":
         assert abs(g_diff) < eps, "REC g is off by {}".format(g_diff)
         assert abs(h_diff) < eps, "REC h is off by {}".format(h_diff)
 
-        logging.info("REC END t: {} h: {} g: {}".format(rec, abs(h_diff), abs(g_diff)))
-        ThreeCompVisualisation(agent)
+        # logging.info("REC END t: {} h: {} g: {}".format(rec, abs(h_diff), abs(g_diff)))
+        # ThreeCompVisualisation(agent)
+
+        logging.info("PASSED")

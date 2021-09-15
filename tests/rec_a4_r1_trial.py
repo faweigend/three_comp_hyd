@@ -4,6 +4,7 @@ from scipy import optimize
 import logging
 
 import numpy as np
+from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 
 if __name__ == "__main__":
@@ -13,6 +14,7 @@ if __name__ == "__main__":
 
     p_exp = 350
     p_rec = 100
+    t_max = 5000
 
     # estimations per second for discrete agent
     hz = 250
@@ -54,6 +56,7 @@ if __name__ == "__main__":
     s_c1_gh = ((p_rec - m_ae) / (a_anf + a_ans) - dgt4_gh) * np.exp(a_gh * t4)
     s_c2_gh = (-t4 * b_gh + dgt4_gh) / a_gh - (p_rec - m_ae) / ((a_anf + a_ans) * a_gh) + gt4
 
+
     def a4_gt(t):
         # general solution for g(t)
         return t * (p_rec - m_ae) / (a_anf + a_ans) + s_c2_gh + s_c1_gh / a_gh * np.exp(-a_gh * t)
@@ -70,9 +73,21 @@ if __name__ == "__main__":
 
 
     ht_end = 1 - phi
-    # check if equilibrium in this phase
 
-    t_end = optimize.fsolve(lambda t: ht_end - a4_ht(t), x0=np.array([0]))[0]
+    # check if equilibrium in this phase
+    import time
+    t0 = time.process_time_ns()
+    t_end = ODEThreeCompHydSimulator.optimize(func=lambda t: a4_ht(t) - ht_end,
+                                              initial_guess=0,
+                                              max_steps=t_max)
+    t1 = time.process_time_ns()
+    print("Time elapsed own: ", t1 - t0)  # CPU seconds elapsed (floating point)
+
+    t0 = time.process_time_ns()
+    optimize.fsolve(lambda t: a4_ht(t) - ht_end, x0=np.array([0]))
+    t1 = time.process_time_ns()
+    print("Time elapsed scipy: ", t1 - t0)  # CPU seconds elapsed (floating point)
+
     gt_end = a4_gt(t_end)
 
     agent.reset()

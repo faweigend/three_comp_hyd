@@ -4,6 +4,7 @@ from scipy import optimize
 import logging
 
 import numpy as np
+from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 
 if __name__ == "__main__":
@@ -13,6 +14,7 @@ if __name__ == "__main__":
 
     p_exp = 350
     p_rec = 100
+    t_max = 5000  # max rec time
 
     # estimations per second for discrete agent
     hz = 250
@@ -80,7 +82,20 @@ if __name__ == "__main__":
 
 
     # find the point where h(t) == g(t)
-    eq_gh = optimize.fsolve(lambda t: (a3_gt(t) + theta) - a3_ht(t), x0=np.array([0]))[0]
+    import time
+
+    t0 = time.process_time_ns()
+    eq_gh = ODEThreeCompHydSimulator.optimize(func=lambda t: a3_ht(t) - (a3_gt(t) + theta),
+                                              initial_guess=t3,
+                                              max_steps=t_max)
+    t1 = time.process_time_ns()
+    print("Time elapsed own: ", t1 - t0)  # CPU seconds elapsed (floating point)
+
+    t0 = time.process_time_ns()
+    optimize.fsolve(lambda t: a3_ht(t) - (a3_gt(t) + theta),
+                    x0=np.array([t3]))
+    t1 = time.process_time_ns()
+    print("Time elapsed scipy: ", t1 - t0)  # CPU seconds elapsed (floating point)
 
     # check in simulation
     agent.reset()
@@ -88,8 +103,6 @@ if __name__ == "__main__":
     agent.set_h(ht3)
     ThreeCompVisualisation(agent)
     agent.set_power(p_rec)
-    print(a3_ht(eq_gh))
-    print(a3_gt(eq_gh))
 
     for _ in range(int(eq_gh * agent.hz)):
         agent.perform_one_step()

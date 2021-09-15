@@ -6,6 +6,7 @@ from scipy import optimize
 import logging
 
 import numpy as np
+from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 
 from tests import configurations
@@ -17,6 +18,7 @@ if __name__ == "__main__":
 
     p_exp = 350
     p_rec = 100
+    t_max = 5000
 
     # estimations per second for discrete agent
     hz = 250
@@ -70,7 +72,20 @@ if __name__ == "__main__":
 
     # estimate an initial guess that assumes no contribution from g
     initial_guess = 0
-    rt6 = optimize.fsolve(lambda t: a6_ht(t) - h_target, x0=np.array([initial_guess]))[0]
+
+    import time
+
+    t0 = time.process_time_ns()
+    rt6 = ODEThreeCompHydSimulator.optimize(func=lambda t: a6_ht(t) - h_target,
+                                            initial_guess=initial_guess,
+                                            max_steps=t_max)
+    t1 = time.process_time_ns()
+    print("Time elapsed own: ", t1 - t0)  # CPU seconds elapsed (floating point)
+
+    t0 = time.process_time_ns()
+    optimize.fsolve(lambda t: a6_ht(t) - h_target, x0=np.array([initial_guess]))
+    t1 = time.process_time_ns()
+    print("Time elapsed scipy: ", t1 - t0)  # CPU seconds elapsed (floating point)
 
     agent.reset()
     agent.set_g(gt6)

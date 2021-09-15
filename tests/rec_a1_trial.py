@@ -12,7 +12,8 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     p_exp = 350
-    p_rec = 0
+    p_rec = 5
+    t_rec = 10000 # max time
 
     # estimations per second for discrete agent
     hz = 250
@@ -57,16 +58,24 @@ if __name__ == "__main__":
                p_rec * (1 - phi) / m_ae
 
 
+    # full recovery is never reached as log(inf) only approximates 0
+    # a1_ht(max rec time) results in target_h
+    target_h = a1_ht(t_rec)
+
     # h(t) = 0 is never reached and causes a log(0) estimation. A close approximation is h(t) = 0.0001
     # t0 = a_anf * (1 - phi) / - m_ae * np.log(0.000001 / s_c1 - p_rec * (1 - phi) / (m_ae * s_c1))
 
-    # with substituted c1
-    t0 = a_anf * (1 - phi) / - m_ae * \
-         (np.log(0.000001 - p_rec * (1 - phi) / m_ae) -
-          (np.log(ht1 - p_rec * (1 - phi) / m_ae) +
-           m_ae * t1 / (a_anf * (1 - phi))
-           )
-          )
+    # return min(h) if even after the maximal recovery time h>epsilon
+    if target_h > 0.00001:
+        t0 = t_rec
+    else:
+        # with substituted c1
+        t0 = a_anf * (1 - phi) / - m_ae * \
+             (np.log(0.00001 - p_rec * (1 - phi) / m_ae) -
+              (np.log(ht1 - p_rec * (1 - phi) / m_ae) +
+               m_ae * t1 / (a_anf * (1 - phi))
+               )
+              )
 
     # check in simulation
     agent.reset()
@@ -81,6 +90,6 @@ if __name__ == "__main__":
     logging.info("predicted time: {} \n"
                  "diff h: {}\n"
                  "diff g: {}".format(t0,
-                                     0 - agent.get_h(),
+                                     target_h - agent.get_h(),
                                      0 - agent.get_g()))
     ThreeCompVisualisation(agent)
