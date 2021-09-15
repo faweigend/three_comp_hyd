@@ -18,7 +18,7 @@ class ODEThreeCompHydSimulator:
                   ODEThreeCompHydSimulator.tte_a2,
                   ODEThreeCompHydSimulator.tte_a3,
                   ODEThreeCompHydSimulator.tte_a4,
-                  ODEThreeCompHydSimulator.tte_a4,
+                  ODEThreeCompHydSimulator.tte_a5,
                   ODEThreeCompHydSimulator.tte_a6]
 
         # start with fully reset agent
@@ -29,7 +29,7 @@ class ODEThreeCompHydSimulator:
                             p_exp=p_exp, t_max=t_max, conf=conf)
 
             # if recovery time is reached return fill levels at that point
-            if t == t_max:
+            if t == np.inf or t == t_max:
                 return t, h, g
 
         # if all phases complete full exhaustion is reached
@@ -717,10 +717,10 @@ class ODEThreeCompHydSimulator:
             raise UserWarning("initial guess for func is not positive")
 
         # while maximal precision is not reached
-        while step_size > 0.000001:
+        while step_size > 0.0000001:
             t_p = t
             # increase t until function turns negative
-            while t <= max_steps and func(t) >= 0:
+            while t <= max_steps + 1 and func(t) >= 0:
                 t_p = t
                 t += step_size
 

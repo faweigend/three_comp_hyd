@@ -17,39 +17,39 @@ def tte_test_procedure(p, hz, eps, conf, agent, log_level=0):
     max_time = 5000
 
     # A1
-    t1, ht1, gt1 = ODEThreeCompHydSimulator.tte_a1(p=p, conf=conf)
-    if t1 == np.inf or t1 > max_time:
+    t1, ht1, gt1 = ODEThreeCompHydSimulator.tte_a1(t1=0, h1=0, g1=0, p_exp=p, t_max=max_time, conf=conf)
+    if t1 == np.inf or t1 >= max_time:
         logging.info("EQUILIBRIUM IN A1: t: {} h: {} g: {}".format(t1, ht1, gt1))
         return
     logging.info("A1: {}".format(t1))
 
-    t2, ht2, gt2 = ODEThreeCompHydSimulator.tte_a2(t2=t1, h2=ht1, g2=gt1, p_exp=p, conf=conf)
+    t2, ht2, gt2 = ODEThreeCompHydSimulator.tte_a2(t2=t1, h2=ht1, g2=gt1, p_exp=p, t_max=max_time, conf=conf)
     logging.info("A2: {}".format(t2))
 
     # A3
-    t3, ht3, gt3 = ODEThreeCompHydSimulator.tte_a3(t3=t2, h3=ht2, g3=gt2, p_exp=p, conf=conf)
-    if t3 == np.inf or t3 > max_time:
+    t3, ht3, gt3 = ODEThreeCompHydSimulator.tte_a3(t3=t2, h3=ht2, g3=gt2, p_exp=p, t_max=max_time, conf=conf)
+    if t3 == np.inf or t3 >= max_time:
         logging.info("EQUILIBRIUM IN A3: t: {} h: {} g: {}".format(t3, ht3, gt3))
         return
     logging.info("A3: {}".format(t3))
 
     # A4
-    t4, ht4, gt4 = ODEThreeCompHydSimulator.tte_a4(t4=t3, h4=ht3, g4=gt3, p_exp=p, conf=conf)
-    if t4 == np.inf or t4 > max_time:
+    t4, ht4, gt4 = ODEThreeCompHydSimulator.tte_a4(t4=t3, h4=ht3, g4=gt3, p_exp=p, t_max=max_time, conf=conf)
+    if t4 == np.inf or t4 >= max_time:
         logging.info("EQUILIBRIUM IN A4: t: {} h: {} g: {}".format(t4, ht4, gt4))
         return
     logging.info("A4: {}".format(t4))
 
     # A5
-    t5, ht5, gt5 = ODEThreeCompHydSimulator.tte_a5(t5=t4, h5=ht4, g5=gt4, p_exp=p, conf=conf)
-    if t5 == np.inf or t5 > max_time:
+    t5, ht5, gt5 = ODEThreeCompHydSimulator.tte_a5(t5=t4, h5=ht4, g5=gt4, p_exp=p, t_max=max_time, conf=conf)
+    if t5 == np.inf or t5 >= max_time:
         logging.info("EQUILIBRIUM IN A5: t: {} h: {} g: {}".format(t5, ht5, gt5))
         return
     logging.info("A5: {}".format(t5))
 
     # A6
-    t6, ht6, gt6 = ODEThreeCompHydSimulator.tte_a6(t_end=t5, h6=ht5, g6=gt5, p_exp=p, conf=conf)
-    if t6 == np.inf or t6 > max_time:
+    t6, ht6, gt6 = ODEThreeCompHydSimulator.tte_a6(t6=t5, h6=ht5, g6=gt5, p_exp=p, t_max=max_time, conf=conf)
+    if t6 == np.inf or t6 >= max_time:
         logging.info("EQUILIBRIUM IN A6: t: {} h: {} g: {}".format(t6, ht6, gt6))
         return
     logging.info("A6: {}".format(t6))
@@ -92,7 +92,7 @@ def the_loop(p: float = 350.0,
                                   m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
                                   gam=example_conf[6], phi=example_conf[7])
 
-        ThreeCompVisualisation(agent)
+        # ThreeCompVisualisation(agent)
         tte_test_procedure(p, hz, eps, example_conf, agent)
 
 
@@ -103,9 +103,8 @@ def test_one_config(example_conf=None):
 
     # just a default value
     if example_conf is None:
-        example_conf = [15101.24769778409, 86209.27743067988, 52.71702367096787,
-                        363.2970828395908, 38.27073086773415, 0.14892228099402588,
-                        0.3524379644134216, 0.4580228306857272]
+        example_conf = [17530.530747393303, 37625.72364566721, 268.7372285266482, 223.97570400889148,
+                        7.895654547752743, 0.1954551343626819, 0.224106497474462, 0.01]
 
     # create three component hydraulic agent with example configuration
     agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
@@ -122,11 +121,11 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    p = 350
+    p = 260
     # estimations per second for discrete agent
     hz = 250
     # required precision of discrete to differential agent
-    eps = 0.005
+    eps = 0.001
 
     test_one_config()
 
