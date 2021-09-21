@@ -1,6 +1,5 @@
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 from threecomphyd.evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
-from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulator
 from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 
@@ -11,53 +10,59 @@ import numpy as np
 
 def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, agent, log_level=0):
     # Start with first time to exhaustion bout
-    tte_1, h, g = ODEThreeCompHydSimulator.tte(conf=conf,
-                                               start_h=0, start_g=0,
-                                               p_exp=p_exp, t_max=t_max)
+    t, h, g = ODEThreeCompHydSimulator.tte(p_exp=p_exp, conf=conf, t_max=t_max)
 
-    if tte_1 == np.inf or int(tte_1) == int(t_max):
+    if t == np.inf or int(t) == int(t_max):
         logging.info("Exhaustion not reached during TTE")
         return
-
+    
     # double-check with discrete agent
-    for _ in range(int(round(tte_1 * hz))):
+    for _ in range(int(round(t * hz))):
         agent.set_power(p_exp)
         agent.perform_one_step()
     g_diff = agent.get_g() - g
     h_diff = agent.get_h() - h
-    assert abs(g_diff) < eps, "TTE1 g is off by {}".format(g_diff)
-    assert abs(h_diff) < eps, "TTE1 h is off by {}".format(h_diff)
+    assert abs(g_diff) < eps, "TTE g is off by {}".format(g_diff)
+    assert abs(h_diff) < eps, "TTE h is off by {}".format(h_diff)
 
-    rec, h, g = ODEThreeCompHydSimulator.rec(conf=conf,
-                                             start_h=h, start_g=g,
-                                             p_rec=p_rec, t_max=t_rec)
+    # now iterate through all recovery phases
+    phases = [ODEThreeCompHydSimulator.rec_a6,
+              ODEThreeCompHydSimulator.rec_a5,
+              ODEThreeCompHydSimulator.rec_a4_r1,
+              ODEThreeCompHydSimulator.rec_a4_r2,
+              ODEThreeCompHydSimulator.rec_a3_r1,
+              ODEThreeCompHydSimulator.rec_a3_r2,
+              ODEThreeCompHydSimulator.rec_a2,
+              ODEThreeCompHydSimulator.rec_a1]
 
-    # double-check with discrete agent
-    for _ in range(int(round(rec * hz))):
-        agent.set_power(p_rec)
-        agent.perform_one_step()
-    g_diff = agent.get_g() - g
-    h_diff = agent.get_h() - h
-    assert abs(g_diff) < eps, "REC g is off by {}".format(g_diff)
-    assert abs(h_diff) < eps, "REC h is off by {}".format(h_diff)
+    # restart time from 0
+    t = 0
 
-    tte_2, h, g = ODEThreeCompHydSimulator.tte(conf=conf,
-                                               start_h=h, start_g=g,
-                                               p_exp=p_exp, t_max=t_max)
+    # detailed checks for every phase
+    for phase in phases:
+        # save previous time to estimate time difference
+        t_p = t
 
-    # double-check with discrete agent
-    for _ in range(int(round(tte_2 * hz))):
-        agent.set_power(p_rec)
-        agent.perform_one_step()
-    g_diff = agent.get_g() - g
-    h_diff = agent.get_h() - h
-    assert abs(g_diff) < eps, "TTE2 g is off by {}".format(g_diff)
-    assert abs(h_diff) < eps, "TTE2 h is off by {}".format(h_diff)
+        # get estimated time of phase end
+        t, h, g = phase(t, h, g, p_rec=p_rec, t_max=t_rec, conf=conf)
+        # logging.info("{}\nt {}\nh {}\ng {}".format(phase, t, h, g))
 
-    rec_ratio = tte_2 / tte_1 * 100.0
-    est_ratio = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(agent=agent, p_exp=p_exp,
-                                                                 p_rec=p_rec, t_rec=t_rec)
-    logging.info("ODE ratio: {} \nEST ratio: {}".format(rec_ratio, est_ratio))
+        # double-check with discrete agent
+        for _ in range(int(round((t - t_p) * hz))):
+            agent.set_power(p_rec)
+            agent.perform_one_step()
+        g_diff = agent.get_g() - g
+        h_diff = agent.get_h() - h
+
+        # ThreeCompVisualisation(agent)
+
+        assert abs(g_diff) < eps, "{} g is off by {}".format(phase, g_diff)
+        assert abs(h_diff) < eps, "{} h is off by {}".format(phase, h_diff)
+
+        if t == t_max:
+            logging.info("Max recovery reached in {}".format(phase))
+            # ThreeCompVisualisation(agent)
+            return
 
 
 def the_loop(p_exp: float = 350.0, p_rec: float = 100.0, t_rec=180.0,
@@ -108,4 +113,4 @@ if __name__ == "__main__":
                         hz=hz, eps=eps, conf=c,
                         agent=agent, log_level=2)
 
-    # the_loop(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max, hz=hz, eps=eps)
+    the_loop(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max, hz=hz, eps=eps)

@@ -12,17 +12,17 @@ class ODEThreeCompHydSimulator:
     eps = 0.000001
 
     @staticmethod
-    def tte(conf: list, p_exp: float, t_max: float = 5000) -> (float, float, float):
+    def tte(conf: list, start_h: float, start_g: float, p_exp: float, t_max: float = 5000) -> (float, float, float):
 
-        phases = [ODEThreeCompHydSimulator.tte_a1,
-                  ODEThreeCompHydSimulator.tte_a2,
+        phases = [ODEThreeCompHydSimulator.lAe,
+                  ODEThreeCompHydSimulator.mAe,
                   ODEThreeCompHydSimulator.tte_a3,
                   ODEThreeCompHydSimulator.tte_a4,
                   ODEThreeCompHydSimulator.tte_a5,
                   ODEThreeCompHydSimulator.tte_a6]
 
         # start with fully reset agent
-        t, h, g = 0, 0, 0
+        t, h, g = 0, start_h, start_g
         # iterate through all phases until end is reached
         for phase in phases:
             t, h, g = phase(t, h, g,
@@ -36,46 +36,56 @@ class ODEThreeCompHydSimulator:
         return t, h, g
 
     @staticmethod
-    def tte_a1(t1: float, h1: float, g1: float, p_exp: float, t_max: float, conf: list) -> (float, float, float):
+    def lAe(t_s: float, h_s: float, g_s: float, p_exp: float, t_max: float, conf: list) -> (float, float, float):
 
         a_anf = conf[0]
         m_ae = conf[2]
         theta = conf[5]
         phi = conf[7]
 
-        if t1 > 0 or h1 > 0 or g1 > 0:
-            raise UserWarning("TTE expects agent to be fully reset (t=0, h=0, g=0)")
+        # phase ends at bottom of Ae or top of AnS
+        h_target = min(theta, 1 - phi)
 
-        # TODO: t_max not considered yet
-        # check if equilibrium in phase A1
-        if ((m_ae * min(theta, 1 - phi)) / (p_exp * (1 - phi))) >= 1:
-            h = (a_anf * (1 - phi)) / m_ae * (1 - np.exp(-(m_ae * np.inf) / (a_anf * (1 - phi)))) * p_exp / a_anf
-            return np.inf, h, 0
+        # Phase A1 is not applicable if fill-level of AnS too low, ..
+        # ... or Ans not full
+        if h_s > h_target or g_s > 0:
+            return t_s, h_s, g_s
 
-        # end of phase A1 -> the time when h(t) = min(theta,1-phi)
-        t1 = -a_anf * (1 - phi) / m_ae * np.log(1 - (m_ae * min(theta, 1 - phi) / (p_exp * (1 - phi))))
+        # derived general solution with h(0) = 0 for c1
+        def a1_ht(t):
+            return p_exp * (1 - phi) / m_ae * (1 - np.exp(m_ae * t / (a_anf * (phi - 1))))
 
-        # return t1, h(t1), g(t1)
-        return t1, min(theta, 1 - phi), 0
+        # check if max time is reached in this phase
+        if a1_ht(t_max) <= h_target:
+            return t_max, a1_ht(t_max), g_s
+        else:
+            # end of phase A1 -> the time when h(t) = min(theta,1-phi)
+            t_end = -a_anf * (1 - phi) / m_ae * np.log(1 - (m_ae * h_target / (p_exp * (1 - phi))))
+            return t_end, h_target, g_s
 
     @staticmethod
-    def tte_a2(t2: float, h2: float, g2: float, p_exp: float, t_max: float, conf: list) -> (float, float, float):
+    def mAe(t_s: float, h_s: float, g_s: float, p_exp: float, t_max: float, conf: list) -> (float, float, float):
 
         a_anf = conf[0]
         m_ae = conf[2]
         theta = conf[5]
         phi = conf[7]
 
-        # A2 is only applicable if phi is higher than the top of AnS
-        if phi <= (1 - theta):
-            return t2, h2, g2
+        # this phase is only applicable if h is in-between 1-theta and phi and ...
+        # ... AnS is full
+        if not theta >= h_s >= (1 - phi) or g_s > 0:
+            return t_s, h_s, g_s
 
-        # TODO: t_max not considered yet
         # linear utilization -> no equilibrium possible
-        t_end = t2 + ((phi - (1 - theta)) * a_anf) / (p_exp - m_ae)
+        t_end = t_s + ((phi - (1 - theta)) * a_anf) / (p_exp - m_ae)
 
-        # return t2, h(t2), g(t2)
-        return t_end, theta, g2
+        # check if max time is reached before phase end
+        if t_end > t_max:
+            h_end = h_s + (t_max - t_s) * (p_exp - m_ae) / a_anf
+            return t_end, h_end, g_s
+
+        else:
+            return t_end, theta, g_s
 
     @staticmethod
     def tte_a3(t3: float, h3: float, g3: float, p_exp: float, t_max: float, conf: list) -> (float, float, float):
@@ -598,9 +608,11 @@ class ODEThreeCompHydSimulator:
         phi = conf[7]
 
         # A3 R2 is only applicable if h is above or at pipe exit of Ae...
-        # ... and h is above g (error of epsilon tolerated)
+        # ... and h is above g (error of epsilon tolerated)...
+        # ... and g is not 0
         if not h3 <= 1 - phi + ODEThreeCompHydSimulator.eps \
-                or not h3 < g3 + theta + ODEThreeCompHydSimulator.eps:
+                or not h3 < g3 + theta + ODEThreeCompHydSimulator.eps \
+                or not g3 > 0.0:
             return t3, h3, g3
 
         # EQ 16 and 17 substituted in EQ 8

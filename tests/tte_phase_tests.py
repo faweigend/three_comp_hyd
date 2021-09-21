@@ -17,13 +17,13 @@ def tte_test_procedure(p, hz, eps, conf, agent, log_level=0):
     max_time = 5000
 
     # A1
-    t1, ht1, gt1 = ODEThreeCompHydSimulator.tte_a1(t1=0, h1=0, g1=0, p_exp=p, t_max=max_time, conf=conf)
+    t1, ht1, gt1 = ODEThreeCompHydSimulator.lAe(t_s=0, h_s=0, g_s=0, p_exp=p, t_max=max_time, conf=conf)
     if t1 == np.inf or t1 >= max_time:
         logging.info("EQUILIBRIUM IN A1: t: {} h: {} g: {}".format(t1, ht1, gt1))
         return
     logging.info("A1: {}".format(t1))
 
-    t2, ht2, gt2 = ODEThreeCompHydSimulator.tte_a2(t2=t1, h2=ht1, g2=gt1, p_exp=p, t_max=max_time, conf=conf)
+    t2, ht2, gt2 = ODEThreeCompHydSimulator.mAe(t_s=t1, h_s=ht1, g_s=gt1, p_exp=p, t_max=max_time, conf=conf)
     logging.info("A2: {}".format(t2))
 
     # A3
@@ -103,8 +103,7 @@ def test_one_config(example_conf=None):
 
     # just a default value
     if example_conf is None:
-        example_conf = [17530.530747393303, 37625.72364566721, 268.7372285266482, 223.97570400889148,
-                        7.895654547752743, 0.1954551343626819, 0.224106497474462, 0.01]
+        example_conf = [22960.500530676287, 77373.91670678859, 234.24391186170348, 382.9246247635444, 32.281951614864944, 0.4382785572308323, 0.29408404649271447, 0.18875064978567485]
 
     # create three component hydraulic agent with example configuration
     agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],

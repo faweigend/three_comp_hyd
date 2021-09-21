@@ -61,7 +61,7 @@ if __name__ == "__main__":
         # ThreeCompVisualisation(agent)
 
         # Start with first time to exhaustion bout
-        tte, h_tte, g_tte = ODEThreeCompHydSimulator.tte(p_exp=p_exp, conf=conf)
+        tte, h_tte, g_tte = ODEThreeCompHydSimulator.tte(p_exp=p_exp, conf=conf, start_h=0, start_g=0)
 
         # double-check with discrete agent
         for _ in range(int(round(tte * hz))):
