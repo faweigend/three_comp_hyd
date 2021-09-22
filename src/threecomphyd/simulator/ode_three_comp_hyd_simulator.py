@@ -1,3 +1,4 @@
+import logging
 import math
 
 import numpy as np
@@ -10,6 +11,32 @@ class ODEThreeCompHydSimulator:
 
     # precision epsilon for threshold checks
     eps = 0.000001
+    max_time = 5000
+
+    @staticmethod
+    def get_recovery_ratio_wb1_wb2(conf: list, p_exp: float, p_rec: float, t_rec: float) -> float:
+
+        t_max = ODEThreeCompHydSimulator.max_time
+
+        # Start with first time to exhaustion bout
+        tte_1, h, g = ODEThreeCompHydSimulator.tte(conf=conf,
+                                                   start_h=0, start_g=0,
+                                                   p_exp=p_exp, t_max=t_max)
+        if tte_1 >= t_max:
+            logging.info("Exhaustion not reached during TTE")
+            return 0
+
+        # now recovery
+        rec, h, g = ODEThreeCompHydSimulator.rec(conf=conf,
+                                                 start_h=h, start_g=g,
+                                                 p_rec=p_rec, t_max=t_rec)
+
+        # and work bout two
+        tte_2, h, g = ODEThreeCompHydSimulator.tte(conf=conf,
+                                                   start_h=h, start_g=g,
+                                                   p_exp=p_exp, t_max=t_max)
+
+        return tte_2 / tte_1 * 100.0
 
     @staticmethod
     def tte(conf: list, start_h: float, start_g: float, p_exp: float, t_max: float = 5000) -> (float, float, float):
