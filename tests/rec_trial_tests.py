@@ -6,16 +6,22 @@ from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydS
 
 import logging
 
-import numpy as np
 
+def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, log_level=0):
+    # create three component hydraulic agent with example configuration
+    agent = ThreeCompHydAgent(hz=hz, a_anf=conf[0], a_ans=conf[1], m_ae=conf[2],
+                              m_ans=conf[3], m_anf=conf[4], the=conf[5],
+                              gam=conf[6], phi=conf[7])
 
-def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, agent, log_level=0):
+    if log_level > 0:
+        ThreeCompVisualisation(agent)
+
     # Start with first time to exhaustion bout
     tte_1, h, g = ODEThreeCompHydSimulator.tte(conf=conf,
                                                start_h=0, start_g=0,
                                                p_exp=p_exp, t_max=t_max)
 
-    if tte_1 == np.inf or int(tte_1) == int(t_max):
+    if tte_1 >= t_max:
         logging.info("Exhaustion not reached during TTE")
         return
 
@@ -27,6 +33,10 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, agent, log_le
     h_diff = agent.get_h() - h
     assert abs(g_diff) < eps, "TTE1 g is off by {}".format(g_diff)
     assert abs(h_diff) < eps, "TTE1 h is off by {}".format(h_diff)
+
+    if log_level > 0:
+        logging.info("TTE1 {} h: {} g: {}".format(tte_1, h, g))
+        ThreeCompVisualisation(agent)
 
     rec, h, g = ODEThreeCompHydSimulator.rec(conf=conf,
                                              start_h=h, start_g=g,
@@ -41,23 +51,37 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, agent, log_le
     assert abs(g_diff) < eps, "REC g is off by {}".format(g_diff)
     assert abs(h_diff) < eps, "REC h is off by {}".format(h_diff)
 
+    if log_level > 0:
+        logging.info("REC {} h: {} g: {}".format(rec, h, g))
+        ThreeCompVisualisation(agent)
+
     tte_2, h, g = ODEThreeCompHydSimulator.tte(conf=conf,
                                                start_h=h, start_g=g,
                                                p_exp=p_exp, t_max=t_max)
 
     # double-check with discrete agent
     for _ in range(int(round(tte_2 * hz))):
-        agent.set_power(p_rec)
+        agent.set_power(p_exp)
         agent.perform_one_step()
     g_diff = agent.get_g() - g
     h_diff = agent.get_h() - h
     assert abs(g_diff) < eps, "TTE2 g is off by {}".format(g_diff)
     assert abs(h_diff) < eps, "TTE2 h is off by {}".format(h_diff)
 
+    if log_level > 0:
+        logging.info("TTE2 {} h: {} g: {}".format(tte_2, h, g))
+        ThreeCompVisualisation(agent)
+
+    # simulator step limit needs to be adjusted
+    ThreeCompHydSimulator.step_limit = 5000 * hz
+    est_ratio = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(agent=agent, p_exp=p_exp, p_rec=p_rec, t_rec=t_rec)
+    ThreeCompHydSimulator.step_limit = 5000 / hz
+
     rec_ratio = tte_2 / tte_1 * 100.0
-    est_ratio = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(agent=agent, p_exp=p_exp,
-                                                                 p_rec=p_rec, t_rec=t_rec)
-    logging.info("ODE ratio: {} \nEST ratio: {}".format(rec_ratio, est_ratio))
+    diff = abs(rec_ratio - est_ratio)
+
+    logging.info("ODE ratio: {}    EST ratio: {}".format(rec_ratio, est_ratio))
+    assert diff < eps, "Ratio estimations are too different {}".format(diff)
 
 
 def the_loop(p_exp: float = 350.0, p_rec: float = 100.0, t_rec=180.0,
@@ -71,14 +95,9 @@ def the_loop(p_exp: float = 350.0, p_rec: float = 100.0, t_rec=180.0,
 
         example_conf = udp.create_educated_initial_guess()
         logging.info(example_conf)
-        # create three component hydraulic agent with example configuration
-        agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
-                                  m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
-                                  gam=example_conf[6], phi=example_conf[7])
 
         rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
-                            hz=hz, eps=eps, conf=example_conf,
-                            agent=agent, log_level=2)
+                            hz=hz, eps=eps, conf=example_conf, log_level=0)
 
 
 if __name__ == "__main__":
@@ -92,20 +111,15 @@ if __name__ == "__main__":
     t_max = 5000
 
     # estimations per second for discrete agent
-    hz = 250
+    hz = 800
     # required precision of discrete to differential agent
-    eps = 0.001
+    eps = 0.01
 
     # a configuration
-    c = [17530.530747393303, 37625.72364566721, 268.7372285266482, 223.97570400889148,
-         7.895654547752743, 0.1954551343626819, 0.224106497474462, 0.01]
-    agent = ThreeCompHydAgent(hz=hz, a_anf=c[0], a_ans=c[1], m_ae=c[2],
-                              m_ans=c[3], m_anf=c[4], the=c[5],
-                              gam=c[6], phi=c[7])
-    ThreeCompVisualisation(agent)
+    c = [5000, 65296.55506048172, 286.92487794015625, 287.8170222313081, 38.355175636958336,
+         0.4377894638957991, 0.2437516643675469, 0.48005517184947655]
 
     rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
-                        hz=hz, eps=eps, conf=c,
-                        agent=agent, log_level=2)
+                        hz=hz, eps=eps, conf=c, log_level=2)
 
-    # the_loop(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max, hz=hz, eps=eps)
+    the_loop(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max, hz=hz, eps=eps)

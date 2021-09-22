@@ -50,19 +50,22 @@ class ODEThreeCompHydSimulator:
 
         # This phase is not applicable if fill-level of AnF below pipe exit Ae or top of AnS, ..
         # ... or AnS not full
-        if h_s > h_target or g_s > 0:
+        if h_s > h_target or g_s > 0.0 + ODEThreeCompHydSimulator.eps:
             return t_s, h_s, g_s
 
-        # derived general solution with h(0) = 0 for c1
+        # constant can be derived from known t_s and h_s
+        c1 = (h_s - p_exp * (1 - phi) / m_ae) * np.exp(-m_ae * t_s / a_anf * (phi - 1))
+
+        # general solution for h(t) using c1
         def ht(t):
-            return p_exp * (1 - phi) / m_ae * (1 - np.exp(m_ae * t / (a_anf * (phi - 1))))
+            return p_exp * (1 - phi) / m_ae + c1 * np.exp(m_ae * t / (a_anf * (phi - 1)))
 
         # check if max time is reached in this phase
         if ht(t_max) <= h_target:
             return t_max, ht(t_max), g_s
         else:
             # end of phase A1 -> the time when h(t) = min(theta,1-phi)
-            t_end = -a_anf * (1 - phi) / m_ae * np.log(1 - (m_ae * h_target / (p_exp * (1 - phi))))
+            t_end = a_anf * (phi - 1) / m_ae * np.log((h_target - p_exp * (1 - phi) / m_ae) / c1)
             return t_end, h_target, g_s
 
     @staticmethod
@@ -80,7 +83,7 @@ class ODEThreeCompHydSimulator:
         # This phase is not applicable if fill-level of AnF below pipe exit Ae, ..
         # ... or AnS fill-level is above AnF fill-level ...
         # ... or AnS is full
-        if h_s > 1 - phi or g_s + theta <= h_s or g_s <= 0.0:
+        if h_s > 1 - phi or g_s + theta <= h_s or g_s <= 0.0 + ODEThreeCompHydSimulator.eps:
             return t_s, h_s, g_s
 
         # TODO: mostly copied from rec A3R2 find ways to combine equations
@@ -146,7 +149,7 @@ class ODEThreeCompHydSimulator:
 
         # this phase not applicable if h is not in-between 1-theta and phi and ...
         # ... AnS is not full
-        if not theta >= h_s >= (1 - phi) or g_s > 0:
+        if not theta >= h_s >= (1 - phi) or g_s > 0.0 + ODEThreeCompHydSimulator.eps:
             return t_s, h_s, g_s
 
         # linear utilization -> no equilibrium possible
@@ -257,7 +260,8 @@ class ODEThreeCompHydSimulator:
         # and then substituted in EQ(12) and solved for c1
         s_c1 = (g_s - m_ans * (h_s - g_s - theta) / (a_ans * r2 * (1 - theta - gamma)) - c / b) / (
                 np.exp(r1 * t_s) * (1 - r1 / r2))
-        s_c2 = s_c1 * np.exp(r1 * t_s) * np.exp(-r2 * t_s) * -r1 / r2
+        # uses EQ(12) with solution for c1 and solves for c2
+        s_c2 = (g_s - s_c1 * np.exp(r1 * t_s) - c / b) / np.exp(r2 * t_s)
 
         def gt(t):
             # the general solution for g(t)

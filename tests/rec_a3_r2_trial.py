@@ -69,18 +69,15 @@ if __name__ == "__main__":
     # uses EQ(14) with solution for c1 and solves for c2
     s_c2 = (gt3 - s_c1 * np.exp(r1 * t3) - c / b) / np.exp(r2 * t3)
 
-
     def a3_gt(t):
         # the general solution for g(t)
         return s_c1 * np.exp(r1 * t) + s_c2 * np.exp(r2 * t) + c / b
-
 
     # substitute into EQ(9) for h
     def a3_ht(t):
         k1 = a_ans * (1 - gamma) / m_anf * s_c1 * r1 + s_c1
         k2 = a_ans * (1 - gamma) / m_anf * s_c2 * r2 + s_c2
         return k1 * np.exp(r1 * t) + k2 * np.exp(r2 * t) + c / b + theta
-
 
     # use the quickest possible recovery as the initial guess (assumes h=0)
     in_c1 = (gt3 + theta) * np.exp(-m_anf * t3 / ((gamma - 1) * a_ans))

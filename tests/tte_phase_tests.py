@@ -5,9 +5,15 @@ from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydS
 
 import logging
 
-def tte_test_procedure(p, hz, eps, conf, agent, log_level=0):
+
+def tte_test_procedure(p, hz, eps, conf, log_level=0):
     # all TTE phases
     max_time = 5000
+
+    # create three component hydraulic agent with example configuration
+    agent = ThreeCompHydAgent(hz=hz, a_anf=conf[0], a_ans=conf[1], m_ae=conf[2],
+                              m_ans=conf[3], m_anf=conf[4], the=conf[5],
+                              gam=conf[6], phi=conf[7])
 
     phases = [ODEThreeCompHydSimulator.work_lAe,
               ODEThreeCompHydSimulator.work_lAe_rAnS,
@@ -19,10 +25,9 @@ def tte_test_procedure(p, hz, eps, conf, agent, log_level=0):
               ODEThreeCompHydSimulator.work_fAe_fAnS]
 
     # set initial conditions
-    h_s = 0
-    g_s = 1 - conf[6] - conf[5]
+    h_s = 0.0423121637107437
+    g_s = 0.061937224354866705  # 1 - conf[6] - conf[5]
     t, h, g = 0, h_s, g_s
-    ts, hts, gts = [], [], []
 
     # display initial state if log level is high enough
     if log_level > 0:
@@ -36,9 +41,10 @@ def tte_test_procedure(p, hz, eps, conf, agent, log_level=0):
 
         # display intermediate state if log level is high enough
         if log_level > 0:
-            logging.info("PHASE {}".format(phase))
+            logging.info("PHASE {} t {} ".format(phase, t))
             agent.set_h(h)
             agent.set_g(g)
+            logging.info("ODE".format(phase, t))
             ThreeCompVisualisation(agent)
 
         # exit loop if end is reached
@@ -46,13 +52,7 @@ def tte_test_procedure(p, hz, eps, conf, agent, log_level=0):
             logging.info("EQUILIBRIUM IN {}: t: {} h: {} g: {}".format(phase, t, h, g))
             break
 
-        # keep track of times and states at phase ends
-        ts.append(t)
-        hts.append(h)
-        gts.append(g)
-
-    # now confirm with iterative agent
-    for i, t in enumerate(ts):
+        # now confirm with iterative agent
         # set to initial state
         agent.reset()
         agent.set_h(h_s)
@@ -64,16 +64,17 @@ def tte_test_procedure(p, hz, eps, conf, agent, log_level=0):
             agent.perform_one_step()
 
         # estimate estimation differences
-        g_diff = agent.get_g() - gts[i]
-        h_diff = agent.get_h() - hts[i]
+        g_diff = agent.get_g() - g
+        h_diff = agent.get_h() - h
 
         if log_level >= 2:
-            print("error phase {}. h is off by {}".format(i + 1, h_diff))
-            print("error phase {}. g is off by {}".format(i + 1, g_diff))
+            logging.info("error phase {}. h is off by {}".format(phase, h_diff))
+            logging.info("error phase {}. g is off by {}".format(phase, g_diff))
+            logging.info("ITERATIVE".format(phase, t))
+            ThreeCompVisualisation(agent)
 
-        assert abs(g_diff) < eps, "error phase {}. g is off by {}".format(i + 1, g_diff)
-        assert abs(h_diff) < eps, "error phase {}. h is off by {}".format(i + 1, h_diff)
-
+        assert abs(g_diff) < eps, "error phase {}. g is off by {}".format(phase, g_diff)
+        assert abs(h_diff) < eps, "error phase {}. h is off by {}".format(phase, h_diff)
 
 def the_loop(p: float = 350.0,
              hz: int = 250,
@@ -84,33 +85,9 @@ def the_loop(p: float = 350.0,
 
     while True:
         udp = MultiObjectiveThreeCompUDP(None, None)
-
         example_conf = udp.create_educated_initial_guess()
         logging.info(example_conf)
-        # create three component hydraulic agent with example configuration
-        agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
-                                  m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
-                                  gam=example_conf[6], phi=example_conf[7])
-
-        # ThreeCompVisualisation(agent)
-        tte_test_procedure(p, hz, eps, example_conf, agent)
-
-
-def test_one_config(example_conf=None):
-    """
-    tests given configuration and puts out some more details
-    """
-
-    # just a default value
-    if example_conf is None:
-        example_conf = [25925.53993526785, 60694.43170965706, 219.8524740824735, 216.83073328159165,
-                        26.323382867622215, 0.15040127238313122, 0.28924204946747195, 0.1762119589774433]
-
-    # create three component hydraulic agent with example configuration
-    agent = ThreeCompHydAgent(hz=hz, a_anf=example_conf[0], a_ans=example_conf[1], m_ae=example_conf[2],
-                              m_ans=example_conf[3], m_anf=example_conf[4], the=example_conf[5],
-                              gam=example_conf[6], phi=example_conf[7])
-    tte_test_procedure(p, hz, eps, example_conf, agent, log_level=2)
+        tte_test_procedure(p, hz, eps, example_conf)
 
 
 if __name__ == "__main__":
@@ -118,12 +95,14 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    p = 450
+    p = 560
     # estimations per second for discrete agent
-    hz = 250
+    hz = 500
     # required precision of discrete to differential agent
     eps = 0.001
 
-    test_one_config()
+    example_conf = [5000, 65296.55506048172, 286.92487794015625, 287.8170222313081, 38.355175636958336,
+         0.4377894638957991, 0.2437516643675469, 0.48005517184947655]
+    tte_test_procedure(p, hz, eps, example_conf, log_level=2)
 
     the_loop(p=p, hz=hz, eps=eps)
