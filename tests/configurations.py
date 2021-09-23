@@ -25,6 +25,16 @@ d = [15101.24769778409, 86209.27743067988,  # anf, ans
      252.71702367096787, 363.2970828395908,  # m_ae, m_ans
      380.27073086773415, 0.64892228099402588,  # m_anf, theta
      0.1580228306857272, 0.6580228306857272]  # gamma, phi
+# a configuration where AnS has size of 1.0
+e = [15101.24769778409, 86209.27743067988,  # anf, ans
+     252.71702367096787, 363.2970828395908,  # m_ae, m_ans
+     380.27073086773415, 0.0,  # m_anf, theta
+     0.0, 0.6580228306857272]  # gamma, phi
+# a configuration where AnF has size of 1.0
+f = [15101.24769778409, 86209.27743067988,  # anf, ans
+     252.71702367096787, 363.2970828395908,  # m_ae, m_ans
+     380.27073086773415, 0.3,  # m_anf, theta
+     0.3, 0.0]  # gamma, phi
 
 if __name__ == "__main__":
     # set logging level to highest level
@@ -35,10 +45,10 @@ if __name__ == "__main__":
     eps = 0.001  # required precision
 
     # setting combinations
-    p_exps = [260, 300, 421, 681]
-    rec_times = [10, 180, 240, 1800, 3600]
-    p_recs = [0, 13, 57, 130, 247]
-    configs = [a, b, c, d]
+    p_exps = [260, 681]
+    rec_times = [10, 240, 3600]
+    p_recs = [0, 247]
+    configs = [a, b, c, d, e, f]
 
     combs = list(itertools.product(p_exps, rec_times, p_recs, configs))
 

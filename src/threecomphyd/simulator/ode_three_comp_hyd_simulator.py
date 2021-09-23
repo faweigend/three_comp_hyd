@@ -368,16 +368,20 @@ class ODEThreeCompHydSimulator:
         gamma = conf[6]
         phi = conf[7]
 
+        # in work phases h is assumed to continuously increase
+        # and therefore this phase ends at 1-phi
+        h_target = 1 - phi
+
         # this phase is not applicable if phi is greater or equal to gamma...
         # ... or h is already below pipe exit Ae
-        if phi >= gamma or h_s >= 1 - phi:
+        if phi >= gamma or h_s >= h_target:
             return t_s, h_s, g_s
 
-        # g(t4) = g4 can be solved for c
+        # g(t_s) = g_s can be solved for c
         s_cg = (g_s - (1 - theta - gamma)) * np.exp((m_ans * t_s) / ((1 - theta - gamma) * a_ans))
 
+        # generalised g(t)
         def gt(t):
-            # generalised g(t) for phase A5
             return (1 - theta - gamma) + s_cg * np.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
 
         # as defined for EQ(21)
@@ -386,13 +390,13 @@ class ODEThreeCompHydSimulator:
         g = p_exp / a_anf
         b = m_ans * s_cg / ((1 - theta - gamma) * a_anf)
 
-        # find c that matches h(t4) = h4
+        # find c that matches h(t_s) = h_s
         s_ch = (h_s + b / ((a + k) * np.exp(k) ** t_s) + g / a) / np.exp(a) ** t_s
 
         def ht(t):
             return -b / ((a + k) * np.exp(k) ** t) + s_ch * np.exp(a) ** t - g / a
 
-        h_target = 1 - phi
+        # find the time at which the phase stops
         t_end = ODEThreeCompHydSimulator.optimize(func=lambda t: h_target - ht(t),
                                                   initial_guess=t_s,
                                                   max_steps=t_max)
@@ -419,15 +423,17 @@ class ODEThreeCompHydSimulator:
         gamma = conf[6]
         phi = conf[7]
 
+        h_target = 1.0
+
         # this phase is not applicable if Ae or AnS are directly at the bottom of the model
         if phi == 0.0 or gamma == 0.0:
             return t_s, h_s, g_s
 
-        # g(t5) = gt5 can be solved for c
+        # g(t_s) = g_s can be solved for c
         s_cg = (g_s - (1 - theta - gamma)) / np.exp(-m_ans * t_s / ((1 - theta - gamma) * a_ans))
 
+        # generalised g(t)
         def gt(t):
-            # generalised g(t) for phase A6
             return (1 - theta - gamma) + s_cg * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
 
         k = m_ans / ((1 - theta - gamma) * a_ans)
@@ -436,14 +442,13 @@ class ODEThreeCompHydSimulator:
         # g = p / a_anf
         ag = (p_exp - m_ae) / a_anf
 
-        # h(t5) = ht5 can be solved for c
+        # h(t_s) = h_s can be solved for c
         s_ch = -t_s * ag + ((b * math.exp(-k * t_s)) / k) + h_s
 
+        # generalised h(t)
         def ht(t):
-            # generalised h(t) for phase A6
             return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
 
-        h_target = 1.0
         # find end of phase A6. The time point where h(t_end)=1
         t_end = ODEThreeCompHydSimulator.optimize(func=lambda t: h_target - ht(t),
                                                   initial_guess=t_s,
@@ -454,38 +459,39 @@ class ODEThreeCompHydSimulator:
     def rec(conf: list, start_h: float, start_g: float, p_rec: float = 0.0, t_max: float = 5000.0) -> (
             float, float, float):
 
-        # now iterate through all recovery phases
-        phases = [ODEThreeCompHydSimulator.rec_a6,
-                  ODEThreeCompHydSimulator.rec_a5,
-                  ODEThreeCompHydSimulator.rec_a4_r1,
-                  ODEThreeCompHydSimulator.rec_a4_r2,
-                  ODEThreeCompHydSimulator.rec_a3_r1,
-                  ODEThreeCompHydSimulator.rec_a3_r2,
-                  ODEThreeCompHydSimulator.rec_a2,
-                  ODEThreeCompHydSimulator.rec_a1]
+        # all recovery phases in order
+        phases = [ODEThreeCompHydSimulator.rec_fAe_fAnS,
+                  ODEThreeCompHydSimulator.rec_lAe_fAnS,
+                  ODEThreeCompHydSimulator.rec_fAe_lAnS,
+                  ODEThreeCompHydSimulator.rec_fAe_rAnS,
+                  ODEThreeCompHydSimulator.rec_lAe_lAnS,
+                  ODEThreeCompHydSimulator.rec_lAe_rAnS,
+                  ODEThreeCompHydSimulator.rec_fAe,
+                  ODEThreeCompHydSimulator.rec_lAe]
 
         # start time from 0 and given start fill level
         t = 0
         h, g = start_h, start_g
 
-        # iterate through all phases until end is reached
-        for phase in phases:
-            t, h, g = phase(t, h, g, p_rec=p_rec, t_max=t_max, conf=conf)
+        # cycle through phases until t_max is reached
+        while t < t_max:
+            for phase in phases:
+                t, h, g = phase(t, h, g, p_rec=p_rec, t_max=t_max, conf=conf)
 
-            # if recovery time is reached return fill levels at that point
-            if t == t_max:
-                return t, h, g
+                # if recovery time is reached return fill levels at that point
+                if t >= t_max:
+                    return t, h, g
 
         # if all phases complete full recovery is reached
         return t, h, g
 
     @staticmethod
-    def rec_a6(t6: float, h6: float, g6: float, p_rec: float, t_max: float, conf: list):
+    def rec_fAe_fAnS(t_s: float, h_s: float, g_s: float, p_rec: float, t_max: float, conf: list):
         """
         recovery from exhaustive exercise.
-        :param t6: time in seconds at which recovery starts
-        :param h6: depletion state of AnF when recovery starts
-        :param g6: depletion state of AnS when recovery starts
+        :param t_s: time in seconds at which recovery starts
+        :param h_s: depletion state of AnF when recovery starts
+        :param g_s: depletion state of AnS when recovery starts
         :param p_rec: constant recovery intensity
         :param t_max: the maximal recovery time
         :param conf: hydraulic model configuration
@@ -500,52 +506,48 @@ class ODEThreeCompHydSimulator:
         gamma = conf[6]
         phi = conf[7]
 
-        # no recovery possible
-        if p_rec >= m_ae:
-            return np.inf, 1.0, 1.0
-
         # A6 rec ends either at beginning of A4 or A5
         h_target = max(1 - gamma, 1 - phi)
 
         # check whether phase is applicable or if h is
         # already above the end of the phase
-        if not h6 > h_target:
-            return t6, h6, g6
+        if h_s < h_target - ODEThreeCompHydSimulator.eps:
+            return t_s, h_s, g_s
 
-        # g(t6) = g6 can be solved for c
-        s_cg = (g6 - (1 - theta - gamma)) / np.exp(-m_ans * t6 / ((1 - theta - gamma) * a_ans))
+        # g(t_s) = g_s can be solved for c
+        s_cg = (g_s - (1 - theta - gamma)) / np.exp(-m_ans * t_s / ((1 - theta - gamma) * a_ans))
 
-        def a6_gt(t):
-            # generalised g(t) for phase A6
-            return (1 - theta - gamma) + s_cg * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
+        # generalised g(t)
+        def gt(t):
+            return (1 - theta - gamma) + s_cg * np.exp(-m_ans * t / ((1 - theta - gamma) * a_ans))
 
         k = m_ans / ((1 - theta - gamma) * a_ans)
         # a = -m_ae / a_anf
-        b = (m_ans * s_cg) / ((1 - theta - gamma) * a_anf)
+        b = m_ans * s_cg / ((1 - theta - gamma) * a_anf)
         # g = p / a_anf
         ag = (p_rec - m_ae) / a_anf
 
-        # h(t6) = 1 can be solved for c
-        s_ch = -t6 * ag + ((b * math.exp(-k * t6)) / k) + h6
+        # h(t_s) = h_s can be solved for c
+        s_ch = -t_s * ag + b * math.exp(-k * t_s) / k + h_s
 
-        def a6_ht(t):
-            # generalised h(t) for recovery phase A6
-            return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
+        # generalised h(t)
+        def ht(t):
+            return t * ag - b * math.exp(-k * t) / k + s_ch
 
         # estimate an initial guess that assumes no contribution from g
-        initial_guess = t6
-        t_end = ODEThreeCompHydSimulator.optimize(func=lambda t: a6_ht(t) - h_target,
-                                                  initial_guess=initial_guess,
+        t_end = ODEThreeCompHydSimulator.optimize(func=lambda t: ht(t) - h_target,
+                                                  initial_guess=t_s,
                                                   max_steps=t_max)
-        return t_end, a6_ht(t_end), a6_gt(t_end)
+        h_end = min(ht(t_end), 1.0)
+        return t_end, h_end, gt(t_end)
 
     @staticmethod
-    def rec_a5(t5: float, h5: float, g5: float, p_rec: float, t_max: float, conf: list):
+    def rec_lAe_fAnS(t_s: float, h_s: float, g_s: float, p_rec: float, t_max: float, conf: list):
         """
         recovery from exhaustive exercise.
-        :param t5: time in seconds at which recovery starts
-        :param h5: depletion state of AnF when recovery starts
-        :param g5: depletion state of AnS when recovery starts
+        :param t_s: time in seconds at which recovery starts
+        :param h_s: depletion state of AnF when recovery starts
+        :param g_s: depletion state of AnS when recovery starts
         :param p_rec: constant recovery intensity
         :param t_max: the maximal recovery time
         :param conf: hydraulic model configuration
@@ -560,19 +562,20 @@ class ODEThreeCompHydSimulator:
         gamma = conf[6]
         phi = conf[7]
 
-        # A5 always ends when h reaches pipe exit of AnS
+        # in this recovery phase h is assumed to continuously increase
+        # this recovery phase ends when h reaches pipe exit of AnS
         h_target = 1 - gamma
 
-        # check whether phase is applicable or if h is
-        # already above the end of the phase
-        if not h5 > h_target:
-            return t5, h5, g5
+        # this phase is not applicable if phi is greater or equal to gamma...
+        # ... or if h is already above the end of the phase
+        if phi >= gamma or h_s <= h_target - ODEThreeCompHydSimulator.eps:
+            return t_s, h_s, g_s
 
-        # g(t5) = g5 can be solved for c
-        s_cg = (g5 - (1 - theta - gamma)) * np.exp((m_ans * t5) / ((1 - theta - gamma) * a_ans))
+        # g(t_s) = g_s can be solved for c
+        s_cg = (g_s - (1 - theta - gamma)) * np.exp((m_ans * t_s) / ((1 - theta - gamma) * a_ans))
 
-        def a5_gt(t):
-            # generalised g(t) for phase A5
+        # generalised g(t)
+        def gt(t):
             return (1 - theta - gamma) + s_cg * np.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
 
         # as defined for EQ(21)
@@ -581,22 +584,26 @@ class ODEThreeCompHydSimulator:
         g = p_rec / a_anf
         b = m_ans * s_cg / ((1 - theta - gamma) * a_anf)
 
-        # find c that matches h(t5) = h5
-        s_ch = (h5 + b / ((a + k) * np.exp(k) ** t5) + g / a) / np.exp(a) ** t5
+        # find c that matches h(t_s) = h_s
+        s_ch = (h_s + b / (a + k) * np.exp(-k * t_s) + g / a) * np.exp(-a * t_s)
 
-        def a5_ht(t):
-            return -b / ((a + k) * np.exp(k) ** t) + s_ch * np.exp(a) ** t - g / a
+        def ht(t):
+            return -b / (a + k) * np.exp(-k * t) + s_ch * np.exp(a * t) - g / a
 
         # find the time at which the phase stops
-        initial_guess = t5
-        t_end = ODEThreeCompHydSimulator.optimize(func=lambda t: a5_ht(t) - h_target,
-                                                  initial_guess=initial_guess,
+        t_ht = ODEThreeCompHydSimulator.optimize(func=lambda t: ht(t) - h_target,
+                                                 initial_guess=t_s,
+                                                 max_steps=t_max)
+
+        # phase also ends if h drops back to 1-phi changing lAe into fAe
+        t_phi = ODEThreeCompHydSimulator.optimize(func=lambda t: (1 - phi) - ht(t),
+                                                  initial_guess=t_s,
                                                   max_steps=t_max)
-        # return with  fill levels at that time
-        return t_end, a5_ht(t_end), a5_gt(t_end)
+        t_end = min(t_ht, t_phi)
+        return t_end, ht(t_end), gt(t_end)
 
     @staticmethod
-    def rec_a4_r1(t4: float, h4: float, g4: float, p_rec: float, t_max: float, conf: list):
+    def rec_fAe_lAnS(t_s: float, h_s: float, g_s: float, p_rec: float, t_max: float, conf: list):
 
         a_anf = conf[0]
         a_ans = conf[1]
@@ -606,22 +613,24 @@ class ODEThreeCompHydSimulator:
         gamma = conf[6]
         phi = conf[7]
 
-        # A4 R1 is only applicable h below pipe exit of Ae ...
+        # phase full Ae and limited AnS is only applicable h below pipe exit of Ae
+        # ... and above AnS ...
         # ... and if g is above h (allows error of epsilon)
-        if not h4 > 1 - phi \
-                or not h4 > g4 + theta + ODEThreeCompHydSimulator.eps:
-            return t4, h4, g4
+        if h_s > 1 - gamma + ODEThreeCompHydSimulator.eps \
+                or h_s < 1 - phi - ODEThreeCompHydSimulator.eps \
+                or h_s < g_s + theta - ODEThreeCompHydSimulator.eps:
+            return t_s, h_s, g_s
 
         # if g is above h (flow from AnS into AnF)
         a_gh = (a_anf + a_ans) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
         b_gh = (p_rec - m_ae) * m_ans / (a_anf * a_ans * (1 - theta - gamma))
 
         # derivative g'(t4) can be calculated manually
-        dgt4_gh = m_ans * (h4 - g4 - theta) / (a_ans * (1 - theta - gamma))
+        dgt4_gh = m_ans * (h_s - g_s - theta) / (a_ans * (1 - theta - gamma))
 
         # ... which then allows to derive c1 and c2
-        s_c1_gh = ((p_rec - m_ae) / (a_anf + a_ans) - dgt4_gh) * np.exp(a_gh * t4)
-        s_c2_gh = (-t4 * b_gh + dgt4_gh) / a_gh - (p_rec - m_ae) / ((a_anf + a_ans) * a_gh) + g4
+        s_c1_gh = ((p_rec - m_ae) / (a_anf + a_ans) - dgt4_gh) * np.exp(a_gh * t_s)
+        s_c2_gh = (-t_s * b_gh + dgt4_gh) / a_gh - (p_rec - m_ae) / ((a_anf + a_ans) * a_gh) + g_s
 
         def a4_gt(t):
             # general solution for g(t)
@@ -635,25 +644,30 @@ class ODEThreeCompHydSimulator:
             # EQ(9) with constants for g(t) and g'(t)
             return a_ans * (1 - theta - gamma) / m_ans * a4_dgt(t) + a4_gt(t) + theta
 
-        initial_guess = t4
+        initial_guess = t_s
 
         # phase ends when g drops below h...
-        tgth = ODEThreeCompHydSimulator.optimize(func=lambda t: a4_ht(t) - (theta + a4_gt(t)),
-                                                 initial_guess=initial_guess,
-                                                 max_steps=t_max)
+        t_gth = ODEThreeCompHydSimulator.optimize(func=lambda t: a4_ht(t) - (theta + a4_gt(t)),
+                                                  initial_guess=initial_guess,
+                                                  max_steps=t_max)
 
-        # ...or if h reaches 1-phi
-        tphi = ODEThreeCompHydSimulator.optimize(func=lambda t: a4_ht(t) - (1 - phi),
-                                                 initial_guess=initial_guess,
-                                                 max_steps=t_max)
+        # ...or if h reaches 1-phi changing fAe into lAe
+        t_phi = ODEThreeCompHydSimulator.optimize(func=lambda t: a4_ht(t) - (1 - phi),
+                                                  initial_guess=initial_guess,
+                                                  max_steps=t_max)
+
+        # ...or if h drops to 1-gamma changing lAnS into fAnS
+        t_gam = ODEThreeCompHydSimulator.optimize(func=lambda t: 1 - gamma - a4_ht(t),
+                                                  initial_guess=initial_guess,
+                                                  max_steps=t_max)
 
         # choose minimal time at which this phase ends
-        t_end = min(tphi, tgth)
+        t_end = min(t_phi, t_gth, t_gam)
 
         return t_end, a4_ht(t_end), a4_gt(t_end)
 
     @staticmethod
-    def rec_a4_r2(t4: float, h4: float, g4: float, p_rec: float, t_max: float, conf: list):
+    def rec_fAe_rAnS(t_s: float, h_s: float, g_s: float, p_rec: float, t_max: float, conf: list):
 
         a_anf = conf[0]
         a_ans = conf[1]
@@ -665,20 +679,20 @@ class ODEThreeCompHydSimulator:
 
         # A4 R2 is only applicable if h below pipe exit of Ae...
         # ... and h is above g (error of epsilon tolerated)
-        if not h4 > 1 - phi or \
-                not h4 < g4 + theta + ODEThreeCompHydSimulator.eps:
-            return t4, h4, g4
+        if h_s <= 1 - phi or \
+                h_s >= g_s + theta + ODEThreeCompHydSimulator.eps:
+            return t_s, h_s, g_s
 
         # if h is above g simulate flow from AnF into AnS
         a_hg = (a_anf + a_ans) * m_anf / (a_anf * a_ans * (1 - gamma))
         b_hg = (p_rec - m_ae) * m_anf / (a_anf * a_ans * (1 - gamma))
 
         # derivative g'(t4) can be calculated manually from g4, t4, and h4
-        dgt4_hg = - m_anf * (g4 + theta - h4) / (a_ans * (1 - gamma))
+        dgt4_hg = - m_anf * (g_s + theta - h_s) / (a_ans * (1 - gamma))
 
         # which then allows to derive c1 and c2
-        s_c1_gh = ((p_rec - m_ae) / (a_anf + a_ans) - dgt4_hg) * np.exp(a_hg * t4)
-        s_c2_gh = (-t4 * b_hg + dgt4_hg) / a_hg - (p_rec - m_ae) / ((a_anf + a_ans) * a_hg) + g4
+        s_c1_gh = ((p_rec - m_ae) / (a_anf + a_ans) - dgt4_hg) * np.exp(a_hg * t_s)
+        s_c2_gh = (-t_s * b_hg + dgt4_hg) / a_hg - (p_rec - m_ae) / ((a_anf + a_ans) * a_hg) + g_s
 
         def a4_gt(t):
             # general solution for g(t)
@@ -696,12 +710,12 @@ class ODEThreeCompHydSimulator:
 
         # A4 ends if AnS is completely refilled
         t_fill = ODEThreeCompHydSimulator.optimize(func=lambda t: a4_gt(t),
-                                                   initial_guess=t4,
+                                                   initial_guess=t_s,
                                                    max_steps=t_max)
 
         # A4 also ends by surpassing 1 - phi
         t_phi = ODEThreeCompHydSimulator.optimize(func=lambda t: a4_ht(t) - h_target,
-                                                  initial_guess=t4,
+                                                  initial_guess=t_s,
                                                   max_steps=t_max)
 
         # choose minimal time at which phase ends
@@ -710,7 +724,7 @@ class ODEThreeCompHydSimulator:
         return t_end, a4_ht(t_end), a4_gt(t_end)
 
     @staticmethod
-    def rec_a3_r1(t3: float, h3: float, g3: float, p_rec: float, t_max: float, conf: list):
+    def rec_lAe_lAnS(t_s: float, h_s: float, g_s: float, p_rec: float, t_max: float, conf: list):
 
         a_anf = conf[0]
         a_ans = conf[1]
@@ -720,11 +734,13 @@ class ODEThreeCompHydSimulator:
         gamma = conf[6]
         phi = conf[7]
 
-        # A3 R1 is only applicable if h is above or at pipe exit of Ae...
+        # lAe and lAnS is only applicable if h is above or at pipe exit of Ae...
+        # ... and above or at pipe exit AnS ...
         # ... and g is above h (error of epsilon tolerated)
-        if not h3 <= 1 - phi + ODEThreeCompHydSimulator.eps \
-                or not h3 > g3 + theta + ODEThreeCompHydSimulator.eps:
-            return t3, h3, g3
+        if h_s > 1 - phi + ODEThreeCompHydSimulator.eps \
+                or h_s > 1 - gamma + ODEThreeCompHydSimulator.eps \
+                or h_s < g_s + theta - ODEThreeCompHydSimulator.eps:
+            return t_s, h_s, g_s
 
         # my simplified form
         a = m_ae / (a_anf * (1 - phi)) + \
@@ -745,11 +761,11 @@ class ODEThreeCompHydSimulator:
         # uses Al dt/dl part of EQ(8) solved for c2
         # r1 * c1 * exp(r1*t3) + r2 * c2 * exp(r2*t3) = m_ans * (ht3 - gt3 - theta)) / (a_ans * r2 * (1 - theta - gamma))
         # and then substituted in EQ(14) and solved for c1
-        s_c1 = (c / b + (m_ans * (h3 - g3 - theta)) / (a_ans * r2 * (1 - theta - gamma)) - g3) / \
-               (np.exp(r1 * t3) * (r1 / r2 - 1))
+        s_c1 = (c / b + (m_ans * (h_s - g_s - theta)) / (a_ans * r2 * (1 - theta - gamma)) - g_s) / \
+               (np.exp(r1 * t_s) * (r1 / r2 - 1))
 
         # uses EQ(14) with solution for c1 and solves for c2
-        s_c2 = (g3 - s_c1 * np.exp(r1 * t3) - c / b) / np.exp(r2 * t3)
+        s_c2 = (g_s - s_c1 * np.exp(r1 * t_s) - c / b) / np.exp(r2 * t_s)
 
         def a3_gt(t):
             # the general solution for g(t)
@@ -761,16 +777,26 @@ class ODEThreeCompHydSimulator:
             k2 = a_ans * (1 - theta - gamma) / m_ans * s_c2 * r2 + s_c2
             return k1 * np.exp(r1 * t) + k2 * np.exp(r2 * t) + c / b + theta
 
-        # phase A3 R1 only ends if h(t) rises above g(t)
-        # find the point where h(t) == g(t)
-        # As h(t3) is assumed to be below g(t3) and AnS is limited, this point must be reached
-        t_end = ODEThreeCompHydSimulator.optimize(func=lambda t: a3_ht(t) - (a3_gt(t) + theta),
-                                                  initial_guess=t3,
+        # find the point where h(t) == g(t) ...
+        t_gh = ODEThreeCompHydSimulator.optimize(func=lambda t: a3_ht(t) - (a3_gt(t) + theta),
+                                                 initial_guess=t_s,
+                                                 max_steps=t_max)
+
+        # ... or where h(t) drops back to 1 - gamma, changing lAnS to fAnS
+        t_gam = ODEThreeCompHydSimulator.optimize(func=lambda t: 1 - gamma - a3_ht(t),
+                                                  initial_guess=t_s,
                                                   max_steps=t_max)
+
+        # ... or where h(t) drops back to 1 - phi, changing lAe to fAe
+        t_phi = ODEThreeCompHydSimulator.optimize(func=lambda t: 1 - phi - a3_ht(t),
+                                                  initial_guess=t_s,
+                                                  max_steps=t_max)
+
+        t_end = min(t_gh, t_gam, t_phi)
         return t_end, a3_ht(t_end), a3_gt(t_end)
 
     @staticmethod
-    def rec_a3_r2(t3: float, h3: float, g3: float, p_rec: float, t_max: float, conf: list):
+    def rec_lAe_rAnS(t_s: float, h_s: float, g_s: float, p_rec: float, t_max: float, conf: list):
 
         a_anf = conf[0]
         a_ans = conf[1]
@@ -783,10 +809,10 @@ class ODEThreeCompHydSimulator:
         # A3 R2 is only applicable if h is above or at pipe exit of Ae...
         # ... and h is above g (error of epsilon tolerated)...
         # ... and g is not 0
-        if not h3 <= 1 - phi + ODEThreeCompHydSimulator.eps \
-                or not h3 < g3 + theta + ODEThreeCompHydSimulator.eps \
-                or not g3 > 0.0:
-            return t3, h3, g3
+        if not h_s <= 1 - phi + ODEThreeCompHydSimulator.eps \
+                or not h_s < g_s + theta + ODEThreeCompHydSimulator.eps \
+                or not g_s > 0.0:
+            return t_s, h_s, g_s
 
         # EQ 16 and 17 substituted in EQ 8
         a = m_ae / (a_anf * (1 - phi)) + \
@@ -805,11 +831,11 @@ class ODEThreeCompHydSimulator:
 
         # uses Al dt/dl part of EQ(16) == dl/dt of EQ(14) solved for c2
         # and then substituted in EQ(14) and solved for c1
-        s_c1 = (c / b - (m_anf * (g3 + theta - h3)) / (a_ans * r2 * (1 - gamma)) - g3) / \
-               (np.exp(r1 * t3) * (r1 / r2 - 1))
+        s_c1 = (c / b - (m_anf * (g_s + theta - h_s)) / (a_ans * r2 * (1 - gamma)) - g_s) / \
+               (np.exp(r1 * t_s) * (r1 / r2 - 1))
 
         # uses EQ(14) with solution for c1 and solves for c2
-        s_c2 = (g3 - s_c1 * np.exp(r1 * t3) - c / b) / np.exp(r2 * t3)
+        s_c2 = (g_s - s_c1 * np.exp(r1 * t_s) - c / b) / np.exp(r2 * t_s)
 
         def a3_gt(t):
             # the general solution for g(t)
@@ -827,62 +853,53 @@ class ODEThreeCompHydSimulator:
         else:
             # find the point where g(t) == 0
             t_end = ODEThreeCompHydSimulator.optimize(func=lambda t: a3_gt(t),
-                                                      initial_guess=t3,
+                                                      initial_guess=t_s,
                                                       max_steps=t_max)
             return t_end, a3_ht(t_end), a3_gt(t_end)
 
     @staticmethod
-    def rec_a2(t2: float, h2: float, g2: float, p_rec: float, t_max: float, conf: list):
+    def rec_fAe(t_s: float, h_s: float, g_s: float, p_rec: float, t_max: float, conf: list):
 
         a_anf = conf[0]
         m_ae = conf[2]
         phi = conf[7]
 
-        # Recovery phase A2 is only applicable if h is below pipe exit of Ae and AnS is full
-        if 1 - phi > h2 or g2 > ODEThreeCompHydSimulator.eps:
-            return t2, h2, g2
+        # full Ae recovery is only applicable if h is below pipe exit of Ae and AnS is full
+        if 1 - phi > h_s or g_s > ODEThreeCompHydSimulator.eps:
+            return t_s, h_s, g_s
 
         def a2_ht(t):
-            return h2 - (t - t2) * (m_ae - p_rec) / a_anf
+            return h_s - (t - t_s) * (m_ae - p_rec) / a_anf
 
         # the total duration of recovery phase A2 from t2 on
-        t_end = (h2 - 1 + phi) * a_anf / (m_ae - p_rec) + t2
+        t_end = (h_s - 1 + phi) * a_anf / (m_ae - p_rec) + t_s
 
         # check if targeted recovery time is before phase end time
         t_end = min(t_end, t_max)
 
-        return t_end, a2_ht(t_end), g2
+        return t_end, a2_ht(t_end), g_s
 
     @staticmethod
-    def rec_a1(t1: float, h1: float, g1: float, p_rec: float, t_max: float, conf: list):
+    def rec_lAe(t_s: float, h_s: float, g_s: float, p_rec: float, t_max: float, conf: list):
 
         a_anf = conf[0]
         m_ae = conf[2]
         phi = conf[7]
 
-        def a1_ht(t):
-            return (h1 - p_rec * (1 - phi) / m_ae) * \
-                   np.exp(m_ae * (t1 - t) / (a_anf * (1 - phi))) + \
+        # pure lAe recovery is only possible if AnS is full and fill-level AnF above AnS
+        if h_s > g_s or g_s > ODEThreeCompHydSimulator.eps:
+            return t_s, h_s, g_s
+
+        def ht(t):
+            return (h_s - p_rec * (1 - phi) / m_ae) * \
+                   np.exp(m_ae * (t_s - t) / (a_anf * (1 - phi))) + \
                    p_rec * (1 - phi) / m_ae
 
         # full recovery can't be reached as log(inf) only approximates 0
         # a1_ht(max rec time) is the most recovery possible
-        target_h = a1_ht(t_max)
+        target_h = ht(t_max)
 
-        return t_max, target_h, g1
-
-        # # return min(h) if even after the maximal recovery time h>epsilon
-        # if target_h > ODEThreeCompHydSimulator.eps:
-        #     return t_rec, target_h, g1
-        #
-        # # otherwise return time when h(t) reaches approximately 0 (epsilon)
-        # t_end = a_anf * (1 - phi) / - m_ae * (
-        #         np.log(target_h - p_rec * (1 - phi) / m_ae) - (
-        #         np.log(h1 - p_rec * (1 - phi) / m_ae) + m_ae * t1 / (a_anf * (1 - phi))
-        # )
-        # )
-        #
-        # return t_end, a1_ht(t_end), g1
+        return t_max, target_h, g_s
 
     @staticmethod
     def optimize(func, initial_guess, max_steps):
@@ -899,7 +916,10 @@ class ODEThreeCompHydSimulator:
         # check if initial guess conforms to underlying optimizer assumption
         t = initial_guess
         if func(t) < 0:
-            raise UserWarning("initial guess for func is not positive")
+            if func(t + ODEThreeCompHydSimulator.eps) >= 0:
+                t += ODEThreeCompHydSimulator.eps
+            else:
+                raise UserWarning("initial guess for func is not positive")
 
         # while maximal precision is not reached
         while step_size > 0.0000001:

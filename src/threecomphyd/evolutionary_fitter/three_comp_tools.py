@@ -14,7 +14,7 @@ three_comp_parameter_limits = {
     "m_ae": [1, 2000],
     "m_ans": [1, 2000],
     "m_anf": [1, 2000],
-    "theta": [0.01, 0.99],
+    "theta": [0.01, 0.99],  # 0.0 and 1.0 are not possible because equations would divide by 0
     "gamma": [0.01, 0.99],
     "phi": [0.01, 0.99]
 }

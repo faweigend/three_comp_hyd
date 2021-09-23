@@ -17,13 +17,14 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     p_exp = 350
-    p_rec = 100
+    p_rec = 247
     t_max = 5000
 
     # estimations per second for discrete agent
     hz = 250
 
-    conf = configurations.d
+    conf = [5604.966588001499, 54499.44673416602, 155.82060702780947, 105.26777135234472, 28.623478621476917,
+            0.2314852496176266, 0.35438323467786853, 0.5949904604992432]
 
     # create three component hydraulic agent with example configuration
     agent = ThreeCompHydAgent(hz=hz, a_anf=conf[0], a_ans=conf[1], m_ae=conf[2],
