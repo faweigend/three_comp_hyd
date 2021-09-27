@@ -71,7 +71,7 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     # estimations per second for discrete agent
-    hz = 20
+    hz = 2
     t_max = 5000
 
     the_loop(t_max=t_max, hz=hz)

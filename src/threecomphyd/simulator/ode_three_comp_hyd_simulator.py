@@ -885,9 +885,10 @@ class ODEThreeCompHydSimulator:
         a_anf = conf[0]
         m_ae = conf[2]
         phi = conf[7]
+        theta = conf[5]
 
         # pure lAe recovery is only possible if AnS is full and fill-level AnF above AnS
-        if h_s > g_s or g_s > ODEThreeCompHydSimulator.eps:
+        if h_s > g_s + theta or g_s > ODEThreeCompHydSimulator.eps:
             return t_s, h_s, g_s
 
         def ht(t):
@@ -911,7 +912,7 @@ class ODEThreeCompHydSimulator:
         """
 
         # start precision
-        step_size = 1000.0
+        step_size = 10.0
 
         # check if initial guess conforms to underlying optimizer assumption
         t = initial_guess
