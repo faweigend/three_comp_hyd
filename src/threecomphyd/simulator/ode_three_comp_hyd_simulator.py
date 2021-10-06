@@ -23,8 +23,8 @@ class ODEThreeCompHydSimulator:
                                                    start_h=0, start_g=0,
                                                    p_exp=p_exp, t_max=t_max)
         if tte_1 >= t_max:
-            logging.info("Exhaustion not reached during TTE")
-            return 0
+            # Exhaustion not reached during TTE
+            return 200
 
         # now recovery
         rec, h, g = ODEThreeCompHydSimulator.rec(conf=conf,
@@ -58,7 +58,7 @@ class ODEThreeCompHydSimulator:
                             p_exp=p_exp, t_max=t_max, conf=conf)
 
             # if recovery time is reached return fill levels at that point
-            if t == np.inf or t == t_max:
+            if t == np.nan or t >= t_max:
                 return t, h, g
 
         # if all phases complete full exhaustion is reached
@@ -260,8 +260,9 @@ class ODEThreeCompHydSimulator:
         phi = conf[7]
 
         # This phase is not applicable h is lower than pipe exit Ae...
-        # ... or if reflow into AnS is happening
-        if h_s > (1 - phi) or g_s + theta > h_s + ODEThreeCompHydSimulator.eps:
+        # ... or if reflow into AnS is happening ...
+        # ... or if AnS flow is at full
+        if h_s > (1 - phi) or g_s + theta > h_s + ODEThreeCompHydSimulator.eps or h_s > (1 - gamma):
             return t_s, h_s, g_s
 
         # taken from Equation 11 by Morton 1986
@@ -434,7 +435,7 @@ class ODEThreeCompHydSimulator:
 
         # generalised g(t)
         def gt(t):
-            return (1 - theta - gamma) + s_cg * math.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
+            return (1 - theta - gamma) + s_cg * np.exp((-m_ans * t) / ((1 - theta - gamma) * a_ans))
 
         k = m_ans / ((1 - theta - gamma) * a_ans)
         # a = -m_ae / a_anf
@@ -443,11 +444,11 @@ class ODEThreeCompHydSimulator:
         ag = (p_exp - m_ae) / a_anf
 
         # h(t_s) = h_s can be solved for c
-        s_ch = -t_s * ag + ((b * math.exp(-k * t_s)) / k) + h_s
+        s_ch = -t_s * ag + ((b * np.exp(-k * t_s)) / k) + h_s
 
         # generalised h(t)
         def ht(t):
-            return t * ag - ((b * math.exp(-k * t)) / k) + s_ch
+            return t * ag - ((b * np.exp(-k * t)) / k) + s_ch
 
         # find end of phase A6. The time point where h(t_end)=1
         t_end = ODEThreeCompHydSimulator.optimize(func=lambda t: h_target - ht(t),
@@ -479,7 +480,7 @@ class ODEThreeCompHydSimulator:
                 t, h, g = phase(t, h, g, p_rec=p_rec, t_max=t_max, conf=conf)
 
                 # if recovery time is reached return fill levels at that point
-                if t >= t_max:
+                if t == np.nan or t >= t_max:
                     return t, h, g
 
         # if all phases complete full recovery is reached
