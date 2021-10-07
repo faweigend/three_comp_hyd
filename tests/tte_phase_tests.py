@@ -16,7 +16,7 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
                               gam=conf[6], phi=conf[7])
 
     phases = [ODEThreeCompHydSimulator.lAe,
-              ODEThreeCompHydSimulator.work_lAe_rAnS,
+              ODEThreeCompHydSimulator.lAe_rAnS,
               ODEThreeCompHydSimulator.work_fAe,
               ODEThreeCompHydSimulator.work_fAe_rAnS,
               ODEThreeCompHydSimulator.work_lAe_lAnS,
@@ -25,8 +25,8 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
               ODEThreeCompHydSimulator.work_fAe_fAnS]
 
     # set initial conditions
-    h_s = 0.015047877356186012
-    g_s = 0.12055688716004659  # 1 - conf[6] - conf[5]
+    h_s = 0
+    g_s = 0  # 1 - conf[6] - conf[5]
     t, h, g = 0, h_s, g_s
 
     # display initial state if log level is high enough
@@ -101,9 +101,9 @@ if __name__ == "__main__":
     # required precision of discrete to differential agent
     eps = 0.001
 
-    example_conf = [8307.733355384593, 83908.04796664482, 174.9214061687359,
-                    413.34459434994994, 29.1778756437821,
-         0.3486671398769143, 0.01, 0.803980915503534]
+    example_conf = [16440.760749341924, 39844.68845444773, 205.95359029932902,
+                    248.79961885239118, 25.86948744313801, 0.4773848980363584,
+                    0.453981977895603, 0.31563995769439257]
     tte_test_procedure(p, hz, eps, example_conf, log_level=2)
 
     the_loop(p=p, hz=hz, eps=eps)

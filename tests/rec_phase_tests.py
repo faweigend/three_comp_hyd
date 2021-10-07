@@ -57,8 +57,8 @@ def rec_trial_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
               ODEThreeCompHydSimulator.rec_fAe_lAnS,
               ODEThreeCompHydSimulator.rec_fAe_rAnS,
               ODEThreeCompHydSimulator.rec_lAe_lAnS,
-              ODEThreeCompHydSimulator.rec_lAe_rAnS,
               ODEThreeCompHydSimulator.rec_fAe,
+              ODEThreeCompHydSimulator.lAe_rAnS,
               ODEThreeCompHydSimulator.lAe]
 
     # restart time from 0
