@@ -111,13 +111,13 @@ if __name__ == "__main__":
     t_max = 5000
 
     # estimations per second for discrete agent
-    hz = 800
+    hz = 2000
     # required precision of discrete to differential agent
     eps = 0.01
 
     # a configuration
-    c = [5000, 65296.55506048172, 286.92487794015625, 287.8170222313081, 38.355175636958336,
-         0.4377894638957991, 0.2437516643675469, 0.48005517184947655]
+    c = [8307.733355384593, 83908.04796664482, 174.9214061687359, 413.34459434994994, 29.1778756437821,
+         0.35, 0.01, 0.8]
 
     rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
                         hz=hz, eps=eps, conf=c, log_level=2)

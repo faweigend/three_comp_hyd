@@ -41,7 +41,7 @@ class ODEThreeCompHydSimulator:
     @staticmethod
     def tte(conf: list, start_h: float, start_g: float, p_exp: float, t_max: float = 5000) -> (float, float, float):
 
-        phases = [ODEThreeCompHydSimulator.work_lAe,
+        phases = [ODEThreeCompHydSimulator.lAe,
                   ODEThreeCompHydSimulator.work_lAe_rAnS,
                   ODEThreeCompHydSimulator.work_fAe,
                   ODEThreeCompHydSimulator.work_fAe_rAnS,
@@ -54,8 +54,7 @@ class ODEThreeCompHydSimulator:
         t, h, g = 0, start_h, start_g
         # iterate through all phases until end is reached
         for phase in phases:
-            t, h, g = phase(t, h, g,
-                            p_exp=p_exp, t_max=t_max, conf=conf)
+            t, h, g = phase(t, h, g, p_exp, t_max=t_max, conf=conf)
 
             # if recovery time is reached return fill levels at that point
             if t == np.nan or t >= t_max:
@@ -65,7 +64,10 @@ class ODEThreeCompHydSimulator:
         return t, h, g
 
     @staticmethod
-    def work_lAe(t_s: float, h_s: float, g_s: float, p_exp: float, t_max: float, conf: list) -> (float, float, float):
+    def lAe(t_s: float, h_s: float, g_s: float, p: float, t_max: float, conf: list) -> (float, float, float):
+        """
+        The phase l_Ae where only Ae contributes and flow through p_Ae is limited by liquid pressure.
+        """
 
         a_anf = conf[0]
         m_ae = conf[2]
@@ -73,27 +75,31 @@ class ODEThreeCompHydSimulator:
         phi = conf[7]
 
         # phase ends at bottom of Ae or top of AnS
-        h_target = min(theta, 1 - phi)
+        h_bottom = min(theta, 1 - phi)
 
         # This phase is not applicable if fill-level of AnF below pipe exit Ae or top of AnS, ..
-        # ... or AnS not full
-        if h_s > h_target or g_s > 0.0 + ODEThreeCompHydSimulator.eps:
+        # ... or AnS not full ...
+        # ... or pipe exit of Ae is at the top of the model
+        if h_s >= h_bottom + ODEThreeCompHydSimulator.eps \
+                or g_s > ODEThreeCompHydSimulator.eps \
+                or phi == 0:
             return t_s, h_s, g_s
 
         # constant can be derived from known t_s and h_s
-        c1 = (h_s - p_exp * (1 - phi) / m_ae) * np.exp(-m_ae * t_s / a_anf * (phi - 1))
+        c1 = (h_s - p * (1 - phi) / m_ae) * np.exp(-m_ae * t_s / (a_anf * (phi - 1)))
 
         # general solution for h(t) using c1
-        def ht(t):
-            return p_exp * (1 - phi) / m_ae + c1 * np.exp(m_ae * t / (a_anf * (phi - 1)))
+        ht_max = p * (1 - phi) / m_ae + c1 * np.exp(m_ae * t_max / (a_anf * (phi - 1)))
+        # ht_max = ODEThreeCompHydSimulator.lAe_ht(t_max, p, c1, a_anf, m_ae, phi)
 
         # check if max time is reached in this phase
-        if ht(t_max) <= h_target:
-            return t_max, ht(t_max), g_s
+        # for example this will always happen during recovery as in h, log(inf) only approximates 0
+        if ht_max <= h_bottom:
+            return t_max, ht_max, g_s
         else:
             # end of phase A1 -> the time when h(t) = min(theta,1-phi)
-            t_end = a_anf * (phi - 1) / m_ae * np.log((h_target - p_exp * (1 - phi) / m_ae) / c1)
-            return t_end, h_target, g_s
+            t_end = a_anf * (phi - 1) / m_ae * np.log((h_bottom - p * (1 - phi) / m_ae) / c1)
+            return t_end, h_bottom, g_s
 
     @staticmethod
     def work_lAe_rAnS(t_s: float, h_s: float, g_s: float, p_exp: float, t_max: float, conf: list) -> (
@@ -468,7 +474,7 @@ class ODEThreeCompHydSimulator:
                   ODEThreeCompHydSimulator.rec_lAe_lAnS,
                   ODEThreeCompHydSimulator.rec_lAe_rAnS,
                   ODEThreeCompHydSimulator.rec_fAe,
-                  ODEThreeCompHydSimulator.rec_lAe]
+                  ODEThreeCompHydSimulator.lAe]
 
         # start time from 0 and given start fill level
         t = 0
@@ -477,7 +483,7 @@ class ODEThreeCompHydSimulator:
         # cycle through phases until t_max is reached
         while t < t_max:
             for phase in phases:
-                t, h, g = phase(t, h, g, p_rec=p_rec, t_max=t_max, conf=conf)
+                t, h, g = phase(t, h, g, p_rec, t_max=t_max, conf=conf)
 
                 # if recovery time is reached return fill levels at that point
                 if t == np.nan or t >= t_max:
@@ -879,29 +885,6 @@ class ODEThreeCompHydSimulator:
         t_end = min(t_end, t_max)
 
         return t_end, a2_ht(t_end), g_s
-
-    @staticmethod
-    def rec_lAe(t_s: float, h_s: float, g_s: float, p_rec: float, t_max: float, conf: list):
-
-        a_anf = conf[0]
-        m_ae = conf[2]
-        phi = conf[7]
-        theta = conf[5]
-
-        # pure lAe recovery is only possible if AnS is full and fill-level AnF above AnS
-        if h_s > g_s + theta or g_s > ODEThreeCompHydSimulator.eps:
-            return t_s, h_s, g_s
-
-        def ht(t):
-            return (h_s - p_rec * (1 - phi) / m_ae) * \
-                   np.exp(m_ae * (t_s - t) / (a_anf * (1 - phi))) + \
-                   p_rec * (1 - phi) / m_ae
-
-        # full recovery can't be reached as log(inf) only approximates 0
-        # a1_ht(max rec time) is the most recovery possible
-        target_h = ht(t_max)
-
-        return t_max, target_h, g_s
 
     @staticmethod
     def optimize(func, initial_guess, max_steps):
