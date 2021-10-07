@@ -12,17 +12,15 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    p_exp = 350
+    p_exp = 260
     p_rec = 0
 
     # estimations per second for discrete agent
-    hz = 250
+    hz = 1000
 
     # a D configuration
-    conf = [15101.24769778409, 86209.27743067988,  # anf, ans
-            252.71702367096787, 363.2970828395908,  # m_ae, m_ans
-            38.27073086773415, 0.64892228099402588,  # m_anf, theta
-            0.1580228306857272, 0.6580228306857272]  # gamma, phi
+    conf = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908, 38.27073086773415,
+            0.14892228099402588, 0.3524379644134216, 0.1580228306857272]
 
     # create three component hydraulic agent with example configuration
     agent = ThreeCompHydAgent(hz=hz,
@@ -32,16 +30,16 @@ if __name__ == "__main__":
                               gam=conf[6], phi=conf[7])
     phi = conf[7]
 
-    t2 = 0
-    h2 = 0.5
-    g2 = 0.0
+    t2 = 2643.143819400002
+    h2 = 0.025100624266976845
+    g2 = 4.883399240540598e-12
 
-    t_end, _, _ = ODEThreeCompHydSimulator.fAe(t_s=t2,
-                                               h_s=h2,
-                                               g_s=g2,
-                                               p=p_rec,
-                                               t_max=1000,
-                                               conf=conf)
+    t_end, h_end, g_end = ODEThreeCompHydSimulator.fAe(t_s=t2,
+                                                       h_s=h2,
+                                                       g_s=g2,
+                                                       p=p_rec,
+                                                       t_max=5000,
+                                                       conf=conf)
 
     # check in simulation
     agent.reset()
@@ -50,12 +48,12 @@ if __name__ == "__main__":
     ThreeCompVisualisation(agent)
     agent.set_power(p_rec)
 
-    for _ in range(int(t_end * agent.hz)):
+    for _ in range(int((t_end - t2) * agent.hz)):
         agent.perform_one_step()
 
     logging.info("predicted time: {} \n"
                  "diff h: {}\n"
                  "diff g: {}".format(t_end,
-                                     (1 - phi) - agent.get_h(),
-                                     0 - agent.get_g()))
+                                     h_end - agent.get_h(),
+                                     g_end - agent.get_g()))
     ThreeCompVisualisation(agent)

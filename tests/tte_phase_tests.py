@@ -16,10 +16,10 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
                               gam=conf[6], phi=conf[7])
 
     phases = [ODEThreeCompHydSimulator.lAe,
-              ODEThreeCompHydSimulator.lAe_rAnS,
+              ODEThreeCompHydSimulator.lAe_rAn,
               ODEThreeCompHydSimulator.fAe,
               ODEThreeCompHydSimulator.work_fAe_rAnS,
-              ODEThreeCompHydSimulator.work_lAe_lAnS,
+              ODEThreeCompHydSimulator.lAe_lAnS,
               ODEThreeCompHydSimulator.work_fAe_lAnS,
               ODEThreeCompHydSimulator.work_lAe_fAns,
               ODEThreeCompHydSimulator.work_fAe_fAnS]

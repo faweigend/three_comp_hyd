@@ -105,9 +105,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    p_exp = 560
-    t_rec = 180
-    p_rec = 0
+    p_exp = 681
+    t_rec = 3600
+    p_rec = 247
     t_max = 5000
 
     # estimations per second for discrete agent
@@ -116,8 +116,8 @@ if __name__ == "__main__":
     eps = 0.01
 
     # a configuration
-    c = [8307.733355384593, 83908.04796664482, 174.9214061687359, 413.34459434994994, 29.1778756437821,
-         0.35, 0.01, 0.8]
+    c = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908, 38.27073086773415,
+         0.14892228099402588, 0.3524379644134216, 0.1580228306857272]
 
     rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
                         hz=hz, eps=eps, conf=c, log_level=2)

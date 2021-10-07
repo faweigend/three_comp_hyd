@@ -56,9 +56,9 @@ def rec_trial_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
               ODEThreeCompHydSimulator.rec_lAe_fAnS,
               ODEThreeCompHydSimulator.rec_fAe_lAnS,
               ODEThreeCompHydSimulator.rec_fAe_rAnS,
-              ODEThreeCompHydSimulator.rec_lAe_lAnS,
+              ODEThreeCompHydSimulator.lAe_rAn,
+              ODEThreeCompHydSimulator.lAe_lAnS,
               ODEThreeCompHydSimulator.fAe,
-              ODEThreeCompHydSimulator.lAe_rAnS,
               ODEThreeCompHydSimulator.lAe]
 
     # restart time from 0
@@ -84,8 +84,9 @@ def rec_trial_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
             if log_level > 1:
                 logging.info("[intermediate result] {}\n"
                              "t {}\n"
+                             "h {} g {}\n"
                              "Diff h {}\n"
-                             "Diff g {}".format(phase, t, h_diff, g_diff))
+                             "Diff g {}".format(phase, t, h, g, h_diff, g_diff))
                 ThreeCompVisualisation(agent)
 
             assert abs(g_diff) < eps, "{} g is off by {}".format(phase, g_diff)
@@ -122,19 +123,18 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    p_exp = 560
-    t_rec = 180
+    p_exp = 260
+    t_rec = 3600
     p_rec = 0
     t_max = 5000
-
     # estimations per second for discrete agent
     hz = 400
     # required precision of discrete to differential agent
     eps = 0.001
 
     # a configuration
-    c = [21704.77778915587, 61925.84797188902, 212.76772005473063, 140.0897845828814, 32.4028329961532,
-         0.3217431159932008, 0.2683727457040581, 0.7190401470030847]
+    c = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908, 38.27073086773415,
+         0.14892228099402588, 0.3524379644134216, 0.1580228306857272]
     rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
                         hz=hz, eps=eps, conf=c, log_level=2)
 
