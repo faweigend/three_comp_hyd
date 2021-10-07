@@ -57,7 +57,7 @@ def rec_trial_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
               ODEThreeCompHydSimulator.rec_fAe_lAnS,
               ODEThreeCompHydSimulator.rec_fAe_rAnS,
               ODEThreeCompHydSimulator.rec_lAe_lAnS,
-              ODEThreeCompHydSimulator.rec_fAe,
+              ODEThreeCompHydSimulator.fAe,
               ODEThreeCompHydSimulator.lAe_rAnS,
               ODEThreeCompHydSimulator.lAe]
 
@@ -133,8 +133,8 @@ if __name__ == "__main__":
     eps = 0.001
 
     # a configuration
-    c = [8307.733355384593, 83908.04796664482, 174.9214061687359, 413.34459434994994, 29.1778756437821,
-         0.3486671398769143, 0.01, 0.803980915503534]
+    c = [21704.77778915587, 61925.84797188902, 212.76772005473063, 140.0897845828814, 32.4028329961532,
+         0.3217431159932008, 0.2683727457040581, 0.7190401470030847]
     rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
                         hz=hz, eps=eps, conf=c, log_level=2)
 

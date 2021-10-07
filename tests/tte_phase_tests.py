@@ -17,7 +17,7 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
 
     phases = [ODEThreeCompHydSimulator.lAe,
               ODEThreeCompHydSimulator.lAe_rAnS,
-              ODEThreeCompHydSimulator.work_fAe,
+              ODEThreeCompHydSimulator.fAe,
               ODEThreeCompHydSimulator.work_fAe_rAnS,
               ODEThreeCompHydSimulator.work_lAe_lAnS,
               ODEThreeCompHydSimulator.work_fAe_lAnS,
@@ -101,9 +101,8 @@ if __name__ == "__main__":
     # required precision of discrete to differential agent
     eps = 0.001
 
-    example_conf = [16440.760749341924, 39844.68845444773, 205.95359029932902,
-                    248.79961885239118, 25.86948744313801, 0.4773848980363584,
-                    0.453981977895603, 0.31563995769439257]
+    example_conf = [21704.77778915587, 61925.84797188902, 212.76772005473063, 140.0897845828814, 32.4028329961532,
+         0.3217431159932008, 0.2683727457040581, 0.7190401470030847]
     tte_test_procedure(p, hz, eps, example_conf, log_level=2)
 
     the_loop(p=p, hz=hz, eps=eps)

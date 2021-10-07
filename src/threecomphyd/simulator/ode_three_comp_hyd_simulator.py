@@ -43,7 +43,7 @@ class ODEThreeCompHydSimulator:
 
         phases = [ODEThreeCompHydSimulator.lAe,
                   ODEThreeCompHydSimulator.lAe_rAnS,
-                  ODEThreeCompHydSimulator.work_fAe,
+                  ODEThreeCompHydSimulator.fAe,
                   ODEThreeCompHydSimulator.work_fAe_rAnS,
                   ODEThreeCompHydSimulator.work_lAe_lAnS,
                   ODEThreeCompHydSimulator.work_fAe_lAnS,
@@ -176,7 +176,7 @@ class ODEThreeCompHydSimulator:
         return t_end, ht(t_end), gt(t_end)
 
     @staticmethod
-    def work_fAe(t_s: float, h_s: float, g_s: float, p_exp: float, t_max: float, conf: list) -> (float, float, float):
+    def fAe(t_s: float, h_s: float, g_s: float, p: float, t_max: float, conf: list) -> (float, float, float):
 
         a_anf = conf[0]
         m_ae = conf[2]
@@ -185,17 +185,30 @@ class ODEThreeCompHydSimulator:
 
         # this phase not applicable if h is not in-between 1-theta and phi and ...
         # ... AnS is not full
-        if not theta >= h_s >= (1 - phi) or g_s > 0.0 + ODEThreeCompHydSimulator.eps:
+        if theta + ODEThreeCompHydSimulator.eps < h_s < 1 - phi - ODEThreeCompHydSimulator.eps or \
+                g_s > ODEThreeCompHydSimulator.eps:
             return t_s, h_s, g_s
 
+        # the first derivative. Change in ht
+        ht_p = (p - m_ae) / a_anf
+
+        if ht_p > 0:
+            # expenditure
+            h_target = theta
+        elif ht_p < 0:
+            # recovery ends at 1 - phi
+            h_target = 1 - phi
+        else:
+            # no change
+            h_target = h_s
+
         # linear utilization -> no equilibrium possible
-        t_end = t_s + ((phi - (1 - theta)) * a_anf) / (p_exp - m_ae)
+        t_end = (h_target - h_s) * a_anf / (p - m_ae) + t_s
 
         # check if max time is reached before phase end
         if t_end > t_max:
-            h_end = h_s + (t_max - t_s) * (p_exp - m_ae) / a_anf
+            h_end = h_s + (t_max - t_s) * ht_p
             return t_end, h_end, g_s
-
         else:
             return t_end, theta, g_s
 
@@ -475,7 +488,7 @@ class ODEThreeCompHydSimulator:
                   ODEThreeCompHydSimulator.rec_fAe_lAnS,
                   ODEThreeCompHydSimulator.rec_fAe_rAnS,
                   ODEThreeCompHydSimulator.rec_lAe_lAnS,
-                  ODEThreeCompHydSimulator.rec_fAe,
+                  ODEThreeCompHydSimulator.fAe,
                   ODEThreeCompHydSimulator.lAe_rAnS,
                   ODEThreeCompHydSimulator.lAe]
 
@@ -804,28 +817,6 @@ class ODEThreeCompHydSimulator:
 
         t_end = min(t_gh, t_gam, t_phi)
         return t_end, a3_ht(t_end), a3_gt(t_end)
-
-    @staticmethod
-    def rec_fAe(t_s: float, h_s: float, g_s: float, p_rec: float, t_max: float, conf: list):
-
-        a_anf = conf[0]
-        m_ae = conf[2]
-        phi = conf[7]
-
-        # full Ae recovery is only applicable if h is below pipe exit of Ae and AnS is full
-        if 1 - phi > h_s or g_s > ODEThreeCompHydSimulator.eps:
-            return t_s, h_s, g_s
-
-        def a2_ht(t):
-            return h_s - (t - t_s) * (m_ae - p_rec) / a_anf
-
-        # the total duration of recovery phase A2 from t2 on
-        t_end = (h_s - 1 + phi) * a_anf / (m_ae - p_rec) + t_s
-
-        # check if targeted recovery time is before phase end time
-        t_end = min(t_end, t_max)
-
-        return t_end, a2_ht(t_end), g_s
 
     @staticmethod
     def optimize(func, initial_guess, max_steps):

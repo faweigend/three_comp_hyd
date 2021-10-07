@@ -4,6 +4,7 @@ from scipy import optimize
 import logging
 
 import numpy as np
+from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 
 if __name__ == "__main__":
@@ -29,25 +30,18 @@ if __name__ == "__main__":
                               m_ae=conf[2], m_ans=conf[3],
                               m_anf=conf[4], the=conf[5],
                               gam=conf[6], phi=conf[7])
+    phi = conf[7]
 
     t2 = 0
     h2 = 0.5
     g2 = 0.0
 
-    a_anf = conf[0]
-    a_ans = conf[1]
-    m_ae = conf[2]
-    m_ans = conf[3]
-    m_anf = conf[4]
-    theta = conf[5]
-    gamma = conf[6]
-    phi = conf[7]
-
-
-    def a2_ht(t):
-        return h2 - t * (m_ae - p_rec) / a_anf
-
-    t_end = (h2 - 1 + phi) * a_anf / (m_ae - p_rec)
+    t_end, _, _ = ODEThreeCompHydSimulator.fAe(t_s=t2,
+                                               h_s=h2,
+                                               g_s=g2,
+                                               p=p_rec,
+                                               t_max=1000,
+                                               conf=conf)
 
     # check in simulation
     agent.reset()
