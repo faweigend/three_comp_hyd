@@ -275,7 +275,7 @@ class ODEThreeCompHydSimulator:
             return t_end, h_target, g_s, func
 
     @staticmethod
-    def fAe_rAn(t_s: float, h_s: float, g_s: float, p_exp: float, t_max: float, conf: list) -> (
+    def fAe_rAn(t_s: float, h_s: float, g_s: float, p: float, t_max: float, conf: list) -> (
             float, float, float):
 
         a_anf = conf[0]
@@ -302,22 +302,22 @@ class ODEThreeCompHydSimulator:
 
         # if h is above g (flow from AnF into AnS)
         a_hg = (a_anf + a_ans) * m_anf / (a_anf * a_ans * (1 - gamma))
-        b_hg = (p_exp - m_ae) * m_anf / (a_anf * a_ans * (1 - gamma))
+        b_hg = (p - m_ae) * m_anf / (a_anf * a_ans * (1 - gamma))
 
         # derivative g'(t) can be calculated manually
         dgt_hg = - m_anf * (g_s + theta - h_s) / (a_ans * (1 - gamma))
 
         # which then allows to derive c1 and c2
-        s_c1_gh = ((p_exp - m_ae) / (a_anf + a_ans) - dgt_hg) * np.exp(a_hg * t_s)
-        s_c2_gh = (-t_s * b_hg + dgt_hg) / a_hg - (p_exp - m_ae) / ((a_anf + a_ans) * a_hg) + g_s
+        s_c1_gh = ((p - m_ae) / (a_anf + a_ans) - dgt_hg) * np.exp(a_hg * t_s)
+        s_c2_gh = (-t_s * b_hg + dgt_hg) / a_hg - (p - m_ae) / ((a_anf + a_ans) * a_hg) + g_s
 
         def gt(t):
             # general solution for g(t)
-            return t * (p_exp - m_ae) / (a_anf + a_ans) + s_c2_gh + s_c1_gh / a_hg * np.exp(-a_hg * t)
+            return t * (p - m_ae) / (a_anf + a_ans) + s_c2_gh + s_c1_gh / a_hg * np.exp(-a_hg * t)
 
         def dgt(t):
             # first derivative g'(t)
-            return (p_exp - m_ae) / (a_anf + a_ans) - s_c1_gh * np.exp(-a_hg * t)
+            return (p - m_ae) / (a_anf + a_ans) - s_c1_gh * np.exp(-a_hg * t)
 
         def ht(t):
             # EQ(16) with constants for g(t) and g'(t)
@@ -521,15 +521,14 @@ class ODEThreeCompHydSimulator:
         elif t_end == t_gth:
             func = ODEThreeCompHydSimulator.fAe_rAn
         elif t_end == t_gam:
-            func = ODEThreeCompHydSimulator.lAe_fAn
+            func = ODEThreeCompHydSimulator.fAe_fAn
         else:
             func = ODEThreeCompHydSimulator.lAe_lAn
 
         return t_end + t_p, ht(t_end), gt(t_end), func
 
     @staticmethod
-    def lAe_fAn(t_s: float, h_s: float, g_s: float, p: float, t_max: float, conf: list) -> (
-            float, float, float):
+    def lAe_fAn(t_s: float, h_s: float, g_s: float, p: float, t_max: float, conf: list):
         """
         :param t_s: time in seconds at which phase starts
         :param h_s: depletion state of AnF when phase starts
@@ -577,7 +576,7 @@ class ODEThreeCompHydSimulator:
             return -b / ((a + k) * np.exp(k) ** t) + s_ch * np.exp(a) ** t - g / a
 
         # find the time at which the phase stops
-        t_gam = ODEThreeCompHydSimulator.optimize(func=lambda t: ht(t) - 1 - gamma,
+        t_gam = ODEThreeCompHydSimulator.optimize(func=lambda t: ht(t) - (1 - gamma),
                                                   initial_guess=t_s,
                                                   max_steps=t_max)
 
@@ -591,20 +590,19 @@ class ODEThreeCompHydSimulator:
         if t_end >= t_max:
             func = None
         elif t_end == t_gam:
-            func = ODEThreeCompHydSimulator.lAe_fAn
+            func = ODEThreeCompHydSimulator.lAe_lAn
         else:
             func = ODEThreeCompHydSimulator.fAe_fAn
 
         return t_end, ht(t_end), gt(t_end), func
 
     @staticmethod
-    def fAe_fAn(t_s: float, h_s: float, g_s: float, p_exp: float, t_max: float, conf: list) -> (
-            float, float, float):
+    def fAe_fAn(t_s: float, h_s: float, g_s: float, p: float, t_max: float, conf: list):
         """
         :param t_s:
         :param h_s:
         :param g_s:
-        :param p_exp: constant power output
+        :param p: constant power output
         :param t_max: maximal time limit
         :param conf: configuration of hydraulic model
         :return:
@@ -639,7 +637,7 @@ class ODEThreeCompHydSimulator:
         # a = -m_ae / a_anf
         b = (m_ans * s_cg) / ((1 - theta - gamma) * a_anf)
         # g = p / a_anf
-        ag = (p_exp - m_ae) / a_anf
+        ag = (p - m_ae) / a_anf
 
         # h(t_s) = h_s can be solved for c
         s_ch = -t_s * ag + ((b * np.exp(-k * t_s)) / k) + h_s

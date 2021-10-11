@@ -47,12 +47,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    # estimations per second for discrete agent
-
-    # a D configuration
     conf = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908, 38.27073086773415,
             0.4892228099402588, 0.1524379644134216, 0.780228306857272]
-
+    log = 0
     h2 = 0.325100624266976845
     g2 = 0
 
@@ -62,15 +59,15 @@ if __name__ == "__main__":
 
     p = 0
     logging.info("h = 1 - phi")
-    n_func = test(func, h2, g2, p, conf)
+    n_func = test(func, h2, g2, p, conf, log=log)
     assert n_func == ODEThreeCompHydSimulator.lAe
 
     p = 280
     logging.info("h = 1 - gamma")
-    n_func = test(func, h2, g2, p, conf)
+    n_func = test(func, h2, g2, p, conf, log=log)
     assert n_func == ODEThreeCompHydSimulator.fAe_lAn
 
     logging.info("time limit")
     p = 254
-    n_func = test(func, h2, g2, p, conf, t_max=100)
+    n_func = test(func, h2, g2, p, conf, t_max=100, log=log)
     assert n_func is None
