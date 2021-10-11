@@ -105,13 +105,13 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    p_exp = 681
-    t_rec = 3600
-    p_rec = 247
+    p_exp = 500
+    t_rec = 240
+    p_rec = 0
     t_max = 5000
 
     # estimations per second for discrete agent
-    hz = 2000
+    hz = 500
     # required precision of discrete to differential agent
     eps = 0.01
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     c = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908, 38.27073086773415,
          0.14892228099402588, 0.3524379644134216, 0.1580228306857272]
 
-    rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
-                        hz=hz, eps=eps, conf=c, log_level=2)
+    # rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
+    #                     hz=hz, eps=eps, conf=c, log_level=2)
 
     the_loop(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max, hz=hz, eps=eps)

@@ -54,10 +54,10 @@ def rec_trial_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
     # all recovery phases in order
     phases = [ODEThreeCompHydSimulator.rec_fAe_fAnS,
               ODEThreeCompHydSimulator.rec_lAe_fAnS,
-              ODEThreeCompHydSimulator.rec_fAe_lAnS,
-              ODEThreeCompHydSimulator.rec_fAe_rAnS,
+              ODEThreeCompHydSimulator.fAe_lAn,
+              ODEThreeCompHydSimulator.fAe_rAn,
               ODEThreeCompHydSimulator.lAe_rAn,
-              ODEThreeCompHydSimulator.lAe_lAnS,
+              ODEThreeCompHydSimulator.lAe_lAn,
               ODEThreeCompHydSimulator.fAe,
               ODEThreeCompHydSimulator.lAe]
 
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     p_exp = 260
     t_rec = 3600
-    p_rec = 0
+    p_rec = 247
     t_max = 5000
     # estimations per second for discrete agent
     hz = 400
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     # a configuration
     c = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908, 38.27073086773415,
-         0.14892228099402588, 0.3524379644134216, 0.1580228306857272]
+         0.14892228099402588, 0.2580228306857272, 0.2580228306857272]
     rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
                         hz=hz, eps=eps, conf=c, log_level=2)
 
