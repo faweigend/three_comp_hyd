@@ -8,7 +8,7 @@ import logging
 import numpy as np
 
 
-def rec_trial_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, hz: int, eps: float,
+def rec_phase_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, hz: int, eps: float,
                         conf: list, log_level: int = 0):
     """
     Conducts a TTE and follows it up with a recovery at given conditions. Estimation results of the ODE integral
@@ -51,54 +51,91 @@ def rec_trial_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
         logging.info("[SUCCESS] Agent after TTE at {}".format(p_exp))
         ThreeCompVisualisation(agent)
 
-    # all recovery phases in order
-    phases = [ODEThreeCompHydSimulator.rec_fAe_fAnS,
-              ODEThreeCompHydSimulator.rec_lAe_fAnS,
-              ODEThreeCompHydSimulator.fAe_lAn,
-              ODEThreeCompHydSimulator.fAe_rAn,
-              ODEThreeCompHydSimulator.lAe_rAn,
-              ODEThreeCompHydSimulator.lAe_lAn,
-              ODEThreeCompHydSimulator.fAe,
-              ODEThreeCompHydSimulator.lAe]
-
     # restart time from 0
     t = 0
 
+    theta = conf[5]
+    gamma = conf[6]
+    phi = conf[7]
+    func = None
+
     # cycles through phases until t_max is reached
     while t < t_rec:
-        # detailed checks for every phase
-        for phase in phases:
-            # save previous time to estimate time difference
-            t_p = t
 
-            # get estimated time of phase end
-            t, h, g = phase(t, h, g, p_rec, t_max=t_rec, conf=conf)
+        if func is None:
+            # first distinguish between fAe and lAe
+            if h >= 1 - phi:
+                # fAe
+                if h < theta and g < ODEThreeCompHydSimulator.eps:
+                    func = ODEThreeCompHydSimulator.fAe
+                # fAe_rAnS
+                elif h < g + theta and g > ODEThreeCompHydSimulator.eps:
+                    func = ODEThreeCompHydSimulator.fAe_rAn
+                # fAe_lAnS
+                elif h > g + theta and h < 1 - gamma:
+                    func = ODEThreeCompHydSimulator.fAe_lAn
+                # fAe_fAnS
+                elif h > 1 - gamma:
+                    func = ODEThreeCompHydSimulator.fAe_fAn
+                else:
+                    raise UserWarning(
+                        "unhandled state with h {} g {} and conf theta {} gamma {} phi {}".format(h, g, theta, gamma,
+                                                                                                  phi))
+            else:
+                # lAr
+                if h < theta and g < ODEThreeCompHydSimulator.eps:
+                    func = ODEThreeCompHydSimulator.lAe
+                elif h < g + theta and g > ODEThreeCompHydSimulator.eps:
+                    func = ODEThreeCompHydSimulator.lAe_rAn
+                elif h > g + theta and h <= 1 - gamma:
+                    func = ODEThreeCompHydSimulator.lAe_lAn
+                elif h > 1 - gamma:
+                    func = ODEThreeCompHydSimulator.lAe_fAn
+                else:
+                    raise UserWarning(
+                        "unhandled state with h {} g {} and conf theta {} gamma {} phi {}".format(h, g, theta, gamma,
+                                                                                                  phi))
 
-            # double-check with discrete agent
-            for _ in range(int(round((t - t_p) * hz))):
-                agent.set_power(p_rec)
-                agent.perform_one_step()
-            g_diff = agent.get_g() - g
-            h_diff = agent.get_h() - h
+        if log_level > 1:
+            logging.info("[intermediate result] Try {}".format(func))
 
-            if log_level > 1:
-                logging.info("[intermediate result] {}\n"
-                             "t {}\n"
-                             "h {} g {}\n"
-                             "Diff h {}\n"
-                             "Diff g {}".format(phase, t, h, g, h_diff, g_diff))
-                ThreeCompVisualisation(agent)
+        # save previous time to estimate time difference
+        t_p = t
 
-            assert abs(g_diff) < eps, "{} g is off by {}".format(phase, g_diff)
-            assert abs(h_diff) < eps, "{} h is off by {}".format(phase, h_diff)
+        # iterate through all phases until end is reached
+        t, h, g, n_func = func(t, h, g, p_rec, t_max=t_max, conf=conf)
 
-            if t >= t_rec:
-                logging.info("Max recovery reached in {}".format(phase))
-                # ThreeCompVisualisation(agent)
-                break
+        # double-check with discrete agent
+        for _ in range(int(round((t - t_p) * hz))):
+            agent.set_power(p_rec)
+            agent.perform_one_step()
+        g_diff = agent.get_g() - g
+        h_diff = agent.get_h() - h
 
-                # display fill levels after recovery
+        if log_level > 1:
+            logging.info("[intermediate result] {}\n"
+                         "t {}\n"
+                         "h {} g {}\n"
+                         "Diff h {}\n"
+                         "Diff g {}".format(func, t, h, g, h_diff, g_diff))
+            ThreeCompVisualisation(agent)
+
+        assert abs(g_diff) < eps, "{} g is off by {}".format(func, g_diff)
+        assert abs(h_diff) < eps, "{} h is off by {}".format(func, h_diff)
+
+        if t >= t_rec:
+            logging.info("Max recovery reached in {}".format(func))
+            # ThreeCompVisualisation(agent)
+            break
+
+        if n_func is None:
+            logging.info("EQUILIBRIUM IN {}: t: {} h: {} g: {}".format(func, t, h, g))
+            break
+
+        func = n_func
+
     if log_level > 0:
+        # display fill levels after recovery
         logging.info("[SUCCESS] Agent after recovery at {} for {}".format(p_rec, t_rec))
         ThreeCompVisualisation(agent)
 
@@ -114,7 +151,7 @@ def the_loop(p_exp: float = 350.0, p_rec: float = 100.0, t_rec=180.0,
         udp = MultiObjectiveThreeCompUDP(None, None)
         example_conf = udp.create_educated_initial_guess()
         logging.info(example_conf)
-        rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
+        rec_phase_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
                             hz=hz, eps=eps, conf=example_conf)
 
 
@@ -125,17 +162,17 @@ if __name__ == "__main__":
 
     p_exp = 260
     t_rec = 3600
-    p_rec = 247
+    p_rec = 50
     t_max = 5000
     # estimations per second for discrete agent
-    hz = 400
+    hz = 100
     # required precision of discrete to differential agent
     eps = 0.001
 
     # a configuration
-    c = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908, 38.27073086773415,
-         0.14892228099402588, 0.2580228306857272, 0.2580228306857272]
-    rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
+    c = [15609.954911559335, 77867.72175219007, 157.09776309888684, 299.30113671701247, 26.974910527358077,
+         0.21094717109761837, 0.4588963905306298, 0.45576180870297783]
+    rec_phase_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
                         hz=hz, eps=eps, conf=c, log_level=2)
 
     the_loop(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max, hz=hz, eps=eps)

@@ -82,7 +82,7 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
             logging.info("next PHASE {}".format(func))
 
         # exit loop if end is reached
-        if t >= t_max:
+        if t >= t_max or n_func is None:
             logging.info("EQUILIBRIUM IN {}: t: {} h: {} g: {}".format(func, t, h, g))
             break
 
@@ -137,14 +137,14 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    p = 560
+    p = 260
     # estimations per second for discrete agent
     hz = 500
     # required precision of discrete to differential agent
     eps = 0.001
 
-    example_conf = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908,
-                    38.27073086773415, 0.14892228099402588, 0.3524379644134216, 0.1580228306857272]
+    example_conf = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908, 38.27073086773415,
+         0.14892228099402588, 0.2580228306857272, 0.2580228306857272]
     tte_test_procedure(p, hz, eps, example_conf, log_level=1)
 
     the_loop(p=p, hz=hz, eps=eps)
