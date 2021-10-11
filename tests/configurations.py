@@ -71,7 +71,7 @@ if __name__ == "__main__":
         # ThreeCompVisualisation(agent)
 
         # Start with first time to exhaustion bout
-        tte, h_tte, g_tte = ODEThreeCompHydSimulator.tte(p_exp=p_exp, conf=conf, start_h=0, start_g=0)
+        tte, h_tte, g_tte = ODEThreeCompHydSimulator.constant_power_trial(p=p_exp, conf=conf, start_h=0, start_g=0)
 
         # double-check with discrete agent
         for _ in range(int(round(tte * hz))):
@@ -86,9 +86,9 @@ if __name__ == "__main__":
         # ThreeCompVisualisation(agent)
 
         # Now recovery
-        rec, h_rec, g_rec = ODEThreeCompHydSimulator.rec(conf=conf, start_h=h_tte,
-                                                         start_g=g_tte, p_rec=p_rec,
-                                                         t_max=rec_time)
+        rec, h_rec, g_rec = ODEThreeCompHydSimulator.constant_power_trial(conf=conf, start_h=h_tte,
+                                                                          start_g=g_tte, p=p_rec,
+                                                                          t_max=rec_time)
 
         # double-check with discrete agent
         for _ in range(int(round(rec * hz))):

@@ -61,8 +61,16 @@ def the_loop(t_max: float = 5000, hz: int = 250):
         except UserWarning:
             continue
 
+    mean_t = np.mean(t_results)
+    str_mean_t = ""
+    if mean_t > 0:
+        str_mean_t += "ODE"
+    else:
+        str_mean_t += "Iterative"
+    str_mean_t += " is faster with {}".format(mean_t)
+
     logging.info("\nsuccessful samples: {}\ntime performance: {}\nest error {}".format(
-        len(t_results), np.mean(t_results), np.mean(e_results)))
+        len(t_results), str_mean_t, np.mean(e_results)))
 
 
 if __name__ == "__main__":
@@ -71,7 +79,7 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     # estimations per second for discrete agent
-    hz = 2
+    hz = 5
     t_max = 5000
 
     the_loop(t_max=t_max, hz=hz)

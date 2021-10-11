@@ -31,7 +31,7 @@ def rec_phase_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
         ThreeCompVisualisation(agent)
 
     # Start with first time to exhaustion bout
-    t, h, g = ODEThreeCompHydSimulator.tte(p_exp=p_exp, start_h=0, start_g=0, conf=conf, t_max=t_max)
+    t, h, g = ODEThreeCompHydSimulator.constant_power_trial(p=p_exp, start_h=0, start_g=0, conf=conf, t_max=t_max)
 
     if t >= t_max:
         logging.info("Exhaustion not reached during TTE")

@@ -17,9 +17,9 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, log_level=0):
         ThreeCompVisualisation(agent)
 
     # Start with first time to exhaustion bout
-    tte_1, h, g = ODEThreeCompHydSimulator.tte(conf=conf,
-                                               start_h=0, start_g=0,
-                                               p_exp=p_exp, t_max=t_max)
+    tte_1, h, g = ODEThreeCompHydSimulator.constant_power_trial(conf=conf,
+                                                                start_h=0, start_g=0,
+                                                                p=p_exp, t_max=t_max)
 
     if tte_1 >= t_max:
         logging.info("Exhaustion not reached during TTE")
@@ -38,9 +38,9 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, log_level=0):
         logging.info("TTE1 {} h: {} g: {}".format(tte_1, h, g))
         ThreeCompVisualisation(agent)
 
-    rec, h, g = ODEThreeCompHydSimulator.rec(conf=conf,
-                                             start_h=h, start_g=g,
-                                             p_rec=p_rec, t_max=t_rec)
+    rec, h, g = ODEThreeCompHydSimulator.constant_power_trial(conf=conf,
+                                                              start_h=h, start_g=g,
+                                                              p=p_rec, t_max=t_rec)
 
     # double-check with discrete agent
     for _ in range(int(round(rec * hz))):
@@ -55,9 +55,9 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, log_level=0):
         logging.info("REC {} h: {} g: {}".format(rec, h, g))
         ThreeCompVisualisation(agent)
 
-    tte_2, h, g = ODEThreeCompHydSimulator.tte(conf=conf,
-                                               start_h=h, start_g=g,
-                                               p_exp=p_exp, t_max=t_max)
+    tte_2, h, g = ODEThreeCompHydSimulator.constant_power_trial(conf=conf,
+                                                                start_h=h, start_g=g,
+                                                                p=p_exp, t_max=t_max)
 
     # double-check with discrete agent
     for _ in range(int(round(tte_2 * hz))):
