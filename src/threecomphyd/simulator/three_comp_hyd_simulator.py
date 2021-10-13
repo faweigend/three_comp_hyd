@@ -11,26 +11,32 @@ class ThreeCompHydSimulator:
     TTE tests
     """
 
-    step_limit = 5000
-
     @staticmethod
-    def do_a_tte(agent: ThreeCompHydAgent, p_exp, step_function=None):
+    def tte(agent: ThreeCompHydAgent, p_work: float, start_h: float = 0,
+            start_g: float = 0, t_max: float = 5000, step_function=None):
         """
         a normal time to exhaustion test
-        :param agent:
-        :param p_exp:
-        :param step_function:
+        :param agent: iterative agent
+        :param p_work: constant expenditure intensity for TTE
+        :param start_h: fill level of AnF at start
+        :param start_g: fill level of AnS at start
+        :param t_max: maximal time (steps * hz) until warning "exhaustion not reached" is raised
+        :param step_function: function of agent to estimate one time step. Default is perform_one_step
         :return:
         """
         agent.reset()
+        agent.set_h(start_h)
+        agent.set_g(start_g)
+
+        step_limit = t_max * agent.hz
 
         if step_function is None:
             step_function = agent.perform_one_step
 
         # WB1 Exhaust...
-        agent.set_power(p_exp)
+        agent.set_power(p_work)
         steps = 0
-        while not agent.is_exhausted() and steps < ThreeCompHydSimulator.step_limit:
+        while not agent.is_exhausted() and steps < step_limit:
             step_function()
             steps += 1
         wb1_t = agent.get_time()
@@ -41,7 +47,7 @@ class ThreeCompHydSimulator:
         return wb1_t
 
     @staticmethod
-    def get_recovery_ratio_wb1_wb2(agent: ThreeCompHydAgent, p_exp, p_rec, t_rec):
+    def get_recovery_ratio_wb1_wb2(agent: ThreeCompHydAgent, p_exp, p_rec, t_rec, t_max=5000):
         """
         Returns recovery ratio of given agent according to WB1 -> RB -> WB2 protocol.
         Recovery ratio estimations for given exp, rec intensity and time
@@ -49,16 +55,19 @@ class ThreeCompHydSimulator:
         :param p_exp: work bout intensity
         :param p_rec: recovery bout intensity
         :param t_rec: recovery bout duration
+        :param t_max: maximal time (steps * hz) until warning "exhaustion not reached" is raised
         :return: ratio in percent
         """
 
         hz = agent.hz
         agent.reset()
 
+        step_limit = t_max * hz
+
         # WB1 Exhaust...
         agent.set_power(p_exp)
         steps = 0
-        while not agent.is_exhausted() and steps < ThreeCompHydSimulator.step_limit:
+        while not agent.is_exhausted() and steps < step_limit:
             agent.perform_one_step()
             steps += 1
         wb1_t = agent.get_time()
@@ -68,17 +77,18 @@ class ThreeCompHydSimulator:
 
         # Recover...
         agent.set_power(p_rec)
-        for _ in range(0, int(t_rec * hz)):
+        for _ in range(0, int(round(t_rec * hz))):
             agent.perform_one_step()
         rec_t = agent.get_time()
 
         # WB2 Exhaust...
         agent.set_power(p_exp)
         steps = 0
-        while not agent.is_exhausted() and steps < ThreeCompHydSimulator.step_limit:
+        while not agent.is_exhausted() and steps < step_limit:
             agent.perform_one_step()
             steps += 1
         wb2_t = agent.get_time()
+
         # return ratio of times as recovery ratio
         return ((wb2_t - rec_t) / wb1_t) * 100.0
 

@@ -1,5 +1,6 @@
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 from threecomphyd.evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
+from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulator
 from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 
@@ -103,7 +104,7 @@ def rec_phase_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
         t_p = t
 
         # iterate through all phases until end is reached
-        t, h, g, n_func = func(t, h, g, p_rec, t_max=t_max, conf=conf)
+        t, h, g, n_func = func(t, h, g, p_rec, t_max=t_rec, conf=conf)
 
         # double-check with discrete agent
         for _ in range(int(round((t - t_p) * hz))):
@@ -128,8 +129,9 @@ def rec_phase_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
             # ThreeCompVisualisation(agent)
             break
 
+        # exit loop if end of iteration is reached
         if n_func is None:
-            logging.info("EQUILIBRIUM IN {}: t: {} h: {} g: {}".format(func, t, h, g))
+            logging.info("END IN {}: t: {} h: {} g: {}".format(func, t, h, g))
             break
 
         func = n_func
@@ -161,17 +163,19 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     p_exp = 260
-    t_rec = 3600
-    p_rec = 50
-    t_max = 5000
+    t_rec = 240
+    p_rec = 10
+    t_max = 6000
+
     # estimations per second for discrete agent
-    hz = 100
+    hz = 500
     # required precision of discrete to differential agent
     eps = 0.001
 
     # a configuration
-    c = [15609.954911559335, 77867.72175219007, 157.09776309888684, 299.30113671701247, 26.974910527358077,
-         0.21094717109761837, 0.4588963905306298, 0.45576180870297783]
+    c = [15101.24769778409, 86209.27743067988, 252.71702367096788,
+         363.2970828395908, 38.27073086773415, 0.0, 0.3524379644134216, 1.0]
+
     rec_phase_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
                         hz=hz, eps=eps, conf=c, log_level=2)
 

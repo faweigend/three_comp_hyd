@@ -80,9 +80,8 @@ class ODEThreeCompHydSimulator:
                 func = ODEThreeCompHydSimulator.fAe_fAn
             else:
                 raise UserWarning(
-                    "unhandled state with h {} g {} and conf theta {} gamma {} phi {}".format(h, g, theta,
-                                                                                              gamma,
-                                                                                              phi))
+                    "unhandled state with h {} g {} and "
+                    "conf theta {} gamma {} phi {}".format(h, g, theta, gamma, phi))
         else:
             # lAr
             if h <= theta and g < ODEThreeCompHydSimulator.eps:
@@ -95,9 +94,8 @@ class ODEThreeCompHydSimulator:
                 func = ODEThreeCompHydSimulator.lAe_fAn
             else:
                 raise UserWarning(
-                    "unhandled state with h {} g {} and conf theta {} gamma {} phi {}".format(h, g, theta,
-                                                                                              gamma,
-                                                                                              phi))
+                    "unhandled state with h {} g {} and "
+                    "conf theta {} gamma {} phi {}".format(h, g, theta, gamma, phi))
         return func
 
     @staticmethod
@@ -254,7 +252,10 @@ class ODEThreeCompHydSimulator:
         elif ht_p < 0:
             # recovery ends at 1 - phi
             h_target = 1 - phi
-            func = ODEThreeCompHydSimulator.lAe
+            if h_target > 0:
+                func = ODEThreeCompHydSimulator.lAe
+            else:
+                func = None  # recovery is finished if pipe exit Ae is at 0
         else:
             # no change
             return t_max, h_s, g_s, None
@@ -268,6 +269,39 @@ class ODEThreeCompHydSimulator:
             return t_max, h_end, g_s, None
         else:
             return t_end, h_target, g_s, func
+
+    @staticmethod
+    def rAn(t_s: float, h_s: float, g_s: float, p: float, t_max: float, conf: list):
+        """
+        This recovery phase only occurs in configurations A,B,C,D when AnF is fully refilled
+        but flow into AnS is still going
+        """
+        a_ans = conf[1]
+        m_ae = conf[2]
+        m_anf = conf[4]
+        theta = conf[5]
+        gamma = conf[6]
+
+        if p > m_ae:
+            raise UserWarning("This phase cannot be reached with p {} and m_ae {}".format(p, m_ae))
+
+        c1 = (g_s + theta) * np.exp(-m_anf * t_s / (a_ans * (gamma - 1)))
+
+        # the time g reaches 0
+        if theta > 0:
+            # only defined for theta > 0 because of log
+            t_end = np.log(theta / c1) * a_ans * (gamma - 1) / m_anf
+        else:
+            # if theta is 0 g will never reach 0 due to exp
+            t_end = t_max
+
+        # if t_end after t_max, return g(t_max)
+        if t_end > t_max:
+            gtmax = c1 * np.exp(m_anf * t_max / (a_ans * (gamma - 1))) - theta
+            return t_max, h_s, gtmax, None
+        else:
+            # otherwise g is 0
+            return t_max, h_s, 0, None
 
     @staticmethod
     def fAe_rAn(t_s: float, h_s: float, g_s: float, p: float, t_max: float, conf: list):
@@ -338,7 +372,13 @@ class ODEThreeCompHydSimulator:
         elif t_end == t_gtht:
             func = ODEThreeCompHydSimulator.fAe_lAn
         else:
-            func = ODEThreeCompHydSimulator.lAe_rAn
+            # else the target was 1-phi
+            if phi == 1:
+                # if Ae is at the top of AnF
+                func = ODEThreeCompHydSimulator.rAn
+            else:
+                # transition into lAe
+                func = ODEThreeCompHydSimulator.lAe_rAn
 
         return t_end + t_p, ht(t_end), gt(t_end), func
 
@@ -421,8 +461,8 @@ class ODEThreeCompHydSimulator:
         t_end = min(t_gh, t_gam, t_phi)
 
         # Determine what the current phase lAe_lAn transitions into
-        if t_end >= t_max:
-            func = None
+        if t_end >= t_max or abs(ht(t_end) - 1) < ODEThreeCompHydSimulator.eps:
+            func = None  # max time is reached or exhaustion is reached
         elif t_end == t_gh:
             func = ODEThreeCompHydSimulator.lAe_rAn
         elif t_end == t_gam:
@@ -495,8 +535,8 @@ class ODEThreeCompHydSimulator:
         t_end = min(t_phi, t_gth, t_gam)
 
         # Determine what the current phase fAe_lAn transitions into
-        if t_end >= t_max:
-            func = None
+        if t_end >= t_max or abs(ht(t_end) - 1) < ODEThreeCompHydSimulator.eps:
+            func = None  # max time is reached or exhaustion is reached
         elif t_end == t_gth:
             func = ODEThreeCompHydSimulator.fAe_rAn
         elif t_end == t_gam:
@@ -566,8 +606,8 @@ class ODEThreeCompHydSimulator:
         t_end = min(t_gam, t_phi)
 
         # Determine what the current phase lAe_lAn transitions into
-        if t_end >= t_max:
-            func = None
+        if t_end >= t_max or abs(ht(t_end) - 1) < ODEThreeCompHydSimulator.eps:
+            func = None  # max time is reached or exhaustion is reached
         elif t_end == t_gam:
             func = ODEThreeCompHydSimulator.lAe_lAn
         else:

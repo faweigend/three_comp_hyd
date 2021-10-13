@@ -159,8 +159,8 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
     for tte_t, tte_p in ttes.iterate_pairs():
         # use the simulator
         try:
-            tte = ThreeCompHydSimulator.do_a_tte(agent=three_comp_agent,
-                                                 p_exp=tte_p)
+            tte = ThreeCompHydSimulator.tte(agent=three_comp_agent,
+                                            p_work=tte_p)
         except UserWarning:
             tte = 5000
         # square time difference

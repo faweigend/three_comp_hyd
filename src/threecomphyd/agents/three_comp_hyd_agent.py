@@ -30,8 +30,7 @@ class ThreeCompHydAgent(HydAgentBasis):
         # height of vessel AnS
         self.__height_ans = 1 - self.__theta - self.__gamma
 
-        # the AnS tank size constraint that corresponds to
-        # constraint: theta < 1 - phi
+        # the AnS tank size cannot be negative
         if self.__height_ans <= 0:
             raise UserWarning("AnS has negative height: Theta {} Gamma {} Phi {}".format(the, gam, phi))
 
@@ -68,40 +67,43 @@ class ThreeCompHydAgent(HydAgentBasis):
                "{}".format([self.__a_anf, self.__a_ans, self.__m_ae, self.__m_ans,
                             self.__m_anf, self.__theta, self.__gamma, self.__phi])
 
+    def __raise_detailed_error_report(self):
+        """
+        raises a UserWarning exception with info about configuration, fill states, and power demands
+        """
+        raise UserWarning("Unhandled tank fill level state \n"
+                          "gamma:  {} \n "
+                          "theta:  {} \n "
+                          "phi:    {} \n "
+                          "AnF:    {} \n "
+                          "AnS:    {} \n "
+                          "g:      {} \n "
+                          "h:      {} \n "
+                          "m_ae:   {} \n"
+                          "m_ans:  {} \n"
+                          "m_anf:  {} \n"
+                          "p_Ae:   {} \n"
+                          "p_An:   {} \n"
+                          "pow:    {} \n".format(self.__gamma,
+                                                 self.__theta,
+                                                 self.__phi,
+                                                 self.__a_anf,
+                                                 self.__a_ans,
+                                                 self.__g,
+                                                 self.__h,
+                                                 self.__m_ae,
+                                                 self.__m_ans,
+                                                 self.__m_anf,
+                                                 self.__p_ae,
+                                                 self.__p_an,
+                                                 self._pow))
+
     def _estimate_possible_power_output(self):
         """
         Estimates liquid flow to meet set power demands. Exhaustion flag is set and internal tank fill levels and
         pipe flows are updated.
         :return: power output
         """
-
-        def raise_detailed_error_report():
-            raise UserWarning("Unhandled tank fill level state \n"
-                              "gamma:  {} \n "
-                              "theta:  {} \n "
-                              "phi:    {} \n "
-                              "AnF:    {} \n "
-                              "AnS:    {} \n "
-                              "g:      {} \n "
-                              "h:      {} \n "
-                              "m_ae:   {} \n"
-                              "m_ans:  {} \n"
-                              "m_anf:  {} \n"
-                              "p_Ae:   {} \n"
-                              "p_An:   {} \n"
-                              "pow:    {} \n".format(self.__gamma,
-                                                     self.__theta,
-                                                     self.__phi,
-                                                     self.__a_anf,
-                                                     self.__a_ans,
-                                                     self.__g,
-                                                     self.__h,
-                                                     self.__m_ae,
-                                                     self.__m_ans,
-                                                     self.__m_anf,
-                                                     self.__p_ae,
-                                                     self.__p_an,
-                                                     self._pow))
 
         # step 1: drop level in AnF according to power demand
         # estimate h_{t+1}: scale to hz (delta t) and drop the level of AnF
@@ -119,7 +121,7 @@ class ThreeCompHydAgent(HydAgentBasis):
             # max contribution R1 = m_ae
             self.__p_ae = self.__m_ae
         else:
-            raise_detailed_error_report()
+            self.__raise_detailed_error_report()
 
         # multiply with delta t1
         self.__p_ae = self.__p_ae / self._hz
@@ -149,7 +151,7 @@ class ThreeCompHydAgent(HydAgentBasis):
                 # EQ (20) Morton (1986)
                 self.__p_an = self.__m_ans * (self.__height_ans - self.__g) / self.__height_ans
             else:
-                raise_detailed_error_report()
+                self.__raise_detailed_error_report()
 
             # This check is added to handle cases where the flow causes level height swaps between AnS and AnF
             self.__m_flow = ((self.__h - (self.__g + self.__theta)) / (

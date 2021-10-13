@@ -29,8 +29,8 @@ def test(func, h, g, p, conf, t=0, hz=500, t_max=2000, log=2):
         agent.perform_one_step()
 
     # verify results
-    assert abs(h_end - agent.get_h()) < 0.0001
-    assert abs(g_end - agent.get_g()) < 0.0001
+    assert abs(h_end - agent.get_h()) < 0.0001, "{} vs {}".format(h_end, agent.get_h())
+    assert abs(g_end - agent.get_g()) < 0.0001, "{} vs {}".format(g_end, agent.get_g())
 
     # log outputs according to level
     if log > 0:

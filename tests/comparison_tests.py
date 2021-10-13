@@ -4,7 +4,6 @@ import numpy as np
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 from threecomphyd.evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
 from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulator
-from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 
 import logging
@@ -17,14 +16,14 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, conf, log_level=0):
                               gam=conf[6], phi=conf[7])
 
     # simulator step limit needs to be adjusted
-    ThreeCompHydSimulator.step_limit = t_max * hz
     est_t0 = time.process_time_ns()
-    est_ratio = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(agent=agent, p_exp=p_exp, p_rec=p_rec, t_rec=t_rec)
+    est_ratio = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(agent=agent, p_exp=p_exp, p_rec=p_rec,
+                                                                 t_rec=t_rec, t_max=t_max)
     est_t = time.process_time_ns() - est_t0
-    ThreeCompHydSimulator.step_limit = t_max / hz
 
     ode_t0 = time.process_time_ns()
-    rec_ratio = ODEThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(conf=conf, p_exp=p_exp, p_rec=p_rec, t_rec=t_rec)
+    rec_ratio = ODEThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(conf=conf, p_exp=p_exp, p_rec=p_rec,
+                                                                    t_rec=t_rec, t_max=t_max)
     ode_t = time.process_time_ns() - ode_t0
 
     # rec ratio estimation difference

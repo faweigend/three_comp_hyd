@@ -1,6 +1,7 @@
 import numpy as np
 from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 from threecomphyd.evolutionary_fitter.three_comp_tools import MultiObjectiveThreeCompUDP
+from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulator
 from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
 from threecomphyd.simulator.ode_three_comp_hyd_simulator import ODEThreeCompHydSimulator
 
@@ -81,14 +82,14 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
         if log_level > 0:
             logging.info("next PHASE {}".format(func))
 
-        # exit loop if end is reached
+        # exit loop if end of iteration is reached
         if t >= t_max or n_func is None:
-            logging.info("EQUILIBRIUM IN {}: t: {} h: {} g: {}".format(func, t, h, g))
+            logging.info("END IN {}: t: {} h: {} g: {}".format(func, t, h, g))
             break
 
         # if recovery time is reached return fill levels at that point
         if t == np.nan:
-            return t, h, g
+            break
 
         # now confirm with iterative agent
         # set to initial state
@@ -114,6 +115,13 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
         assert abs(g_diff) < eps, "error phase {}. g is off by {}".format(func, g_diff)
         assert abs(h_diff) < eps, "error phase {}. h is off by {}".format(func, h_diff)
 
+    # confirm the tte time with an entire iterative simulation
+    c_tte = ThreeCompHydSimulator.tte(agent, p_work=p, t_max=t_max)
+    assert abs(c_tte - t) < eps, "confirmation error. Difference betwen " \
+                                 "ODE TTE {} and Iterative TTE {} is {}".format(t,
+                                                                                c_tte,
+                                                                                abs(c_tte - t))
+
     # if all phases complete full exhaustion is reached
     return t, h, g
 
@@ -137,14 +145,17 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    p = 260
+    p = 681
     # estimations per second for discrete agent
     hz = 500
     # required precision of discrete to differential agent
-    eps = 0.001
+    eps = 0.01
 
-    example_conf = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908, 38.27073086773415,
-         0.14892228099402588, 0.2580228306857272, 0.2580228306857272]
+    example_conf = [15101.24769778409, 86209.27743067988,
+                    252.71702367096788, 363.2970828395908,
+                    38.27073086773415, 0.14892228099402588,
+                    0.3524379644134216, 1.0]
+
     tte_test_procedure(p, hz, eps, example_conf, log_level=1)
 
-    the_loop(p=p, hz=hz, eps=eps)
+    # the_loop(p=p, hz=hz, eps=eps)
