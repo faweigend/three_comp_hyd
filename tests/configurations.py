@@ -119,6 +119,7 @@ if __name__ == "__main__":
     hz = 1000  # delta t
     eps = 0.1  # required precision
     t_max = 2000
+    log_level = 0
 
     # setting combinations
     p_exps = [260, 681]
@@ -149,10 +150,26 @@ if __name__ == "__main__":
                                   gam=conf[6], phi=conf[7])
 
         # Start with first time to exhaustion bout
-        tte, h_tte, g_tte = ODEThreeCompHydSimulator.constant_power_trial(p=p_exp, conf=conf, start_h=0,
-                                                                          start_g=0, t_max=t_max)
+        tte, h_tte, g_tte = ODEThreeCompHydSimulator.constant_power_trial(p=p_exp,
+                                                                          conf=conf,
+                                                                          start_h=0,
+                                                                          start_g=0,
+                                                                          t_max=t_max)
 
-        # double-check with discrete agent
+        if log_level > 1:
+             logging.info("TTE ODE {} with h {} and g {}".format(round(tte), h_tte, g_tte))
+
+        # double-check time to exhaustion
+        try:
+            c_tte = ThreeCompHydSimulator.tte(agent=agent, p_work=p_exp, t_max=t_max)
+        except UserWarning:
+            c_tte = t_max
+        assert abs(round(tte) - round(c_tte)) < eps, "TTE ODE {} and IT {} is off by {}".format(round(tte),
+                                                                                                round(c_tte),
+                                                                                                abs(tte - c_tte))
+
+        # double-check h and g
+        agent.reset()
         for _ in range(int(round(tte * hz))):
             agent.set_power(p_exp)
             agent.perform_one_step()
@@ -161,21 +178,13 @@ if __name__ == "__main__":
         assert abs(g_diff) < eps, "TTE g is off by {}".format(g_diff)
         assert abs(h_diff) < eps, "TTE h is off by {}".format(h_diff)
 
-        # double-check time to exhaustion
-        try:
-            c_tte = ThreeCompHydSimulator.tte(agent=agent, p_work=p_exp, t_max=t_max)
-        except UserWarning:
-            c_tte = t_max
-        assert abs(round(tte) - round(c_tte)) < eps, "TTE ODE {} and IT {} is off by {}".format(round(tte),
-                                                                                                      round(c_tte),
-                                                                                                      abs(tte - c_tte))
-
         # Recovery behaviour
         rec, h_rec, g_rec = ODEThreeCompHydSimulator.constant_power_trial(p=p_rec, conf=conf,
                                                                           start_h=h_tte, start_g=g_tte,
                                                                           t_max=rec_time)
+
         # double-check with discrete agent
-        agent.reset()
+        # agent.reset()
         agent.set_h(h_tte)
         agent.set_g(g_tte)
         for _ in range(int(round(rec_time * hz))):
@@ -183,8 +192,8 @@ if __name__ == "__main__":
             agent.perform_one_step()
         g_diff = agent.get_g() - g_rec
         h_diff = agent.get_h() - h_rec
-        assert abs(g_diff) < eps, "REC g is off by {}".format(g_diff)
-        assert abs(h_diff) < eps, "REC h is off by {}".format(h_diff)
+        assert abs(g_diff) < eps, "REC g is off by {}. {} vs {}".format(g_diff, agent.get_g(), g_rec)
+        assert abs(h_diff) < eps, "REC h is off by {}. {} vs {}".format(h_diff, agent.get_h(), h_rec)
 
         # Now a full recovery trial
         rec_t = ODEThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(conf=conf, p_exp=p_exp,

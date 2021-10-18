@@ -20,17 +20,16 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, log_level=0):
     tte_1, h, g = ODEThreeCompHydSimulator.constant_power_trial(conf=conf,
                                                                 start_h=0, start_g=0,
                                                                 p=p_exp, t_max=t_max)
-
+    if tte_1 >= t_max:
+        logging.info("Exhaustion not reached during TTE")
+        return
+    
     # confirm the tte time with an entire iterative simulation
     c_tte = ThreeCompHydSimulator.tte(agent, p_work=p_exp, t_max=t_max)
     assert abs(c_tte - tte_1) < eps, "TTE1 confirmation error. Difference between " \
                                      "ODE TTE {} and Iterative TTE {} is {}".format(tte_1,
                                                                                     c_tte,
                                                                                     abs(c_tte - tte_1))
-
-    if tte_1 >= t_max:
-        logging.info("Exhaustion not reached during TTE")
-        return
 
     agent.reset()
     # double-check with discrete agent
@@ -132,9 +131,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    p_exp = 681
+    p_exp = 260
     t_rec = 240
-    p_rec = 0
+    p_rec = 10
     t_max = 5000
 
     # estimations per second for discrete agent
@@ -143,10 +142,10 @@ if __name__ == "__main__":
     eps = 0.01
 
     # a configuration
-    c = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908,
-         38.27073086773415, 0.14892228099402588, 0.3524379644134216, 1.0]
+    c = [15101.24769778409, 86209.27743067988, 252.71702367096788,
+         363.2970828395908, 38.27073086773415, 0.0, 0.3524379644134216, 1.0]
 
     rec_trial_procedure(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max,
                         hz=hz, eps=eps, conf=c, log_level=2)
 
-    the_loop(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max, hz=hz, eps=eps)
+    # the_loop(p_exp=p_exp, p_rec=p_rec, t_rec=t_rec, t_max=t_max, hz=hz, eps=eps)

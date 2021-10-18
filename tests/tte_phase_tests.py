@@ -28,44 +28,11 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
         agent.set_g(g_s)
         ThreeCompVisualisation(agent)
 
-    theta = conf[5]
-    gamma = conf[6]
-    phi = conf[7]
     func = None
     while t < t_max:
         if func is None:
             # first distinguish between fAe and lAe
-            if h >= 1 - phi:
-                # fAe
-                if h < theta and g < ODEThreeCompHydSimulator.eps:
-                    func = ODEThreeCompHydSimulator.fAe
-                # fAe_rAnS
-                elif h < g + theta and g > ODEThreeCompHydSimulator.eps:
-                    func = ODEThreeCompHydSimulator.fAe_rAn
-                # fAe_lAnS
-                elif h > g + theta and h < 1 - gamma:
-                    func = ODEThreeCompHydSimulator.fAe_lAn
-                # fAe_fAnS
-                elif h > 1 - gamma:
-                    func = ODEThreeCompHydSimulator.fAe_fAn
-                else:
-                    raise UserWarning(
-                        "unhandled state with h {} g {} and conf theta {} gamma {} phi {}".format(h, g, theta, gamma,
-                                                                                                  phi))
-            else:
-                # lAr
-                if h < theta and g < ODEThreeCompHydSimulator.eps:
-                    func = ODEThreeCompHydSimulator.lAe
-                elif h < g + theta and g > ODEThreeCompHydSimulator.eps:
-                    func = ODEThreeCompHydSimulator.lAe_rAn
-                elif h > g + theta and h <= 1 - gamma:
-                    func = ODEThreeCompHydSimulator.lAe_lAn
-                elif h > 1 - gamma:
-                    func = ODEThreeCompHydSimulator.lAe_fAn
-                else:
-                    raise UserWarning(
-                        "unhandled state with h {} g {} and conf theta {} gamma {} phi {}".format(h, g, theta, gamma,
-                                                                                                  phi))
+            func = ODEThreeCompHydSimulator.state_to_phase(conf, h, g)
 
         # iterate through all phases until end is reached
         t, h, g, n_func = func(t, h, g, p, t_max=t_max, conf=conf)
@@ -145,16 +112,14 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
-    p = 681
+    p = 260
     # estimations per second for discrete agent
     hz = 500
     # required precision of discrete to differential agent
     eps = 0.01
 
-    example_conf = [15101.24769778409, 86209.27743067988,
-                    252.71702367096788, 363.2970828395908,
-                    38.27073086773415, 0.14892228099402588,
-                    0.3524379644134216, 1.0]
+    example_conf = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908,
+                    38.27073086773415, 0.14892228099402588, 0.3524379644134216, 1.0]
 
     tte_test_procedure(p, hz, eps, example_conf, log_level=1)
 

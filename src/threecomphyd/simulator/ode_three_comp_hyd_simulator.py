@@ -296,7 +296,7 @@ class ODEThreeCompHydSimulator:
             t_end = t_max
 
         # if t_end after t_max, return g(t_max)
-        if t_end > t_max:
+        if t_end >= t_max:
             gtmax = c1 * np.exp(m_anf * t_max / (a_ans * (gamma - 1))) - theta
             return t_max, h_s, gtmax, None
         else:

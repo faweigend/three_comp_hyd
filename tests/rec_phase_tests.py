@@ -36,7 +36,6 @@ def rec_phase_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
 
     if t >= t_max:
         logging.info("Exhaustion not reached during TTE")
-        return
 
     # double-check with discrete agent
     for _ in range(int(round(t * hz))):
@@ -54,10 +53,6 @@ def rec_phase_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
 
     # restart time from 0
     t = 0
-
-    theta = conf[5]
-    gamma = conf[6]
-    phi = conf[7]
     func = None
 
     # cycles through phases until t_max is reached
@@ -65,37 +60,7 @@ def rec_phase_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
 
         if func is None:
             # first distinguish between fAe and lAe
-            if h >= 1 - phi:
-                # fAe
-                if h < theta and g < ODEThreeCompHydSimulator.eps:
-                    func = ODEThreeCompHydSimulator.fAe
-                # fAe_rAnS
-                elif h < g + theta and g > ODEThreeCompHydSimulator.eps:
-                    func = ODEThreeCompHydSimulator.fAe_rAn
-                # fAe_lAnS
-                elif h > g + theta and h < 1 - gamma:
-                    func = ODEThreeCompHydSimulator.fAe_lAn
-                # fAe_fAnS
-                elif h > 1 - gamma:
-                    func = ODEThreeCompHydSimulator.fAe_fAn
-                else:
-                    raise UserWarning(
-                        "unhandled state with h {} g {} and conf theta {} gamma {} phi {}".format(h, g, theta, gamma,
-                                                                                                  phi))
-            else:
-                # lAr
-                if h < theta and g < ODEThreeCompHydSimulator.eps:
-                    func = ODEThreeCompHydSimulator.lAe
-                elif h < g + theta and g > ODEThreeCompHydSimulator.eps:
-                    func = ODEThreeCompHydSimulator.lAe_rAn
-                elif h > g + theta and h <= 1 - gamma:
-                    func = ODEThreeCompHydSimulator.lAe_lAn
-                elif h > 1 - gamma:
-                    func = ODEThreeCompHydSimulator.lAe_fAn
-                else:
-                    raise UserWarning(
-                        "unhandled state with h {} g {} and conf theta {} gamma {} phi {}".format(h, g, theta, gamma,
-                                                                                                  phi))
+            func = ODEThreeCompHydSimulator.state_to_phase(conf, h, g)
 
         if log_level > 1:
             logging.info("[intermediate result] Try {}".format(func))
@@ -163,9 +128,9 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     p_exp = 260
-    t_rec = 240
-    p_rec = 10
-    t_max = 6000
+    t_rec = 10
+    p_rec = 0
+    t_max = 2000
 
     # estimations per second for discrete agent
     hz = 500
