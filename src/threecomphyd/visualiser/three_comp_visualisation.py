@@ -370,9 +370,9 @@ class ThreeCompVisualisation:
         """
 
         # get sizes from agent
-        a_anf = self._agent.a_anf
-        a_ans = self._agent.a_ans
-        ans_height = self._agent.height_ans
+        a_anf = self._agent.lf
+        a_ans = self._agent.ls
+        ans_height = self._agent.height_ls
 
         # o_left is 0
         o_width = self.__width_o
@@ -439,9 +439,9 @@ class ThreeCompVisualisation:
         self._agent = agent
 
         # get sizes from agent
-        a_anf = agent.a_anf
-        a_ans = agent.a_ans
-        ans_height = agent.height_ans
+        a_anf = agent.lf
+        a_ans = agent.ls
+        ans_height = agent.height_ls
 
         # o_left is 0
         o_width = self.__width_o
@@ -501,25 +501,25 @@ class ThreeCompVisualisation:
         self._arr_power_flow.set_mutation_scale(math.log(power + 1) * 10)
 
         # oxygen arrow
-        p_o = round(self._agent.get_p_ae(), 1)
-        max_str = "(MAX)" if p_o == self._agent.m_ae else ""
+        p_o = round(self._agent.get_p_u(), 1)
+        max_str = "(MAX)" if p_o == self._agent.m_u else ""
         self._ann_o_flow.set_text("flow: {} {}".format(p_o, max_str))
         self._arr_o_flow.set_mutation_scale(math.log(p_o + 1) * 10)
 
         # lactate arrow
-        p_g = round(self._agent.get_p_an(), 1)
+        p_g = round(self._agent.get_p_l(), 1)
         if p_g < 0:
-            max_str = "(MAX)" if p_g == self._agent.m_anf else ""
+            max_str = "(MAX)" if p_g == self._agent.m_lf else ""
             self._arr_r2_flow.set_positions(self._arr_r2_l_pos[1], self._arr_r2_l_pos[0])
         else:
-            max_str = "(MAX)" if p_g == self._agent.m_ans else ""
+            max_str = "(MAX)" if p_g == self._agent.m_ls else ""
             self._arr_r2_flow.set_positions(self._arr_r2_l_pos[0], self._arr_r2_l_pos[1])
         self._ann_r2_flow.set_text("flow: {} {}".format(p_g, max_str))
         self._arr_r2_flow.set_mutation_scale(math.log(abs(p_g) + 1) * 10)
 
         # update levels
         self._h.set_height(1 - self._agent.get_h())
-        self._g.set_height(self._agent.height_ans - self._agent.get_g())
+        self._g.set_height(self._agent.height_ls - self._agent.get_g())
 
         # list of artists to be drawn
         return [self._ann_time,

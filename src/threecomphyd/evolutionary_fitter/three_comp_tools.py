@@ -9,11 +9,11 @@ from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulato
 
 # bounds for all parameters of the three comp hydraulic model
 three_comp_parameter_limits = {
-    "a_anf": [1000, 500000],
-    "a_ans": [1000, 500000],
-    "m_ae": [1, 5000],
-    "m_ans": [1, 5000],
-    "m_anf": [1, 5000],
+    "lf": [1000, 500000],
+    "ls": [1000, 500000],
+    "m_u": [1, 5000],
+    "m_ls": [1, 5000],
+    "m_lf": [1, 5000],
     "theta": [0.01, 0.99],
     "gamma": [0.01, 0.99],
     "phi": [0.01, 0.99]
@@ -127,7 +127,7 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
     """
     Two objective functions for recovery and expenditure error
     that get all required params as arguments
-    :param obj_vars: values that define the three comp agent [anf, ans, m_ae, m_anf, m_ans, theta, gamma, phi]
+    :param obj_vars: values that define the three comp agent [anf, ans, m_u, m_lf, m_ls, theta, gamma, phi]
     :param hz: estimations per second for agent
     :param ttes: time to exhaustion tests to use
     :param recovery_measures: recovery trials to compare to
@@ -141,11 +141,11 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
     recs_exp = []  # Recovery ratios expected (original)
 
     three_comp_agent = ThreeCompHydAgent(hz=hz,
-                                         a_anf=obj_vars[0],
-                                         a_ans=obj_vars[1],
-                                         m_ae=obj_vars[2],
-                                         m_ans=obj_vars[3],
-                                         m_anf=obj_vars[4],
+                                         lf=obj_vars[0],
+                                         ls=obj_vars[1],
+                                         m_u=obj_vars[2],
+                                         m_ls=obj_vars[3],
+                                         m_lf=obj_vars[4],
                                          the=obj_vars[5],
                                          gam=obj_vars[6],
                                          phi=obj_vars[7])

@@ -100,10 +100,10 @@ class ThreeCompHydSimulator:
             # log all the parameters
             h.append(agent.get_h())
             g.append(agent.get_g())
-            anf.append(agent.get_fill_anf())
-            ans.append(agent.get_fill_ans())
-            p_ae.append(agent.get_p_ae())
-            p_an.append(agent.get_p_an())
+            anf.append(agent.get_fill_lf())
+            ans.append(agent.get_fill_ls())
+            p_ae.append(agent.get_p_u())
+            p_an.append(agent.get_p_l())
             m_flow.append(agent.get_m_flow())
             w_p_bal.append(agent.get_w_p_ratio())
 
@@ -138,10 +138,10 @@ class ThreeCompHydSimulator:
         while agent.is_exhausted() is False and steps < 3000:
             t.append(agent.get_time())
             p.append(agent.perform_one_step())
-            anf.append(agent.get_fill_anf())
-            ans.append(agent.get_fill_ans())
-            p_ae.append(agent.get_p_ae())
-            p_an.append(agent.get_p_an())
+            anf.append(agent.get_fill_lf())
+            ans.append(agent.get_fill_ls())
+            p_ae.append(agent.get_p_u())
+            p_an.append(agent.get_p_l())
             m_flow.append(agent.get_m_flow())
             steps += 1
 
@@ -171,10 +171,10 @@ class ThreeCompHydSimulator:
         while agent.is_exhausted() is False and steps < 10000:
             t.append(agent.get_time())
             p.append(agent.perform_one_step())
-            anf.append(agent.get_fill_anf())
-            ans.append(agent.get_fill_ans() * agent.height_ans + agent.theta)
-            p_h.append(agent.get_p_ae())
-            p_g.append(agent.get_p_an())
+            anf.append(agent.get_fill_lf())
+            ans.append(agent.get_fill_ls() * agent.height_ls + agent.theta)
+            p_h.append(agent.get_p_u())
+            p_g.append(agent.get_p_l())
             m_flow.append(agent.get_m_flow())
             steps += 1
         # save time
@@ -187,10 +187,10 @@ class ThreeCompHydSimulator:
         while agent.is_equilibrium() is False and steps < 20000:
             t.append(agent.get_time())
             p.append(agent.perform_one_step())
-            anf.append(agent.get_fill_anf())
-            ans.append(agent.get_fill_ans() * agent.height_ans + agent.theta)
-            p_h.append(agent.get_p_ae())
-            p_g.append(agent.get_p_an())
+            anf.append(agent.get_fill_lf())
+            ans.append(agent.get_fill_ls() * agent.height_ls + agent.theta)
+            p_h.append(agent.get_p_u())
+            p_g.append(agent.get_p_l())
             m_flow.append(agent.get_m_flow())
             steps += 1
         # save recovery time

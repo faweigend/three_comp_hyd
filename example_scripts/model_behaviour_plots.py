@@ -52,7 +52,7 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
 
     # plot three comp agents
     for p in ps:
-        three_comp_agent = ThreeCompHydAgent(hz=1, a_anf=p[0], a_ans=p[1], m_ae=p[2], m_ans=p[3], m_anf=p[4],
+        three_comp_agent = ThreeCompHydAgent(hz=1, lf=p[0], ls=p[1], m_u=p[2], m_ls=p[3], m_lf=p[4],
                                              the=p[5], gam=p[6], phi=p[7])
 
         hyd_fitted_times_ext = [ThreeCompHydSimulator.simulate_tte_hydraulic_detail(three_comp_agent, x) for x in
@@ -133,7 +133,7 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     # add three component model data
     for p in ps:
         # set up agent according to parameters set
-        three_comp_agent = ThreeCompHydAgent(hz=1, a_anf=p[0], a_ans=p[1], m_ae=p[2], m_ans=p[3], m_anf=p[4],
+        three_comp_agent = ThreeCompHydAgent(hz=1, lf=p[0], ls=p[1], m_u=p[2], m_ls=p[3], m_lf=p[4],
                                              the=p[5], gam=p[6], phi=p[7])
 
         # data will be stored in here
