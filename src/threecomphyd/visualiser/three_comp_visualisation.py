@@ -20,12 +20,21 @@ class ThreeCompVisualisation:
                  axis: plt.axis = None,
                  animated: bool = False,
                  detail_annotations: bool = False,
+                 basic_annotations: bool = True,
                  black_and_white: bool = False):
         """
         Whole visualisation setup using given agent's parameters
+        :param agent: The agent to be visualised
+        :param axis: If set, the visualisation will be drawn using the provided axis object.
+        Useful for animations or to display multiple models in one plot
+        :param animated: If true the visualisation is set up to deal with frame updates.
+        See animation script for more details.
+        :param detail_annotations: If true, tank distances and sizes are annotated as well.
+        :param basic_annotations: If true, U, LF, and LS are visible
+        :param black_and_white: If true, the visualisation is in black and white
         """
         # matplotlib fontsize
-        rcParams['font.size'] = 12
+        rcParams['font.size'] = 10
 
         # plot if no axis was assigned
         if axis is None:
@@ -55,31 +64,32 @@ class ThreeCompVisualisation:
         self._agent = agent
         self.__offset = 0.2
 
-        # Ae tank with three stripes
+        # U tank with three stripes
         self.__width_o = 0.3
         self._o = None
         self._o1 = None
         self._o2 = None
-        self._r1 = None  # line marking flow from Ae to AnF
-        self._ann_o = None  # Ae annotation
+        self._r1 = None  # line marking flow from U to LF
+        self._ann_u = None  # U annotation
 
-        # AnF tank
-        self._a_anf = None
+        # LF tank
+        self._a_lf = None
         self._h = None  # fill state
-        self._ann_anf = None  # annotation
+        self._ann_lf = None  # annotation
 
-        # AnS tank
-        self._a_ans = None
+        # LS tank
+        self._a_ls = None
         self._g = None
-        self._ann_ans = None  # annotation AnS
-        self._r2 = None  # line marking flow from AnS to AnF
+        self._ann_ls = None  # annotation LS
+        self._r2 = None  # line marking flow from LS to LF
 
         # finish the basic layout
         self.__set_basic_layout()
+        self.update_basic_layout(agent)
 
         # now the animation components
         if self._animated:
-            # Ae flow
+            # U flow
             self._arr_o_flow = None
             self._ann_o_flow = None
 
@@ -87,7 +97,7 @@ class ThreeCompVisualisation:
             self._arr_power_flow = None
             self._ann_power_flow = None
 
-            # AnS flow (R2)
+            # LS flow (R2)
             self._arr_r2_l_pos = None
             self._arr_r2_flow = None
             self._ann_r2_flow = None
@@ -97,6 +107,10 @@ class ThreeCompVisualisation:
 
             self.__set_animation_layout()
             self._ax1.add_artist(self._ann_time)
+
+        # basic annotations are U, LF, and LS
+        if not basic_annotations:
+            self.hide_basic_annotations()
 
         # add layout for detailed annotations
         # detail annotation add greek letters for distances and positions
@@ -126,25 +140,22 @@ class ThreeCompVisualisation:
         """
 
         o_width = self.__width_o
-        ans_left = self._a_ans.get_x()
-        ans_width = self._a_ans.get_width()
-        anf_left = self._a_anf.get_x()
-        anf_width = self._a_anf.get_width()
-        ans_height = self._a_ans.get_height()
+        ans_left = self._a_ls.get_x()
+        ans_width = self._a_ls.get_width()
+        anf_left = self._a_lf.get_x()
+        anf_width = self._a_lf.get_width()
+        ans_height = self._a_ls.get_height()
 
         # some offset to the bottom
         offset = self.__offset
         phi_o = self._agent.phi + offset
         gamma_o = self._agent.gamma + offset
 
-        font = FontProperties()
-        font.set_family('serif')
-        font.set_name('Times New Roman')
         rcParams['text.usetex'] = True
 
-        self._ann_o_flow = Text(text="$m^{Ae}$", ha='right', fontsize="xx-large", x=o_width + 0.09,
+        self._ann_o_flow = Text(text="$M_{U}$", ha='right', fontsize="xx-large", x=o_width + 0.09,
                                 y=phi_o - 0.08)
-        ann_p_ae = Text(text="$p^{Ae}$", ha='right', fontsize="xx-large", x=o_width + 0.07,
+        ann_p_ae = Text(text="$p_{U}$", ha='right', fontsize="xx-large", x=o_width + 0.07,
                         y=phi_o + 0.03)
         self._arr_o_flow = FancyArrowPatch((o_width, phi_o),
                                            (o_width + 0.1, phi_o),
@@ -171,18 +182,18 @@ class ThreeCompVisualisation:
                                            fc=self.__ann_color)
                            )
 
-        self._ann_power_flow = Text(text="$p$", ha='center', fontsize="xx-large", x=self._ann_anf.get_position()[0],
+        self._ann_power_flow = Text(text="$p$", ha='center', fontsize="xx-large", x=self._ann_lf.get_position()[0],
                                     y=offset - 0.06)
-        self._arr_power_flow = FancyArrowPatch((self._ann_anf.get_position()[0], offset - 0.078),
-                                               (self._ann_anf.get_position()[0], 0.0),
+        self._arr_power_flow = FancyArrowPatch((self._ann_lf.get_position()[0], offset - 0.078),
+                                               (self._ann_lf.get_position()[0], 0.0),
                                                arrowstyle='-|>',
                                                mutation_scale=30,
                                                lw=2,
                                                color=self.__p_color)
 
         self._ax1.annotate('$h$',
-                           xy=(self._ann_anf.get_position()[0] + 0.07, 1 + offset),
-                           xytext=(self._ann_anf.get_position()[0] + 0.07, 1 + offset - 0.30),
+                           xy=(self._ann_lf.get_position()[0] + 0.07, 1 + offset),
+                           xytext=(self._ann_lf.get_position()[0] + 0.07, 1 + offset - 0.30),
                            ha='center',
                            fontsize="xx-large",
                            arrowprops=dict(arrowstyle='-|>',
@@ -190,8 +201,8 @@ class ThreeCompVisualisation:
                                            fc=self.__ann_color)
                            )
         self._ax1.annotate('$h$',
-                           xy=(self._ann_anf.get_position()[0] + 0.07, 1 + offset - 0.55),
-                           xytext=(self._ann_anf.get_position()[0] + 0.07, 1 + offset - 0.30),
+                           xy=(self._ann_lf.get_position()[0] + 0.07, 1 + offset - 0.55),
+                           xytext=(self._ann_lf.get_position()[0] + 0.07, 1 + offset - 0.30),
                            ha='center',
                            fontsize="xx-large",
                            arrowprops=dict(arrowstyle='-|>',
@@ -227,11 +238,11 @@ class ThreeCompVisualisation:
                             height=ans_height * 0.3,
                             color=self.__ans_color))
 
-        ann_p_an = Text(text="$p^{An}$", ha='left', usetex=True, fontsize="xx-large", x=ans_left - 0.06,
+        ann_p_an = Text(text="$p_{L}$", ha='left', usetex=True, fontsize="xx-large", x=ans_left - 0.06,
                         y=gamma_o + 0.11)
-        ann_arr_flow = Text(text="$m^{AnS}$", ha='left', usetex=True, fontsize="xx-large", x=ans_left - 0.09,
+        ann_arr_flow = Text(text="$M_{LS}$", ha='left', usetex=True, fontsize="xx-large", x=ans_left - 0.09,
                             y=gamma_o + 0.03)
-        self._ann_r2_flow = Text(text="$m^{AnF}$", ha='left', usetex=True, fontsize="xx-large", x=ans_left - 0.04,
+        self._ann_r2_flow = Text(text="$M_{LF}$", ha='left', usetex=True, fontsize="xx-large", x=ans_left - 0.04,
                                  y=gamma_o - 0.07)
 
         self._arr_r2_flow = FancyArrowPatch((ans_left - 0.1, gamma_o),
@@ -302,8 +313,8 @@ class ThreeCompVisualisation:
                                            fc=self.__ann_color)
                            )
         self._ax1.add_artist(ann_arr_flow)
-        self._ax1.add_artist(ann_p_an)
-        self._ax1.add_artist(ann_p_ae)
+        # self._ax1.add_artist(ann_p_an)
+        # self._ax1.add_artist(ann_p_ae)
         self._ax1.axhline(offset, linestyle='--', color=self.__ann_color)
         self._ax1.axhline(1 + offset - 0.001, linestyle='--', color=self.__ann_color)
         self._ax1.add_artist(self._ann_power_flow)
@@ -323,7 +334,7 @@ class ThreeCompVisualisation:
         phi_o = self._agent.phi + offset
         gamma_o = self._agent.gamma + offset
 
-        # Ae flow (R1)
+        # S flow (R1)
         self._arr_o_flow = FancyArrowPatch((o_width, phi_o),
                                            (o_width + 0.1, phi_o),
                                            arrowstyle='simple',
@@ -333,25 +344,25 @@ class ThreeCompVisualisation:
         self._ann_o_flow = Text(text="flow: ", ha='right', fontsize="large", x=o_width, y=phi_o - 0.05)
 
         # Tap flow (Power)
-        self._arr_power_flow = FancyArrowPatch((self._ann_anf.get_position()[0], offset - 0.05),
-                                               (self._ann_anf.get_position()[0], 0.0),
+        self._arr_power_flow = FancyArrowPatch((self._ann_lf.get_position()[0], offset - 0.05),
+                                               (self._ann_lf.get_position()[0], 0.0),
                                                arrowstyle='simple',
                                                mutation_scale=0,
                                                ec='white',
                                                color=self.__p_color)
-        self._ann_power_flow = Text(text="flow: ", ha='center', fontsize="large", x=self._ann_anf.get_position()[0],
+        self._ann_power_flow = Text(text="flow: ", ha='center', fontsize="large", x=self._ann_lf.get_position()[0],
                                     y=offset - 0.05)
 
-        # AnS flow (R2)
-        self._arr_r2_l_pos = [(self._a_ans.get_x(), gamma_o),
-                              (self._a_ans.get_x() - 0.1, gamma_o)]
+        # LS flow (R2)
+        self._arr_r2_l_pos = [(self._a_ls.get_x(), gamma_o),
+                              (self._a_ls.get_x() - 0.1, gamma_o)]
         self._arr_r2_flow = FancyArrowPatch(self._arr_r2_l_pos[0],
                                             self._arr_r2_l_pos[1],
                                             arrowstyle='simple',
                                             mutation_scale=0,
                                             ec='white',
                                             color=self.__ans_color)
-        self._ann_r2_flow = Text(text="flow: ", ha='left', fontsize="large", x=self._a_ans.get_x(),
+        self._ann_r2_flow = Text(text="flow: ", ha='left', fontsize="large", x=self._a_ls.get_x(),
                                  y=gamma_o - 0.05)
 
         # information annotation
@@ -370,16 +381,16 @@ class ThreeCompVisualisation:
         """
 
         # get sizes from agent
-        a_anf = self._agent.lf
-        a_ans = self._agent.ls
-        ans_height = self._agent.height_ls
+        a_anf = self._agent.a_anf
+        a_ans = self._agent.a_ans
+        ans_height = self._agent.height_ans
 
         # o_left is 0
         o_width = self.__width_o
 
         # determine width with size ratio retained
         anf_left = o_width + 0.1
-        anf_width = ((a_anf * ans_height) * (1 - anf_left - 0.1)) / (a_ans + a_anf * ans_height)
+        anf_width = ((a_anf * ans_height) * (1 - anf_left - 0.1)) / a_ans
         ans_left = anf_left + anf_width + 0.1
         ans_width = 1 - ans_left
 
@@ -388,33 +399,33 @@ class ThreeCompVisualisation:
         phi_o = self._agent.phi + offset
         gamma_o = self._agent.gamma + offset
 
-        # Ae tank
+        # S tank
         self._o = Rectangle((0.0, phi_o), 0.05, 1 - self._agent.phi, color=self.__ae_color, alpha=0.3)
         self._o1 = Rectangle((0.05, phi_o), 0.05, 1 - self._agent.phi, color=self.__ae_color, alpha=0.6)
         self._o2 = Rectangle((0.1, phi_o), o_width - 0.1, 1 - self._agent.phi, color=self.__ae_color)
-        self._ann_o = Text(text="$Ae$", ha='center', fontsize="xx-large",
-                           x=o_width / 2,
-                           y=((1 - self._agent.phi) / 2) + phi_o - 0.02)
         self._r1 = Line2D([o_width, o_width + 0.1],
                           [phi_o, phi_o],
                           color=self.__ae_color)
+        self._ann_u = Text(text="$U$", ha='center', fontsize="xx-large",
+                           x=o_width / 2,
+                           y=((1 - self._agent.phi) / 2) + phi_o - 0.02)
 
-        # AnF vessel
-        self._a_anf = Rectangle((anf_left, offset), anf_width, 1, fill=False, ec="black")
+        # LF vessel
+        self._a_lf = Rectangle((anf_left, offset), anf_width, 1, fill=False, ec="black")
         self._h = Rectangle((anf_left, offset), anf_width, 1, color=self.__anf_color)
-        self._ann_anf = Text(text="$AnF$", ha='center', fontsize="xx-large",
-                             x=anf_left + (anf_width / 2),
-                             y=offset + 0.5 - 0.02)
+        self._ann_lf = Text(text="$LF$", ha='center', fontsize="xx-large",
+                            x=anf_left + (anf_width / 2),
+                            y=offset + 0.5 - 0.02)
 
-        # AnS vessel
-        self._a_ans = Rectangle((ans_left, gamma_o), ans_width, ans_height, fill=False, ec="black")
+        # LS vessel
+        self._a_ls = Rectangle((ans_left, gamma_o), ans_width, ans_height, fill=False, ec="black")
         self._g = Rectangle((ans_left, gamma_o), ans_width, ans_height, color=self.__ans_color)
-        self._ann_ans = Text(text="$AnS$", ha='center', fontsize="xx-large",
-                             x=ans_left + (ans_width / 2),
-                             y=gamma_o + (ans_height / 2) - 0.02)
         self._r2 = Line2D([ans_left, ans_left - 0.1],
                           [gamma_o, gamma_o],
                           color=self.__ans_color)
+        self._ann_ls = Text(text="$LS$", ha='center', fontsize="xx-large",
+                            x=ans_left + (ans_width / 2),
+                            y=gamma_o + (ans_height / 2) - 0.02)
 
         # the basic layout
         self._ax1.add_line(self._r1)
@@ -422,13 +433,13 @@ class ThreeCompVisualisation:
         self._ax1.add_artist(self._o)
         self._ax1.add_artist(self._o1)
         self._ax1.add_artist(self._o2)
-        self._ax1.add_artist(self._a_anf)
-        self._ax1.add_artist(self._a_ans)
+        self._ax1.add_artist(self._a_lf)
+        self._ax1.add_artist(self._a_ls)
         self._ax1.add_artist(self._h)
         self._ax1.add_artist(self._g)
-        self._ax1.add_artist(self._ann_o)
-        self._ax1.add_artist(self._ann_anf)
-        self._ax1.add_artist(self._ann_ans)
+        self._ax1.add_artist(self._ann_u)
+        self._ax1.add_artist(self._ann_lf)
+        self._ax1.add_artist(self._ann_ls)
 
     def update_basic_layout(self, agent):
         """
@@ -439,9 +450,9 @@ class ThreeCompVisualisation:
         self._agent = agent
 
         # get sizes from agent
-        a_anf = agent.lf
-        a_ans = agent.ls
-        ans_height = agent.height_ls
+        a_anf = agent.a_anf
+        a_ans = agent.a_ans
+        ans_height = agent.height_ans
 
         # o_left is 0
         o_width = self.__width_o
@@ -457,26 +468,38 @@ class ThreeCompVisualisation:
         phi_o = agent.phi + offset
         gamma_o = agent.gamma + offset
 
-        # Ae tank
+        # S tank
         self._o.set_bounds(0.0, phi_o, 0.05, 1 - self._agent.phi)
         self._o1.set_bounds(0.05, phi_o, 0.05, 1 - self._agent.phi)
         self._o2.set_bounds(0.1, phi_o, o_width - 0.1, 1 - self._agent.phi)
-        self._ann_o.set_position(xy=(o_width / 2, ((1 - self._agent.phi) / 2) + phi_o - 0.02))
         self._r1.set_xdata([o_width, o_width + 0.1])
         self._r1.set_ydata([phi_o, phi_o])
+        self._ann_u.set_position(xy=(o_width / 2, ((1 - self._agent.phi) / 2) + phi_o - 0.02))
 
-        # AnF vessel
-        self._a_anf.set_bounds(anf_left, offset, anf_width, 1)
+        # LF vessel
+        self._a_lf.set_bounds(anf_left, offset, anf_width, 1)
         self._h.set_bounds(anf_left, offset, anf_width, 1)
-        self._ann_anf.set_position(xy=(anf_left + (anf_width / 2),
-                                       offset + 0.5 - 0.02))
+        self._ann_lf.set_position(xy=(anf_left + (anf_width / 2),
+                                      offset + 0.5 - 0.02))
 
-        # AnS vessel
-        self._a_ans.set_bounds(ans_left, gamma_o, ans_width, ans_height)
+        # LS vessel
+        self._a_ls.set_bounds(ans_left, gamma_o, ans_width, ans_height)
         self._g.set_bounds(ans_left, gamma_o, ans_width, ans_height)
-        self._ann_ans.set_position(xy=(ans_left + (ans_width / 2), gamma_o + (ans_height / 2) - 0.02))
         self._r2.set_xdata([ans_left, ans_left - 0.1])
         self._r2.set_ydata([gamma_o, gamma_o])
+        self._ann_ls.set_position(xy=(ans_left + (ans_width / 2), gamma_o + (ans_height / 2) - 0.02))
+
+        # update levels
+        self._h.set_height(1 - self._agent.get_h())
+        self._g.set_height(self._agent.height_ans - self._agent.get_g())
+
+    def hide_basic_annotations(self):
+        """
+        Simply hides the S, LF, and LS text
+        """
+        self._ann_u.set_text("")
+        self._ann_lf.set_text("")
+        self._ann_ls.set_text("")
 
     def update_animation_data(self, frame_number):
         """
@@ -501,25 +524,25 @@ class ThreeCompVisualisation:
         self._arr_power_flow.set_mutation_scale(math.log(power + 1) * 10)
 
         # oxygen arrow
-        p_o = round(self._agent.get_p_u(), 1)
-        max_str = "(MAX)" if p_o == self._agent.m_u else ""
+        p_o = round(self._agent.get_p_ae() * self._agent.hz, 1)
+        max_str = "(MAX)" if p_o == self._agent.m_ae else ""
         self._ann_o_flow.set_text("flow: {} {}".format(p_o, max_str))
         self._arr_o_flow.set_mutation_scale(math.log(p_o + 1) * 10)
 
         # lactate arrow
-        p_g = round(self._agent.get_p_l(), 1)
+        p_g = round(self._agent.get_p_an() * self._agent.hz, 1)
         if p_g < 0:
-            max_str = "(MAX)" if p_g == self._agent.m_lf else ""
+            max_str = "(MAX)" if p_g == self._agent.m_anf else ""
             self._arr_r2_flow.set_positions(self._arr_r2_l_pos[1], self._arr_r2_l_pos[0])
         else:
-            max_str = "(MAX)" if p_g == self._agent.m_ls else ""
+            max_str = "(MAX)" if p_g == self._agent.m_ans else ""
             self._arr_r2_flow.set_positions(self._arr_r2_l_pos[0], self._arr_r2_l_pos[1])
         self._ann_r2_flow.set_text("flow: {} {}".format(p_g, max_str))
         self._arr_r2_flow.set_mutation_scale(math.log(abs(p_g) + 1) * 10)
 
         # update levels
         self._h.set_height(1 - self._agent.get_h())
-        self._g.set_height(self._agent.height_ls - self._agent.get_g())
+        self._g.set_height(self._agent.height_ans - self._agent.get_g())
 
         # list of artists to be drawn
         return [self._ann_time,
