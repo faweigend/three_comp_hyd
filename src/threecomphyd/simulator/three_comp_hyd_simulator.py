@@ -83,27 +83,27 @@ class ThreeCompHydSimulator:
         return ((wb2_t - rec_t) / wb1_t) * 100.0
 
     @staticmethod
-    def simulate_course_detail(agent: ThreeCompHydAgent, powers: list, plot: bool = False):
+    def simulate_course_detail(agent: ThreeCompHydAgent, powers, plot: bool = False):
         """
         simulates a whole course with given agent
         :param agent:
-        :param powers:
+        :param powers: list or array
         :param plot:
         :return all parameter values throughout the simulation
         """
 
         agent.reset()
-        h, g, anf, ans, p_ae, p_an, m_flow, w_p_bal = [], [], [], [], [], [], [], []
+        h, g, lf, ls, p_u, p_l, m_flow, w_p_bal = [], [], [], [], [], [], [], []
 
         # let the agent simulate the list of power demands
         for step in powers:
             # log all the parameters
             h.append(agent.get_h())
             g.append(agent.get_g())
-            anf.append(agent.get_fill_lf())
-            ans.append(agent.get_fill_ls())
-            p_ae.append(agent.get_p_u())
-            p_an.append(agent.get_p_l())
+            lf.append(agent.get_fill_lf())
+            ls.append(agent.get_fill_ls())
+            p_u.append(agent.get_p_u())
+            p_l.append(agent.get_p_l())
             m_flow.append(agent.get_m_flow())
             w_p_bal.append(agent.get_w_p_ratio())
 
@@ -115,13 +115,13 @@ class ThreeCompHydSimulator:
         if plot is True:
             ThreeCompHydSimulator.plot_dynamics(t=np.arange(len(powers)),
                                                 p=powers,
-                                                anf=anf,
-                                                ans=ans,
-                                                p_ae=p_ae,
-                                                p_an=p_an)
+                                                anf=lf,
+                                                ans=ls,
+                                                p_ae=p_u,
+                                                p_an=p_l)
 
         # return parameters
-        return h, g, anf, ans, p_ae, p_an, m_flow, w_p_bal
+        return h, g, lf, ls, p_u, p_l, m_flow, w_p_bal
 
     @staticmethod
     def simulate_tte_hydraulic_detail(agent: ThreeCompHydAgent, power, plot=False):
