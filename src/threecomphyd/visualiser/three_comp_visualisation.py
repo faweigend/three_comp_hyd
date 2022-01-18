@@ -7,7 +7,6 @@ from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
 from matplotlib.text import Text
 from matplotlib.patches import Rectangle
 from matplotlib.patches import FancyArrowPatch
-from matplotlib.font_manager import FontProperties
 from matplotlib import rcParams
 
 
