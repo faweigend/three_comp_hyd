@@ -19,8 +19,8 @@ if __name__ == "__main__":
               0.2141766056862277]
 
     # create three component hydraulic agent with example configuration
-    agent = ThreeCompHydAgent(10, a_anf=params[0], a_ans=params[1], m_ae=params[2],
-                              m_ans=params[3], m_anf=params[4], the=params[5], gam=params[6],
+    agent = ThreeCompHydAgent(10, lf=params[0], ls=params[1], m_u=params[2],
+                              m_ls=params[3], m_lf=params[4], the=params[5], gam=params[6],
                               phi=params[7])
 
     # run the interactive animation

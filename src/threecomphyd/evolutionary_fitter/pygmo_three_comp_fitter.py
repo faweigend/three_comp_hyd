@@ -17,24 +17,24 @@ from threecomphyd.evolutionary_fitter.three_comp_tools import MultiObjectiveThre
 
 class PyGMOThreeCompFitter:
     """
-    fits the three component hydraulic model to exercise data
+    fits a three component hydraulic model to exercise data using the optimization library PyGMO
     """
     # this handler's addition to the directory path
     dir_path_addition = "THREE_COMP_PYGMO_FIT"
 
-    def __init__(self, ttes: SimpleTTEMeasures, recovery_measures: SimpleRecMeasures, log_level: int = 0):
+    def __init__(self, ttes: SimpleTTEMeasures, recovery_measures: SimpleRecMeasures, info_level: int = 0):
         """
         constructor with basic parameters
-        :param ttes: traditional ttes to fit expenditure to
-        :param recovery_measures: recovery trials to estimate fitness with
-        :param log_level: determines how much information about the fittings will be stored
+        :param ttes: traditional TTEs to fit expenditure to
+        :param recovery_measures: recovery trials to estimate recovery fitness with
+        :param info_level: determines how much information about the fittings will be stored
         (0 basic, >0 all fronts and migration logs)
         """
         self._dir_path_addition = PyGMOThreeCompFitter.dir_path_addition
 
         self.__hz = 1
         # (0 basic, >0 all fronts and migration logs)
-        self.__log_level = log_level
+        self.__info_level = info_level
         # counter for early stopping. If 0, no early stopping is used
         self.__early_stopping = 10
 
@@ -253,8 +253,8 @@ class PyGMOThreeCompFitter:
                                             algorithm: pygcore.algorithm,
                                             topology: pygcore.topology):
         """
-        Run a fitting that makes use of the parallelized islands.
-        It saves the evolved fronts and corresponding configurations
+        This function runs a fitting that makes use of pygmo's parallelized islands feature.
+        It saves evolved fronts and corresponding configurations
         :param cycles: number of cycles through number of gen steps
         :param pop_size: population size
         :param islands: number of isolated islands (threads)
@@ -342,7 +342,7 @@ class PyGMOThreeCompFitter:
             int_fronts = get_parteo_fronts()
 
             # log fronts for every step if the level requires it
-            if self.__log_level > 0:
+            if self.__info_level > 0:
                 fronts[i] = int_fronts
 
             # keep track of best observed fitness
@@ -392,7 +392,7 @@ class PyGMOThreeCompFitter:
         }
 
         # add logs and results according to log level
-        if self.__log_level > 0:
+        if self.__info_level > 0:
             data["fronts"] = fronts
             # keep migration log
             data["migration_log"] = str(archi.get_migration_log())

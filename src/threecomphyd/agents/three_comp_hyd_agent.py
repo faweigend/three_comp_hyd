@@ -11,50 +11,51 @@ class ThreeCompHydAgent(HydAgentBasis):
     See the document for the reasoning behind procedures in _estimate_power_output.
     """
 
-    def __init__(self, hz, a_anf, a_ans, m_ae, m_ans, m_anf, the, gam, phi):
+    def __init__(self, hz, lf, ls, m_u, m_ls, m_lf, the, gam, phi):
         """
         :param hz: calculations per second
-        :param a_anf: cross sectional area of AnF
-        :param a_ans: cross sectional area of AnS
-        :param m_ae: maximal flow from Ae to AnF
-        :param m_ans: maximal flow from AnS to AnF
-        :param m_anf: maximal flow from AnF to AnS
-        :param the: theta (distance top -> top AnS)
-        :param gam: gamma (distance bottom -> bottom AnS)
-        :param phi: phi (distance bottom -> bottom Ae)
+        :param lf: cross sectional area of LF
+        :param ls: cross sectional area of LS
+        :param m_u: maximal flow from U to LF
+        :param m_ls: maximal flow from LS to LF
+        :param m_lf: maximal flow from LF to LS
+        :param the: theta (distance top -> top LS)
+        :param gam: gamma (distance bottom -> bottom LS)
+        :param phi: phi (distance bottom -> bottom U)
         """
         super().__init__(hz=hz)
 
         # constants
         self.__theta, self.__gamma, self.__phi = the, gam, phi
-        # height of vessel AnS
-        self.__height_ans = 1 - self.__theta - self.__gamma
+        # height of vessel LS
+        self.__height_ls = 1 - self.__theta - self.__gamma
 
-        # the AnS tank size cannot be negative
-        if self.__height_ans <= 0:
-            raise UserWarning("AnS has negative height: Theta {} Gamma {} Phi {}".format(the, gam, phi))
+        # the LS tanks has to have a positive size
+        if self.__height_ls <= 0:
+            raise UserWarning("LS has negative height: Theta {} Gamma {} Phi {}".format(the, gam, phi))
 
+        # the LS tank constraint that corresponds to 1 - phi > theta
         if config.three_comp_phi_constraint is True:
             # the "hitting the wall" constraint that says glycogen can be depleted below VO2 MAX
             if self.__phi > self.__gamma:
                 raise UserWarning("phi not smaller gamma")
 
         # vessel areas
-        self.__a_anf = a_anf  # area of vessel AnF
-        self.__a_ans = a_ans  # area of AnS
+        self.__lf = lf  # area of vessel LF
+        self.__ls = ls  # area of LS
 
         # max flows
-        self.__m_ae = m_ae  # max flow from Ae to AnF
-        self.__m_ans = m_ans  # max flow from AnS to AnF
-        self.__m_anf = m_anf  # max flow from AnA to AnS
+        self.__m_u = m_u  # max flow from U to LF
+        self.__m_ls = m_ls  # max flow from LS to LF
+        self.__m_lf = m_lf  # max flow from LF to LS
 
         # self.__w_m = 100  # max instantaneous power (not in use yet)
 
         # variable parameters
-        self.__h = 0  # state of depletion of vessel AnF
-        self.__g = 0  # state of depletion of vessel AnS
-        self.__p_ae = 0  # flow from Ae to AnF
-        self.__p_an = 0  # flow from AnS to AnF
+        self.__h = 0  # state of depletion of vessel LF
+        self.__g = 0  # state of depletion of vessel LS
+        self.__p_u = 0  # flow from U to LF
+        self.__p_l = 0  # flow from LS to LF (bi-directional)
         self.__m_flow = 0  # maximal flow through pg according to liquid diffs
 
     def __str__(self):
@@ -63,9 +64,9 @@ class ThreeCompHydAgent(HydAgentBasis):
         :return: parameter overview
         """
         return "Three Component Hydraulic Agent \n" \
-               "AnF, AnS, Mae, Mans, Manf, the, gam, phi \n " \
-               "{}".format([self.__a_anf, self.__a_ans, self.__m_ae, self.__m_ans,
-                            self.__m_anf, self.__theta, self.__gamma, self.__phi])
+               "LF, LS, M_U, M_LS, M_LF, theta, gammma, phi \n " \
+               "{}".format([self.__lf, self.__ls, self.__m_u, self.__m_ls,
+                            self.__m_lf, self.__theta, self.__gamma, self.__phi])
 
     def __raise_detailed_error_report(self):
         """
@@ -105,83 +106,83 @@ class ThreeCompHydAgent(HydAgentBasis):
         :return: power output
         """
 
-        # step 1: drop level in AnF according to power demand
-        # estimate h_{t+1}: scale to hz (delta t) and drop the level of AnF
-        self.__h += self._pow / self.__a_anf / self._hz
+        # step 1: drop level in LF according to power demand
+        # estimate h_{t+1}: scale to hz (delta t) and drop the level of LF
+        self.__h += self._pow / self.__lf / self._hz
 
         # step 2: determine tank flows to respond to the new change in h_{t+1}
 
-        # step 2 a: determine oxygen energy flow (p_{Ae})
-        # level AnF above pipe exit. Scale contribution according to h level
+        # step 2 a: determine oxygen energy flow (P_U)
+        # level LF above pipe exit. Scale contribution according to h level
         if 0 <= self.__h < (1 - self.__phi):
-            # contribution from Ae scales with maximal flow capacity
-            self.__p_ae = self.__m_ae * self.__h / (1 - self.__phi)
-        # at maximum rate because level h of AnF is below pipe exit of Ae
+            # contribution from U scales with maximal flow capacity
+            self.__p_u = self.__m_u * self.__h / (1 - self.__phi)
+        # at maximum rate because level h of LF is below pipe exit of U
         elif (1 - self.__phi) <= self.__h:
-            # max contribution R1 = m_ae
-            self.__p_ae = self.__m_ae
+            # max contribution R1 = m_u
+            self.__p_u = self.__m_u
         else:
             self.__raise_detailed_error_report()
 
         # multiply with delta t1
-        self.__p_ae = self.__p_ae / self._hz
+        self.__p_u = self.__p_u / self._hz
 
-        # step 2 b: determine the slow component energy flow (p_{An})
-        # [no change] AnS full and level AnF above level AnS
+        # step 2 b: determine the slow component energy flow (P_U)
+        # [no change] LS full and level LF above level LS
         if self.__h <= self.__theta and self.__g == 0:
-            self.__p_an = 0.0
-        # [no change] AnS empty and level AnF below pipe exit
-        elif self.__h >= (1 - self.__gamma) and self.__g == self.__height_ans:
-            self.__p_an = 0.0
+            self.__p_l = 0.0
+        # [no change] LS empty and level LF below pipe exit
+        elif self.__h >= (1 - self.__gamma) and self.__g == self.__height_ls:
+            self.__p_l = 0.0
         # [no change] h at equal with g
         elif self.__h == (self.__g + self.__theta):
-            self.__p_an = 0.0
+            self.__p_l = 0.0
         else:
-            # [restore] if level AnF above level AnS and AnS is not full
+            # [restore] if level LF above level LS and LS is not full
             if self.__h < self.__g + self.__theta and self.__g > 0:
                 # see EQ (16) in Morton (1986)
-                self.__p_an = -self.__m_anf * (self.__g + self.__theta - self.__h) / (1 - self.__gamma)
-            # [utilise] if level AnS above level AnF and level AnF above pipe exit of AnS
+                self.__p_l = -self.__m_lf * (self.__g + self.__theta - self.__h) / (1 - self.__gamma)
+            # [utilise] if level LS above level LF and level LF above pipe exit of LS
             elif (self.__g + self.__theta) < self.__h < (1 - self.__gamma):
                 # EQ (9) in Morton (1986)
-                self.__p_an = self.__m_ans * (self.__h - self.__g - self.__theta) / self.__height_ans
-            # [utilise max] if level AnF below or at AnS pipe exit and AnS not empty
-            elif (1 - self.__gamma) <= self.__h and self.__g < self.__height_ans:
+                self.__p_l = self.__m_ls * (self.__h - self.__g - self.__theta) / self.__height_ls
+            # [utilise max] if level LF below or at LS pipe exit and LS not empty
+            elif (1 - self.__gamma) <= self.__h and self.__g < self.__height_ls:
                 # the only thing that affects flow is the amount of remaining liquid (pressure)
                 # EQ (20) Morton (1986)
-                self.__p_an = self.__m_ans * (self.__height_ans - self.__g) / self.__height_ans
+                self.__p_l = self.__m_ls * (self.__height_ls - self.__g) / self.__height_ls
             else:
                 self.__raise_detailed_error_report()
 
-            # This check is added to handle cases where the flow causes level height swaps between AnS and AnF
+            # This check is added to handle cases where the flow causes level height swaps between LS and LF
             self.__m_flow = ((self.__h - (self.__g + self.__theta)) / (
-                    (1 / self.__a_ans) + (1 / self.__a_anf)))
+                    (1 / self.__ls) + (1 / self.__lf)))
 
             # consider delta t before extreme values get capped
-            self.__p_an = self.__p_an / self._hz
+            self.__p_l = self.__p_l / self._hz
 
             # Cap flow according to estimated limits
-            if self.__p_an < 0:
-                self.__p_an = max(self.__p_an, self.__m_flow)
+            if self.__p_l < 0:
+                self.__p_l = max(self.__p_l, self.__m_flow)
                 # don't refill more than there is capacity
-                self.__p_an = max(self.__p_an, -self.__g * self.__a_ans)
-            elif self.__p_an > 0:
-                self.__p_an = min(self.__p_an, self.__m_flow)
-                # don't drain more than is available in AnS
-                self.__p_an = min(self.__p_an, (self.__height_ans - self.__g) * self.__a_ans)
+                self.__p_l = max(self.__p_l, -self.__g * self.__ls)
+            elif self.__p_l > 0:
+                self.__p_l = min(self.__p_l, self.__m_flow)
+                # don't drain more than is available in LS
+                self.__p_l = min(self.__p_l, (self.__height_ls - self.__g) * self.__ls)
 
-        # level AnS is adapted to estimated change
+        # level LS is adapted to estimated change
         # g increases as p_An flows out
-        self.__g += self.__p_an / self.__a_ans
-        # refill or deplete AnF according to AnS flow and Power demand
-        # h decreases as p_Ae and p_An flow in
-        self.__h -= (self.__p_ae + self.__p_an) / self.__a_anf
+        self.__g += self.__p_l / self.__ls
+        # refill or deplete LF according to LS flow and Power demand
+        # h decreases as p_U and p_An flow in
+        self.__h -= (self.__p_u + self.__p_l) / self.__lf
 
         # step 3: account for rounding errors and set exhaustion flag
         self._exhausted = self.__h >= 1.0
         # apply limits so that tanks cannot be fuller than full or emptier than empty
         self.__g = max(self.__g, 0.0)
-        self.__g = min(self.__g, self.__height_ans)
+        self.__g = min(self.__g, self.__height_ls)
         self.__h = max(self.__h, 0.0)
         self.__h = min(self.__h, 1.0)
 
@@ -189,7 +190,7 @@ class ThreeCompHydAgent(HydAgentBasis):
 
     def is_exhausted(self):
         """
-        exhaustion is reached when level in AnF cannot sustain power demand
+        exhaustion is reached when level in LF cannot sustain power demand
         :return: simply returns the exhausted boolean
         """
         return bool(self.__h >= 1.0)
@@ -203,37 +204,37 @@ class ThreeCompHydAgent(HydAgentBasis):
 
     def is_equilibrium(self):
         """
-        equilibrium is reached when ph meets pow and AnS does not contribute or drain
+        equilibrium is reached when ph meets pow and LS does not contribute or drain
         :return: boolean
         """
-        return abs(self.__p_ae - self._pow) < 0.1 and abs(self.__p_an) < 0.1
+        return abs(self.__p_u - self._pow) < 0.1 and abs(self.__p_l) < 0.1
 
     def reset(self):
         """power parameters"""
         super().reset()
         # variable parameters
-        self.__h = 0  # state of depletion of vessel AnF
-        self.__g = 0  # state of depletion of vessel AnS
-        self.__p_ae = 0  # flow from Ae to AnF
-        self.__p_an = 0  # flow from AnS to AnF
+        self.__h = 0  # state of depletion of vessel LF
+        self.__g = 0  # state of depletion of vessel LS
+        self.__p_u = 0  # flow from U to LF
+        self.__p_l = 0  # flow from LS to LF
 
     def get_w_p_ratio(self):
         """
         :return: wp estimation between 0 and 1 for comparison to CP models
         """
-        return (1.0 - self.__h) * ((self.__height_ans - self.__g) / self.__height_ans)
+        return (1.0 - self.__h) * ((self.__height_ls - self.__g) / self.__height_ls)
 
-    def get_fill_anf(self):
+    def get_fill_lf(self):
         """
-        :return: fill level of AnF between 0 - 1
+        :return: fill level of LF between 0 - 1
         """
         return 1 - self.__h
 
-    def get_fill_ans(self):
+    def get_fill_ls(self):
         """
-        :return:fill level of AnS between 0 - 1
+        :return:fill level of LS between 0 - 1
         """
-        return (self.__height_ans - self.__g) / self.__height_ans
+        return (self.__height_ls - self.__g) / self.__height_ls
 
     @property
     def phi_constraint(self):
@@ -244,67 +245,67 @@ class ThreeCompHydAgent(HydAgentBasis):
         return config.three_comp_phi_constraint
 
     @property
-    def a_anf(self):
+    def lf(self):
         """
-        :return cross sectional area of AnF
+        :return cross sectional area of LF
         """
-        return self.__a_anf
+        return self.__lf
 
     @property
-    def a_ans(self):
+    def ls(self):
         """
-        :return cross sectional area of AnS
+        :return cross sectional area of LS
         """
-        return self.__a_ans
+        return self.__ls
 
     @property
     def theta(self):
         """
-        :return theta (distance top -> top AnS)
+        :return theta (distance top -> top LS)
         """
         return self.__theta
 
     @property
     def gamma(self):
         """
-        :return gamma (distance bottom -> bottom AnS)
+        :return gamma (distance bottom -> bottom LS)
         """
         return self.__gamma
 
     @property
     def phi(self):
         """
-        :return phi (distance bottom -> bottom Ae)
+        :return phi (distance bottom -> bottom U)
         """
         return self.__phi
 
     @property
-    def height_ans(self):
+    def height_ls(self):
         """
-        :return height of vessel AnS
+        :return height of vessel LS
         """
-        return self.__height_ans
+        return self.__height_ls
 
     @property
-    def m_ae(self):
+    def m_u(self):
         """
-        :return maximal flow from Ae to AnF
+        :return maximal flow from U to LF
         """
-        return self.__m_ae
+        return self.__m_u
 
     @property
-    def m_ans(self):
+    def m_ls(self):
         """
-        :return maximal flow from AnS to AnF
+        :return maximal flow from LS to LF
         """
-        return self.__m_ans
+        return self.__m_ls
 
     @property
-    def m_anf(self):
+    def m_lf(self):
         """
-        :return maximal flow from AnF to AnS
+        :return maximal flow from LF to LS
         """
-        return self.__m_anf
+        return self.__m_lf
 
     def get_m_flow(self):
         """
@@ -314,7 +315,7 @@ class ThreeCompHydAgent(HydAgentBasis):
 
     def get_g(self):
         """
-        :return state of depletion of vessel AnS
+        :return state of depletion of vessel LS
         """
         return self.__g
 
@@ -326,7 +327,7 @@ class ThreeCompHydAgent(HydAgentBasis):
 
     def get_h(self):
         """
-        :return state of depletion of vessel AnF
+        :return state of depletion of vessel LF
         """
         return self.__h
 
@@ -336,14 +337,14 @@ class ThreeCompHydAgent(HydAgentBasis):
         """
         self.__h = h
 
-    def get_p_ae(self):
+    def get_p_u(self):
         """
-        :return flow from Ae to AnF
+        :return flow from U to LF
         """
-        return self.__p_ae
+        return self.__p_u
 
-    def get_p_an(self):
+    def get_p_l(self):
         """
-        :return flow from AnS to AnF
+        :return flow from LS to LF
         """
-        return self.__p_an
+        return self.__p_l
