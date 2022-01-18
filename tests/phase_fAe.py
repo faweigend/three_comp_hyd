@@ -13,8 +13,11 @@ def test(func, h, g, p, conf, t=0, hz=500, t_max=2000, log=2):
     t_end, h_end, g_end, func = func(t_s=t, h_s=h, g_s=g, p=p, t_max=t_max, conf=conf)
 
     # confirm with iterative agent
-    agent = ThreeCompHydAgent(hz=hz, a_anf=conf[0], a_ans=conf[1], m_ae=conf[2], m_ans=conf[3],
-                              m_anf=conf[4], the=conf[5], gam=conf[6], phi=conf[7])
+    agent = ThreeCompHydAgent(hz=hz,
+                              lf=conf[0], ls=conf[1],
+                              m_u=conf[2], m_ls=conf[3],
+                              m_lf=conf[4], the=conf[5],
+                              gam=conf[6], phi=conf[7])
     agent.reset()
     agent.set_g(g)
     agent.set_h(h)

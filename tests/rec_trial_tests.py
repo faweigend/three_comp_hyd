@@ -9,10 +9,11 @@ import logging
 
 def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, log_level=0):
     # create three component hydraulic agent with example configuration
-    agent = ThreeCompHydAgent(hz=hz, a_anf=conf[0], a_ans=conf[1], m_ae=conf[2],
-                              m_ans=conf[3], m_anf=conf[4], the=conf[5],
+    agent = ThreeCompHydAgent(hz=hz,
+                              lf=conf[0], ls=conf[1],
+                              m_u=conf[2], m_ls=conf[3],
+                              m_lf=conf[4], the=conf[5],
                               gam=conf[6], phi=conf[7])
-
     if log_level > 0:
         ThreeCompVisualisation(agent)
 

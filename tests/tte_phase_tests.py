@@ -13,10 +13,11 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
     t_max = 5000
 
     # create three component hydraulic agent with example configuration
-    agent = ThreeCompHydAgent(hz=hz, a_anf=conf[0], a_ans=conf[1], m_ae=conf[2],
-                              m_ans=conf[3], m_anf=conf[4], the=conf[5],
+    agent = ThreeCompHydAgent(hz=hz,
+                              lf=conf[0], ls=conf[1],
+                              m_u=conf[2], m_ls=conf[3],
+                              m_lf=conf[4], the=conf[5],
                               gam=conf[6], phi=conf[7])
-
     # set initial conditions
     h_s = 0
     g_s = 0  # 1 - conf[6] - conf[5]

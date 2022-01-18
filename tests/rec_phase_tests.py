@@ -24,8 +24,10 @@ def rec_phase_procedure(p_exp: float, p_rec: float, t_rec: float, t_max: float, 
     :param log_level: amount of detail about results to be logged
     """
 
-    agent = ThreeCompHydAgent(hz=hz, a_anf=conf[0], a_ans=conf[1], m_ae=conf[2],
-                              m_ans=conf[3], m_anf=conf[4], the=conf[5],
+    agent = ThreeCompHydAgent(hz=hz,
+                              lf=conf[0], ls=conf[1],
+                              m_u=conf[2], m_ls=conf[3],
+                              m_lf=conf[4], the=conf[5],
                               gam=conf[6], phi=conf[7])
     if log_level > 0:
         logging.info("Agent to be examined")
