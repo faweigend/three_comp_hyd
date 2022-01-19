@@ -5,10 +5,11 @@ from threecomphyd.agents.hyd_agent_basis import HydAgentBasis
 
 class ThreeCompHydAgent(HydAgentBasis):
     """
-    Implementation of the adjusted version of Morton's generalised three component model of human bioenergetics.
-    The numeric procedures by Sundström were used and adapted to some of Morton's procedures.
-    Further, slightly adjusted and extended with some extra limitations that are necessary for extreme values.
-    See the document for the reasoning behind procedures in _estimate_power_output.
+    Implementation of the more abstract hydraulic model by Weigend et al. which they derived from Morton's generalised
+    three component model of human bioenergetics. ODEs by Morton and numeric procedures by Sundström were used and
+    adapted to develop the equations in _estimate_possible_power_output. We added extra limitations to handle extreme
+    values. Please, see the Appendix of the document "A New Pathway to Approximate Energy Expenditure and Recovery of
+    an Athlete" by Weigend et al. for a detailed rationale for procedures in _estimate_power_output.
     """
 
     def __init__(self, hz, lf, ls, m_u, m_ls, m_lf, the, gam, phi):
@@ -30,13 +31,13 @@ class ThreeCompHydAgent(HydAgentBasis):
         # height of vessel LS
         self.__height_ls = 1 - self.__theta - self.__gamma
 
-        # the LS tanks has to have a positive size
+        # the LS tank has to have a positive size
         if self.__height_ls <= 0:
             raise UserWarning("LS has negative height: Theta {} Gamma {} Phi {}".format(the, gam, phi))
 
-        # the LS tank constraint that corresponds to 1 - phi > theta
+        # the optional LS tank constraint that corresponds to 1 - phi > theta
+        # described as "hitting the wall" constraint that says glycogen can be depleted below VO2 MAX
         if config.three_comp_phi_constraint is True:
-            # the "hitting the wall" constraint that says glycogen can be depleted below VO2 MAX
             if self.__phi > self.__gamma:
                 raise UserWarning("phi not smaller gamma")
 
@@ -72,7 +73,7 @@ class ThreeCompHydAgent(HydAgentBasis):
         """
         raises a UserWarning exception with info about configuration, fill states, and power demands
         """
-        raise UserWarning("Unhandled tank fill level state \n"
+        raise UserWarning("Unhandled tank fill-level state \n"
                           "gamma:  {} \n "
                           "theta:  {} \n "
                           "phi:    {} \n "
@@ -110,7 +111,7 @@ class ThreeCompHydAgent(HydAgentBasis):
         # estimate h_{t+1}: scale to hz (delta t) and drop the level of LF
         self.__h += self._pow / self.__lf / self._hz
 
-        # step 2: determine tank flows to respond to the new change in h_{t+1}
+        # step 2: determine tank flows to respond to change in h_{t+1}
 
         # step 2 a: determine oxygen energy flow (P_U)
         # level LF above pipe exit. Scale contribution according to h level
