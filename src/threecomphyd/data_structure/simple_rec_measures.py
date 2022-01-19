@@ -11,15 +11,15 @@ class SimpleRecMeasures:
         self.__name = name
         self.__measures = []
 
-    def add_measure(self, p_power: float, r_power: float, r_time: int, recovery_percent: float):
+    def add_measure(self, p_work: float, p_rec: float, t_rec: int, recovery_percent: float):
         """
         adds one observationt to internal list
-        :param p_power: intensity that lead to exhaustion
-        :param r_power: recovery intensity
-        :param r_time: recovery time
+        :param p_work: intensity that lead to exhaustion
+        :param p_rec: recovery intensity
+        :param t_rec: recovery time
         :param recovery_percent: recovery in percent
         """
-        self.__measures.append((p_power, r_power, r_time, recovery_percent))
+        self.__measures.append((p_work, p_rec, t_rec, recovery_percent))
 
     def __str__(self):
         """
@@ -37,10 +37,10 @@ class SimpleRecMeasures:
     def iterate_measures(self):
         """
         iterates through all measures and returns the essential values for the objective function
-        :return: p_exp, p_rec, t_rec, expected
+        :return: p_work, p_rec, t_rec, expected
         """
-        for p_exp, p_rec, t_rec, expected in list(self.__measures):
-            yield p_exp, p_rec, t_rec, expected
+        for p_work, p_rec, t_rec, expected in list(self.__measures):
+            yield p_work, p_rec, t_rec, expected
 
     @property
     def name(self):
