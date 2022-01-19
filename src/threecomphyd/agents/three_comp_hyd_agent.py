@@ -52,11 +52,11 @@ class ThreeCompHydAgent(HydAgentBasis):
         # self.__w_m = 100  # max instantaneous power (not in use yet)
 
         # variable parameters
-        self.__h = 0  # state of depletion of vessel LF
-        self.__g = 0  # state of depletion of vessel LS
-        self.__p_u = 0  # flow from U to LF
-        self.__p_l = 0  # flow from LS to LF (bi-directional)
-        self.__m_flow = 0  # maximal flow through pg according to liquid diffs
+        self.__h = 0.0  # state of depletion of vessel LF
+        self.__g = 0.0  # state of depletion of vessel LS
+        self.__p_u = 0.0  # flow from U to LF
+        self.__p_l = 0.0  # flow from LS to LF (bi-directional)
+        self.__m_flow = 0.0  # maximal flow through pg according to liquid diffs
 
     def __str__(self):
         """
@@ -64,9 +64,40 @@ class ThreeCompHydAgent(HydAgentBasis):
         :return: parameter overview
         """
         return "Three Component Hydraulic Agent \n" \
-               "LF, LS, M_U, M_LS, M_LF, theta, gammma, phi \n " \
+               "LF, LS, M_U, M_LS, M_LF, theta, gamma, phi \n " \
                "{}".format([self.__lf, self.__ls, self.__m_u, self.__m_ls,
                             self.__m_lf, self.__theta, self.__gamma, self.__phi])
+
+    def __raise_detailed_error_report(self):
+        """
+        raises a UserWarning exception with info about configuration, fill states, and power demands
+        """
+        raise UserWarning("Unhandled tank fill level state \n"
+                          "gamma:  {} \n "
+                          "theta:  {} \n "
+                          "phi:    {} \n "
+                          "LF:    {} \n "
+                          "LS:    {} \n "
+                          "g:      {} \n "
+                          "h:      {} \n "
+                          "m_u:   {} \n"
+                          "m_ls:  {} \n"
+                          "m_lf:  {} \n"
+                          "p_U:   {} \n"
+                          "p_L:   {} \n"
+                          "pow:    {} \n".format(self.__gamma,
+                                                 self.__theta,
+                                                 self.__phi,
+                                                 self.__lf,
+                                                 self.__ls,
+                                                 self.__g,
+                                                 self.__h,
+                                                 self.__m_u,
+                                                 self.__m_ls,
+                                                 self.__m_lf,
+                                                 self.__p_u,
+                                                 self.__p_l,
+                                                 self._pow))
 
     def _estimate_possible_power_output(self):
         """
@@ -74,34 +105,6 @@ class ThreeCompHydAgent(HydAgentBasis):
         pipe flows are updated.
         :return: power output
         """
-
-        def raise_detailed_error_report():
-            raise UserWarning("Unhandled tank fill level state \n"
-                              "gamma:  {} \n "
-                              "theta:  {} \n "
-                              "phi:    {} \n "
-                              "LF:    {} \n "
-                              "LS:    {} \n "
-                              "g:      {} \n "
-                              "h:      {} \n "
-                              "m_u:   {} \n"
-                              "m_ls:  {} \n"
-                              "m_lf:  {} \n"
-                              "p_U:   {} \n"
-                              "p_L:   {} \n"
-                              "pow:    {} \n".format(self.__gamma,
-                                                     self.__theta,
-                                                     self.__phi,
-                                                     self.__lf,
-                                                     self.__ls,
-                                                     self.__g,
-                                                     self.__h,
-                                                     self.__m_u,
-                                                     self.__m_ls,
-                                                     self.__m_lf,
-                                                     self.__p_u,
-                                                     self.__p_l,
-                                                     self._pow))
 
         # step 1: drop level in LF according to power demand
         # estimate h_{t+1}: scale to hz (delta t) and drop the level of LF
@@ -119,7 +122,7 @@ class ThreeCompHydAgent(HydAgentBasis):
             # max contribution R1 = m_u
             self.__p_u = self.__m_u
         else:
-            raise_detailed_error_report()
+            self.__raise_detailed_error_report()
 
         # multiply with delta t1
         self.__p_u = self.__p_u / self._hz
@@ -149,7 +152,7 @@ class ThreeCompHydAgent(HydAgentBasis):
                 # EQ (20) Morton (1986)
                 self.__p_l = self.__m_ls * (self.__height_ls - self.__g) / self.__height_ls
             else:
-                raise_detailed_error_report()
+                self.__raise_detailed_error_report()
 
             # This check is added to handle cases where the flow causes level height swaps between LS and LF
             self.__m_flow = ((self.__h - (self.__g + self.__theta)) / (
@@ -169,10 +172,10 @@ class ThreeCompHydAgent(HydAgentBasis):
                 self.__p_l = min(self.__p_l, (self.__height_ls - self.__g) * self.__ls)
 
         # level LS is adapted to estimated change
-        # g increases as p_An flows out
+        # g increases as liquid flows into LF
         self.__g += self.__p_l / self.__ls
         # refill or deplete LF according to LS flow and Power demand
-        # h decreases as p_U and p_An flow in
+        # h rises as p_u and p_l flow into LF
         self.__h -= (self.__p_u + self.__p_l) / self.__lf
 
         # step 3: account for rounding errors and set exhaustion flag
@@ -316,11 +319,23 @@ class ThreeCompHydAgent(HydAgentBasis):
         """
         return self.__g
 
+    def set_g(self, g):
+        """
+        setter for state of depletion of vessel AnS
+        """
+        self.__g = g
+
     def get_h(self):
         """
         :return state of depletion of vessel LF
         """
         return self.__h
+
+    def set_h(self, h):
+        """
+        setter for state of depletion of vessel AnF
+        """
+        self.__h = h
 
     def get_p_u(self):
         """
