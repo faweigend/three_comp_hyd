@@ -11,15 +11,15 @@ class SimpleRecMeasures:
         self.__name = name
         self.__measures = []
 
-    def add_measure(self, p_work: float, p_rec: float, r_time: int, recovery_percent: float):
+    def add_measure(self, p_work: float, p_rec: float, t_rec: int, recovery_percent: float):
         """
         adds one observationt to internal list
         :param p_work: intensity that lead to exhaustion
         :param p_rec: recovery intensity
-        :param r_time: recovery time
+        :param t_rec: recovery time
         :param recovery_percent: recovery in percent
         """
-        self.__measures.append((p_work, p_rec, r_time, recovery_percent))
+        self.__measures.append((p_work, p_rec, t_rec, recovery_percent))
 
     def __str__(self):
         """

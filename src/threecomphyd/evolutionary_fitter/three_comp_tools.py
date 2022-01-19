@@ -266,6 +266,6 @@ def prepare_caen_recovery_ratios(w_p: float, cp: float):
     # name indicates used measures
     recs = SimpleRecMeasures("caen")
     for p_work, p_rec, t_rec, r_percent in caen_data:
-        recs.add_measure(p_work=p_work, p_rec=p_rec, r_time=t_rec, recovery_percent=r_percent)
+        recs.add_measure(p_work=p_work, p_rec=p_rec, t_rec=t_rec, recovery_percent=r_percent)
     # return simple recs object
     return recs

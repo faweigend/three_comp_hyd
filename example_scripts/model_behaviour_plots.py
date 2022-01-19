@@ -55,7 +55,7 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
         three_comp_agent = ThreeCompHydAgent(hz=1, lf=p[0], ls=p[1], m_u=p[2], m_ls=p[3], m_lf=p[4],
                                              the=p[5], gam=p[6], phi=p[7])
 
-        hyd_fitted_times_ext = [ThreeCompHydSimulator.tte_detail(three_comp_agent, x) for x in
+        hyd_fitted_times_ext = [ThreeCompHydSimulator.tte(three_comp_agent, x) for x in
                                 powers_ext]
         hyd_powers_ext = powers_ext
         ax.plot(hyd_fitted_times_ext, hyd_powers_ext,
