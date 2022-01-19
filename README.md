@@ -11,6 +11,9 @@ Example scripts in the [GitHub repository](https://github.com/faweigend/three_co
 use this package. We provide a simulation agent and example simulations, functionalities for debug plots, and an
 evolutionary fitting process to fit a model to individual athletes.
 
+If you are interested in comparing this model to established performance models for intermittent exercise, you might 
+also be interested in our [pypermod project](https://github.com/faweigend/pypermod)
+
 ### Publication
 
 Please see the corresponding paper on [__ACM__](https://dl.acm.org/doi/10.1145/3449726.3459469) or the prerpint on
