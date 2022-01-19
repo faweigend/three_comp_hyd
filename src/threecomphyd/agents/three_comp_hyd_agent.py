@@ -76,27 +76,27 @@ class ThreeCompHydAgent(HydAgentBasis):
                           "gamma:  {} \n "
                           "theta:  {} \n "
                           "phi:    {} \n "
-                          "AnF:    {} \n "
-                          "AnS:    {} \n "
+                          "LF:    {} \n "
+                          "LS:    {} \n "
                           "g:      {} \n "
                           "h:      {} \n "
-                          "m_ae:   {} \n"
-                          "m_ans:  {} \n"
-                          "m_anf:  {} \n"
-                          "p_Ae:   {} \n"
-                          "p_An:   {} \n"
+                          "m_u:   {} \n"
+                          "m_ls:  {} \n"
+                          "m_lf:  {} \n"
+                          "p_U:   {} \n"
+                          "p_L:   {} \n"
                           "pow:    {} \n".format(self.__gamma,
                                                  self.__theta,
                                                  self.__phi,
-                                                 self.__a_anf,
-                                                 self.__a_ans,
+                                                 self.__lf,
+                                                 self.__ls,
                                                  self.__g,
                                                  self.__h,
-                                                 self.__m_ae,
-                                                 self.__m_ans,
-                                                 self.__m_anf,
-                                                 self.__p_ae,
-                                                 self.__p_an,
+                                                 self.__m_u,
+                                                 self.__m_ls,
+                                                 self.__m_lf,
+                                                 self.__p_u,
+                                                 self.__p_l,
                                                  self._pow))
 
     def _estimate_possible_power_output(self):
