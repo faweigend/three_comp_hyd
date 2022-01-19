@@ -7,22 +7,22 @@ import matplotlib.pyplot as plt
 
 class ThreeCompHydSimulator:
     """
-    Employs the ThreeComponentHydraulic model to simulate training sessions and
-    TTE tests
+    Tailored to the ThreeComponentHydraulic model, this class offers functions to simulate training sessions,
+    TTE tests, and recovery estimation protocols
     """
 
     @staticmethod
     def tte(agent: ThreeCompHydAgent, p_work: float, start_h: float = 0,
-            start_g: float = 0, t_max: float = 5000, step_function=None):
+            start_g: float = 0, t_max: float = 5000, step_function=None) -> float:
         """
-        a normal time to exhaustion test
-        :param agent: iterative agent
+        simulates a standard time to exhaustion test
+        :param agent: hydraulic agent
         :param p_work: constant expenditure intensity for TTE
-        :param start_h: fill level of AnF at start
-        :param start_g: fill level of AnS at start
-        :param t_max: maximal time (steps * hz) until warning "exhaustion not reached" is raised
-        :param step_function: function of agent to estimate one time step. Default is perform_one_step
-        :return:
+        :param start_h: fill level of LF at start
+        :param start_g: fill level of LS at start
+        :param t_max: maximal time in seconds until warning "exhaustion not reached" is raised
+        :param step_function: function of agent to estimate one time step. Default is perform_one_step.
+        :return: time to exhaustion in seconds
         """
         agent.reset()
         agent.set_h(start_h)
@@ -33,29 +33,30 @@ class ThreeCompHydSimulator:
         if step_function is None:
             step_function = agent.perform_one_step
 
-        # WB1 Exhaust...
+        # Exhaust...
         agent.set_power(p_work)
         steps = 0
         while not agent.is_exhausted() and steps < step_limit:
             step_function()
             steps += 1
-        wb1_t = agent.get_time()
+        tte = agent.get_time()
 
         if not agent.is_exhausted():
             raise UserWarning("exhaustion not reached!")
 
-        return wb1_t
+        return tte
 
     @staticmethod
-    def get_recovery_ratio_wb1_wb2(agent: ThreeCompHydAgent, p_exp, p_rec, t_rec, t_max=5000):
+    def get_recovery_ratio_wb1_wb2(agent: ThreeCompHydAgent, p_work: float, p_rec: float,
+                                   t_rec: float, t_max: float = 5000) -> float:
         """
         Returns recovery ratio of given agent according to WB1 -> RB -> WB2 protocol.
         Recovery ratio estimations for given exp, rec intensity and time
         :param agent: three component hydraulic agent to use
-        :param p_exp: work bout intensity
+        :param p_work: work bout intensity
         :param p_rec: recovery bout intensity
         :param t_rec: recovery bout duration
-        :param t_max: maximal time (steps * hz) until warning "exhaustion not reached" is raised
+        :param t_max: maximal time in seconds until warning "exhaustion not reached" is raised
         :return: ratio in percent
         """
 
@@ -65,7 +66,7 @@ class ThreeCompHydSimulator:
         step_limit = t_max * hz
 
         # WB1 Exhaust...
-        agent.set_power(p_exp)
+        agent.set_power(p_work)
         steps = 0
         while not agent.is_exhausted() and steps < step_limit:
             agent.perform_one_step()
@@ -82,7 +83,7 @@ class ThreeCompHydSimulator:
         rec_t = agent.get_time()
 
         # WB2 Exhaust...
-        agent.set_power(p_exp)
+        agent.set_power(p_work)
         steps = 0
         while not agent.is_exhausted() and steps < step_limit:
             agent.perform_one_step()
@@ -93,21 +94,26 @@ class ThreeCompHydSimulator:
         return ((wb2_t - rec_t) / wb1_t) * 100.0
 
     @staticmethod
-    def simulate_course_detail(agent: ThreeCompHydAgent, powers, plot: bool = False):
+    def simulate_course_detail(agent: ThreeCompHydAgent, powers,
+                               step_function=None, plot: bool = False):
         """
         simulates a whole course with given agent
         :param agent:
         :param powers: list or array
-        :param plot:
-        :return all parameter values throughout the simulation
+        :param plot: displays a plot of some of the state variables over time
+        :param step_function: function of agent to estimate one time step. Default is perform_one_step.
+        :return all state variables throughout for every time step of the course [h, g, lf, ls, p_u, p_l, m_flow, w_p_bal]
         """
 
         agent.reset()
         h, g, lf, ls, p_u, p_l, m_flow, w_p_bal = [], [], [], [], [], [], [], []
 
+        if step_function is None:
+            step_function = agent.perform_one_step
+
         # let the agent simulate the list of power demands
         for step in powers:
-            # log all the parameters
+            # we include values of time 0
             h.append(agent.get_h())
             g.append(agent.get_g())
             lf.append(agent.get_fill_lf())
@@ -119,72 +125,101 @@ class ThreeCompHydSimulator:
 
             # perform current power step
             agent.set_power(step)
-            agent.perform_one_step()
+            step_function()
 
-        # plot results
+        # an investigation and debug plot if you want to
         if plot is True:
-            ThreeCompHydSimulator.plot_dynamics(t=np.arange(len(powers)),
-                                                p=powers,
-                                                anf=lf,
-                                                ans=ls,
-                                                p_ae=p_u,
-                                                p_an=p_l)
+            ThreeCompHydSimulator.plot_dynamics(t=np.arange(len(powers)), p=powers,
+                                                lf=lf, ls=ls, p_u=p_u, p_l=p_l)
 
         # return parameters
         return h, g, lf, ls, p_u, p_l, m_flow, w_p_bal
 
     @staticmethod
-    def simulate_tte_hydraulic_detail(agent: ThreeCompHydAgent, power, plot=False):
+    def tte_detail(agent: ThreeCompHydAgent, p_work: float, start_h: float = 0,
+                   start_g: float = 0, t_max: float = 5000, step_function=None,
+                   plot: bool = False):
         """
-        returns the time the agent takes till exhaustion at given power
+        simulates a standard time to exhaustion test and collects all state variables of the hydraulic agent in
+        every time step.
+        :param agent: hydraulic agent
+        :param p_work: constant expenditure intensity for TTE
+        :param start_h: fill level of LF at start
+        :param start_g: fill level of LS at start
+        :param t_max: maximal time in seconds until warning "exhaustion not reached" is raised
+        :param step_function: function of agent to estimate one time step. Default is perform_one_step.
+        :param plot: whether state variables over time should be plotted
+        :return: all state variables all state variables throughout for every time step of the TTE [h, g, lf, ls, p_u, p_l, m_flow, w_p_bal]
         """
 
         agent.reset()
-        agent.set_power(power)
+        agent.set_h(start_h)
+        agent.set_g(start_g)
+        step_limit = t_max * agent.hz
 
-        t, p, anf, ans, p_ae, p_an, m_flow = [], [], [], [], [], [], []
-        # perform steps until agent is exhausted
+        if step_function is None:
+            step_function = agent.perform_one_step
+
+        # all state variables are logged
+        t, ps = [], []
+        lf, ls, h, g, p_u, p_l, m_flow, w_p_bal = [], [], [], [], [], [], [], []
+
         steps = 0
-        while agent.is_exhausted() is False and steps < 3000:
+        agent.set_power(p_work)
+
+        # perform steps until agent is exhausted or step limit is reached
+        while steps < step_limit:
+
+            # we include values of time 0
             t.append(agent.get_time())
-            p.append(agent.perform_one_step())
-            anf.append(agent.get_fill_lf())
-            ans.append(agent.get_fill_ls())
-            p_ae.append(agent.get_p_u())
-            p_an.append(agent.get_p_l())
+            ps.append(agent.get_power())
+            h.append(agent.get_h())
+            g.append(agent.get_g())
+            lf.append(agent.get_fill_lf())
+            ls.append(agent.get_fill_ls())
+            p_u.append(agent.get_p_u())
+            p_l.append(agent.get_p_l())
             m_flow.append(agent.get_m_flow())
+            w_p_bal.append(agent.get_w_p_ratio())
+
+            if agent.is_exhausted():
+                break
+
+            step_function()
             steps += 1
 
+        # a investigation and debug plot if you want to
         if plot is True:
-            ThreeCompHydSimulator.plot_dynamics(t, p, anf, ans, p_ae, p_an)
+            ThreeCompHydSimulator.plot_dynamics(t=t, p=ps, lf=lf, ls=ls, p_u=p_u, p_l=p_l)
 
-        return agent.get_time()
+        # return parameters
+        return h, g, h, g, p_u, p_l, m_flow, w_p_bal
 
     @staticmethod
-    def simulate_tte_with_recovery(agent: ThreeCompHydAgent, exp_p, rec_p, plot=False):
+    def tte_detail_with_recovery(agent: ThreeCompHydAgent, p_work, p_rec, plot=False):
         """
         The time the agent takes till exhaustion at given power and time till recovery
         :param agent: agent instance to use
-        :param exp_p: expenditure intensity
-        :param rec_p: recovery intensity
-        :param plot: plot parameter time series
+        :param p_work: expenditure intensity
+        :param p_rec: recovery intensity
+        :param plot: displays a plot of some of the state variables over time
         :returns: tte, ttr
         """
 
         agent.reset()
-        t, p, anf, ans, p_h, p_g, m_flow = [], [], [], [], [], [], []
+        t, p, lf, ls, p_u, p_l, m_flow = [], [], [], [], [], [], []
 
         # perform steps until agent is exhausted
         logging.info("start exhaustion")
-        agent.set_power(exp_p)
+        agent.set_power(p_work)
         steps = 0
         while agent.is_exhausted() is False and steps < 10000:
             t.append(agent.get_time())
             p.append(agent.perform_one_step())
-            anf.append(agent.get_fill_lf())
-            ans.append(agent.get_fill_ls() * agent.height_ls + agent.theta)
-            p_h.append(agent.get_p_u())
-            p_g.append(agent.get_p_l())
+            lf.append(agent.get_fill_lf())
+            ls.append(agent.get_fill_ls() * agent.height_ls + agent.theta)
+            p_u.append(agent.get_p_u())
+            p_l.append(agent.get_p_l())
             m_flow.append(agent.get_m_flow())
             steps += 1
         # save time
@@ -192,15 +227,15 @@ class ThreeCompHydSimulator:
 
         # add recovery at 0
         logging.info("start recovery")
-        agent.set_power(rec_p)
+        agent.set_power(p_rec)
         steps = 0
         while agent.is_equilibrium() is False and steps < 20000:
             t.append(agent.get_time())
             p.append(agent.perform_one_step())
-            anf.append(agent.get_fill_lf())
-            ans.append(agent.get_fill_ls() * agent.height_ls + agent.theta)
-            p_h.append(agent.get_p_u())
-            p_g.append(agent.get_p_l())
+            lf.append(agent.get_fill_lf())
+            ls.append(agent.get_fill_ls() * agent.height_ls + agent.theta)
+            p_u.append(agent.get_p_u())
+            p_l.append(agent.get_p_l())
             m_flow.append(agent.get_m_flow())
             steps += 1
         # save recovery time
@@ -208,15 +243,15 @@ class ThreeCompHydSimulator:
 
         # plot the parameter overview if required
         if plot is True:
-            ThreeCompHydSimulator.plot_dynamics(t, p, anf, ans, p_h, p_g)
+            ThreeCompHydSimulator.plot_dynamics(t, p, lf, ls, p_u, p_l)
 
         # return time till exhaustion and time till recovery
         return tte, ttr
 
     @staticmethod
-    def plot_dynamics(t, p, anf, ans, p_ae, p_an):
+    def plot_dynamics(t, p, lf, ls, p_u, p_l):
         """
-        Debugging plots to look at developed power curves
+        Debugging plots for state parameters
         """
 
         # set up plot
@@ -224,14 +259,14 @@ class ThreeCompHydSimulator:
         ax = fig.add_subplot(1, 1, 1)
 
         # plot liquid flows
-        ax.plot(t, p, color='tab:blue', label="power")
-        ax.plot(t, p_ae, color='tab:red', label="flow from Ae")
-        ax.plot(t, p_an, color='tab:purple', label="flow from AnS to AnF")
+        ax.plot(t, p, color='tab:green', label="power")
+        ax.plot(t, p_u, color='tab:cyan', label="flow from U")
+        ax.plot(t, p_l, color='tab:red', label="flow from LS to LF")
 
         # plot tank fill levels
         ax2 = ax.twinx()
-        ax2.plot(t, anf, color='tab:green', label="fill level AnF", linestyle="--")
-        ax2.plot(t, ans, color='tab:orange', label="fill level AnS", linestyle="--")
+        ax2.plot(t, lf, color='tab:orange', label="fill level LF", linestyle="--")
+        ax2.plot(t, ls, color='tab:red', label="fill level LS", linestyle="--")
 
         # label plot
         ax.set_xlabel("time (s)")

@@ -200,7 +200,7 @@ if __name__ == "__main__":
                                                                     p_rec=p_rec, t_rec=rec_time,
                                                                     t_max=t_max)
         try:
-            c_rec_t = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(agent=agent, p_exp=p_exp,
+            c_rec_t = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(agent=agent, p_work=p_exp,
                                                                        p_rec=p_rec, t_rec=rec_time,
                                                                        t_max=t_max)
         except UserWarning:

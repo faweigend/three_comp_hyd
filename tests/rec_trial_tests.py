@@ -92,7 +92,7 @@ def rec_trial_procedure(p_exp, p_rec, t_rec, t_max, hz, eps, conf, log_level=0):
 
     # simulator step limit needs to be adjusted
     est_ratio = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(agent=agent,
-                                                                 p_exp=p_exp,
+                                                                 p_work=p_exp,
                                                                  p_rec=p_rec,
                                                                  t_rec=t_rec,
                                                                  t_max=t_max)

@@ -175,7 +175,7 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
         # use the simulator
         try:
             achieved = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(three_comp_agent,
-                                                                        p_exp=p_exp,
+                                                                        p_work=p_exp,
                                                                         p_rec=p_rec,
                                                                         t_rec=t_rec)
         except UserWarning:
