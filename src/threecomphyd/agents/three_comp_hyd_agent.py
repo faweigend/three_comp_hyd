@@ -52,11 +52,11 @@ class ThreeCompHydAgent(HydAgentBasis):
         # self.__w_m = 100  # max instantaneous power (not in use yet)
 
         # variable parameters
-        self.__h = 0  # state of depletion of vessel LF
-        self.__g = 0  # state of depletion of vessel LS
-        self.__p_u = 0  # flow from U to LF
-        self.__p_l = 0  # flow from LS to LF (bi-directional)
-        self.__m_flow = 0  # maximal flow through pg according to liquid diffs
+        self.__h = 0.0  # state of depletion of vessel LF
+        self.__g = 0.0  # state of depletion of vessel LS
+        self.__p_u = 0.0  # flow from U to LF
+        self.__p_l = 0.0  # flow from LS to LF (bi-directional)
+        self.__m_flow = 0.0  # maximal flow through pg according to liquid diffs
 
     def __str__(self):
         """
@@ -64,7 +64,7 @@ class ThreeCompHydAgent(HydAgentBasis):
         :return: parameter overview
         """
         return "Three Component Hydraulic Agent \n" \
-               "LF, LS, M_U, M_LS, M_LF, theta, gammma, phi \n " \
+               "LF, LS, M_U, M_LS, M_LF, theta, gamma, phi \n " \
                "{}".format([self.__lf, self.__ls, self.__m_u, self.__m_ls,
                             self.__m_lf, self.__theta, self.__gamma, self.__phi])
 
@@ -169,10 +169,10 @@ class ThreeCompHydAgent(HydAgentBasis):
                 self.__p_l = min(self.__p_l, (self.__height_ls - self.__g) * self.__ls)
 
         # level LS is adapted to estimated change
-        # g increases as p_An flows out
+        # g increases as liquid flows into LF
         self.__g += self.__p_l / self.__ls
         # refill or deplete LF according to LS flow and Power demand
-        # h decreases as p_U and p_An flow in
+        # h rises as p_u and p_l flow into LF
         self.__h -= (self.__p_u + self.__p_l) / self.__lf
 
         # step 3: account for rounding errors and set exhaustion flag
