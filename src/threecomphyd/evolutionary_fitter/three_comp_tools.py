@@ -9,12 +9,12 @@ from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulato
 
 # bounds for all parameters of the three comp hydraulic model
 three_comp_parameter_limits = {
-    "lf": [1000, 500000],
-    "ls": [1000, 500000],
-    "m_u": [1, 5000],
-    "m_ls": [1, 5000],
-    "m_lf": [1, 5000],
-    "theta": [0.01, 0.99],
+    "lf": [5000, 500000],
+    "ls": [5000, 500000],
+    "m_u": [1, 2000],
+    "m_ls": [1, 2000],
+    "m_lf": [1, 2000],
+    "theta": [0.01, 0.99],  # 0.0 and 1.0 are not possible because equations would divide by 0
     "gamma": [0.01, 0.99],
     "phi": [0.01, 0.99]
 }
@@ -52,15 +52,21 @@ class MultiObjectiveThreeCompUDP:
         """
         # set up an initial configuration with sensibly distributed values
         i_x = [
-            np.random.normal(1, 0.4) * w_p * 0.3,  # size AnF is expected to be smaller than AnS
-            np.random.normal(1, 0.4) * w_p,  # size AnS is expected to be larger and correlated to W'
-            np.random.normal(1, 0.4) * cp,  # max flow from Ae should be related to CP
-            np.random.normal(1, 0.4) * cp * 10,  # max flow from AnS is expected to be high
+            np.random.normal(1, 0.4) * w_p * 0.3,  # size LF is expected to be smaller than LS
+            np.random.normal(1, 0.4) * w_p,  # size LS is expected to be larger and correlated to W'
+            np.random.normal(1, 0.4) * cp,  # max flow from U should be related to CP
+            np.random.normal(1, 0.4) * cp,  # max flow from LS
             np.random.normal(1, 0.4) * cp * 0.1,  # max recovery flow is expected to be low
-            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
-            np.random.normal(1, 0.4) * 0.25,  # AnS needs a considerable height
-            np.random.normal(1, 0.4) * 0.5,  # for a curvelinear expenditure dynamic the pipe has to be halfway or lower
+            np.random.normal(1, 0.4) * 0.25,  # theta: top of LS
+            np.random.normal(1, 0.4) * 0.25,  # gamma: 1 - bottom of LS
+            np.random.normal(1, 0.4) * 0.5,  # phi: for a curvelinear expenditure the pipe should be halfway or lower
         ]
+
+        # make sure AnS has a positive cross-sectional area
+        while i_x[5] + i_x[6] > 0.99:
+            i_x[5] = np.random.normal(1, 0.4) * 0.25  # theta
+            i_x[6] = np.random.normal(1, 0.4) * 0.25  # gamma
+
         # ensure values are within limits
         for i in range(len(i_x)):
             i_x[i] = max(self.__bounds[0][i], i_x[i])  # lower bound
@@ -81,7 +87,7 @@ class MultiObjectiveThreeCompUDP:
 
         # UserWarnings indicate that exhaustion was not reached
         # or recovery was too long
-        # or violation of tank size constraint on ANS
+        # or violation of tank size constraint for LS
         except UserWarning:
             tte_nrmse, rec_nrmse = 100, 100
 
@@ -153,8 +159,8 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
     for tte_t, tte_p in ttes.iterate_pairs():
         # use the simulator
         try:
-            tte = ThreeCompHydSimulator.do_a_tte(agent=three_comp_agent,
-                                                 p_exp=tte_p)
+            tte = ThreeCompHydSimulator.tte(agent=three_comp_agent,
+                                            p_work=tte_p)
         except UserWarning:
             tte = 5000
         # square time difference
@@ -169,7 +175,7 @@ def three_comp_two_objective_functions(obj_vars, hz: int,
         # use the simulator
         try:
             achieved = ThreeCompHydSimulator.get_recovery_ratio_wb1_wb2(three_comp_agent,
-                                                                        p_exp=p_exp,
+                                                                        p_work=p_exp,
                                                                         p_rec=p_rec,
                                                                         t_rec=t_rec)
         except UserWarning:
@@ -244,7 +250,7 @@ def prepare_caen_recovery_ratios(w_p: float, cp: float):
     p8 = round(cp + w_p / 480, 2)  # predicted exhaustion after 8 min
     cp33 = round(cp * 0.33, 2)
     cp66 = round(cp * 0.66, 2)
-    # sub, test, wb_power, r_power, r_time, recovery_percent
+    # sub, test, p_work, p_rec, r_time, recovery_percent
     caen_data = [[p4, cp33, 120, 55.0],
                  [p4, cp33, 240, 61.0],
                  [p4, cp33, 360, 70.5],
@@ -259,7 +265,7 @@ def prepare_caen_recovery_ratios(w_p: float, cp: float):
                  [p8, cp66, 360, 50.0]]
     # name indicates used measures
     recs = SimpleRecMeasures("caen")
-    for p_exp, p_rec, t_rec, r_percent in caen_data:
-        recs.add_measure(p_power=p_exp, r_power=p_rec, r_time=t_rec, recovery_percent=r_percent)
+    for p_work, p_rec, t_rec, r_percent in caen_data:
+        recs.add_measure(p_work=p_work, p_rec=p_rec, r_time=t_rec, recovery_percent=r_percent)
     # return simple recs object
     return recs

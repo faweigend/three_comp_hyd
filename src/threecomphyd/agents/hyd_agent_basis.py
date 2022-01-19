@@ -17,12 +17,12 @@ class HydAgentBasis:
         # simulation management parameters
         self._step = 0
         self._hz = hz
-        self._hz_t = 0
+        self._hz_t = 0.0
 
         # power parameters
         self._pow = 0
 
-    def get_name(self):
+    def get_name(self) -> str:
         """
         :return: a descriptive name
         """
@@ -35,14 +35,14 @@ class HydAgentBasis:
         """
         self._pow = power
 
-    def get_power(self):
+    def get_power(self) -> float:
         """
         :return: power in Watts
         """
         return self._pow
 
     @property
-    def hz(self):
+    def hz(self) -> int:
         """
         :return: number of obs per second
         """
@@ -53,17 +53,17 @@ class HydAgentBasis:
         reset internal values to default
         """
         self._step = 0
-        self._hz_t = 0
+        self._hz_t = 0.0
         # power output params
         self._pow = 0
 
-    def get_time(self):
+    def get_time(self) -> float:
         """
         :return: time in seconds considering the agent's hz setting
         """
         return self._hz_t
 
-    def perform_one_step(self):
+    def perform_one_step(self) -> float:
         """
         Updates power output and internal W' balance parameters.
         :return: expended power
@@ -86,19 +86,19 @@ class HydAgentBasis:
         """
 
     @abstractmethod
-    def is_exhausted(self):
+    def is_exhausted(self) -> bool:
         """
         :return: simply returns the exhausted flag
         """
 
     @abstractmethod
-    def is_recovered(self):
+    def is_recovered(self) -> bool:
         """
         :return: simply returns the recovered flag
         """
 
     @abstractmethod
-    def is_equilibrium(self):
+    def is_equilibrium(self) -> bool:
         """
         :return: if energy storages are at a constant state
         """
