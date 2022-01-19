@@ -102,7 +102,8 @@ class ThreeCompHydSimulator:
         :param powers: list or array
         :param plot: displays a plot of some of the state variables over time
         :param step_function: function of agent to estimate one time step. Default is perform_one_step.
-        :return all state variables throughout for every time step of the course [h, g, lf, ls, p_u, p_l, m_flow, w_p_bal]
+        :return all state variables throughout for every
+        time step of the course [h, g, lf, ls, p_u, p_l, m_flow, w_p_bal]
         """
 
         agent.reset()
@@ -149,7 +150,8 @@ class ThreeCompHydSimulator:
         :param t_max: maximal time in seconds until warning "exhaustion not reached" is raised
         :param step_function: function of agent to estimate one time step. Default is perform_one_step.
         :param plot: whether state variables over time should be plotted
-        :return: all state variables all state variables throughout for every time step of the TTE [h, g, lf, ls, p_u, p_l, m_flow, w_p_bal]
+        :return: all state variables all state variables throughout for every
+        time step of the TTE [h, g, lf, ls, p_u, p_l, m_flow, w_p_bal]
         """
 
         agent.reset()
@@ -269,7 +271,7 @@ class ThreeCompHydSimulator:
         ax2.plot(t, ls, color='tab:red', label="fill level LS", linestyle="--")
 
         # label plot
-        ax.set_xlabel("time (s)")
+        ax.set_xlabel("time (seconds)")
         ax.set_ylabel("flow and power in Watts")
         ax2.set_ylabel("fill level")
 

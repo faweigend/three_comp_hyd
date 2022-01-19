@@ -52,13 +52,13 @@ class MultiObjectiveThreeCompUDP:
         """
         # set up an initial configuration with sensibly distributed values
         i_x = [
-            np.random.normal(1, 0.4) * w_p * 0.3,  # size AnF is expected to be smaller than AnS
-            np.random.normal(1, 0.4) * w_p,  # size AnS is expected to be larger and correlated to W'
-            np.random.normal(1, 0.4) * cp,  # max flow from Ae should be related to CP
-            np.random.normal(1, 0.4) * cp,  # max flow from AnS
+            np.random.normal(1, 0.4) * w_p * 0.3,  # size LF is expected to be smaller than LS
+            np.random.normal(1, 0.4) * w_p,  # size LS is expected to be larger and correlated to W'
+            np.random.normal(1, 0.4) * cp,  # max flow from U should be related to CP
+            np.random.normal(1, 0.4) * cp,  # max flow from LS
             np.random.normal(1, 0.4) * cp * 0.1,  # max recovery flow is expected to be low
-            np.random.normal(1, 0.4) * 0.25,  # theta: top of AnS
-            np.random.normal(1, 0.4) * 0.25,  # gamma: 1 - bottom of AnS
+            np.random.normal(1, 0.4) * 0.25,  # theta: top of LS
+            np.random.normal(1, 0.4) * 0.25,  # gamma: 1 - bottom of LS
             np.random.normal(1, 0.4) * 0.5,  # phi: for a curvelinear expenditure the pipe should be halfway or lower
         ]
 
@@ -87,7 +87,7 @@ class MultiObjectiveThreeCompUDP:
 
         # UserWarnings indicate that exhaustion was not reached
         # or recovery was too long
-        # or violation of tank size constraint on ANS
+        # or violation of tank size constraint for LS
         except UserWarning:
             tte_nrmse, rec_nrmse = 100, 100
 
