@@ -48,7 +48,8 @@ class ThreeCompHydSimulator:
 
     @staticmethod
     def get_recovery_ratio_wb1_wb2(agent: ThreeCompHydAgent, p_work: float, p_rec: float,
-                                   t_rec: float, t_max: float = 5000) -> float:
+                                   t_rec: float, start_h: float = 0, start_g: float = 0,
+                                   t_max: float = 5000, step_function=None) -> float:
         """
         Returns recovery ratio of given agent according to WB1 -> RB -> WB2 protocol.
         Recovery ratio estimations for given exp, rec intensity and time
@@ -56,20 +57,28 @@ class ThreeCompHydSimulator:
         :param p_work: work bout intensity
         :param p_rec: recovery bout intensity
         :param t_rec: recovery bout duration
+        :param start_h: fill level of LF at start
+        :param start_g: fill level of LS at start
         :param t_max: maximal time in seconds until warning "exhaustion not reached" is raised
+        :param step_function: function of agent to estimate one time step. Default is perform_one_step.
         :return: ratio in percent
         """
 
         hz = agent.hz
         agent.reset()
+        agent.set_h(start_h)
+        agent.set_g(start_g)
 
         step_limit = t_max * hz
+
+        if step_function is None:
+            step_function = agent.perform_one_step
 
         # WB1 Exhaust...
         agent.set_power(p_work)
         steps = 0
         while not agent.is_exhausted() and steps < step_limit:
-            agent.perform_one_step()
+            step_function()
             steps += 1
         wb1_t = agent.get_time()
 
@@ -79,14 +88,14 @@ class ThreeCompHydSimulator:
         # Recover...
         agent.set_power(p_rec)
         for _ in range(0, int(round(t_rec * hz))):
-            agent.perform_one_step()
+            step_function()
         rec_t = agent.get_time()
 
         # WB2 Exhaust...
         agent.set_power(p_work)
         steps = 0
         while not agent.is_exhausted() and steps < step_limit:
-            agent.perform_one_step()
+            step_function()
             steps += 1
         wb2_t = agent.get_time()
 
@@ -103,7 +112,7 @@ class ThreeCompHydSimulator:
         :param plot: displays a plot of some of the state variables over time
         :param step_function: function of agent to estimate one time step. Default is perform_one_step.
         :return all state variables throughout for every
-        time step of the course [h, g, lf, ls, p_u, p_l, m_flow, w_p_bal]
+        time step of the course [h, g, lf, ls, p_u, p_l, m_flow, w_p_bal]. Pos 0 is time step 1.
         """
 
         agent.reset()
@@ -114,7 +123,11 @@ class ThreeCompHydSimulator:
 
         # let the agent simulate the list of power demands
         for step in powers:
-            # we include values of time 0
+            # we don't include values of time step 0
+            # perform current power step
+            agent.set_power(step)
+            step_function()
+            # ... then collect observed values
             h.append(agent.get_h())
             g.append(agent.get_g())
             lf.append(agent.get_fill_lf())
@@ -123,10 +136,6 @@ class ThreeCompHydSimulator:
             p_l.append(agent.get_p_l())
             m_flow.append(agent.get_m_flow())
             w_p_bal.append(agent.get_w_p_ratio())
-
-            # perform current power step
-            agent.set_power(step)
-            step_function()
 
         # an investigation and debug plot if you want to
         if plot is True:
@@ -151,7 +160,7 @@ class ThreeCompHydSimulator:
         :param step_function: function of agent to estimate one time step. Default is perform_one_step.
         :param plot: whether state variables over time should be plotted
         :return: all state variables all state variables throughout for every
-        time step of the TTE [h, g, lf, ls, p_u, p_l, m_flow, w_p_bal]
+        time step of the TTE [h, g, lf, ls, p_u, p_l, m_flow, w_p_bal]. Pos 0 is time step 1.
         """
 
         agent.reset()
@@ -170,9 +179,12 @@ class ThreeCompHydSimulator:
         agent.set_power(p_work)
 
         # perform steps until agent is exhausted or step limit is reached
-        while steps < step_limit:
-
-            # we include values of time 0
+        while not agent.is_exhausted() and steps < step_limit:
+            # we don't include values of time step 0
+            # perform current power step
+            step_function()
+            steps += 1
+            # ... then collect observed values
             t.append(agent.get_time())
             ps.append(agent.get_power())
             h.append(agent.get_h())
@@ -183,12 +195,6 @@ class ThreeCompHydSimulator:
             p_l.append(agent.get_p_l())
             m_flow.append(agent.get_m_flow())
             w_p_bal.append(agent.get_w_p_ratio())
-
-            if agent.is_exhausted():
-                break
-
-            step_function()
-            steps += 1
 
         # a investigation and debug plot if you want to
         if plot is True:
