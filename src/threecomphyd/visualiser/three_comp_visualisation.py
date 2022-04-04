@@ -20,7 +20,8 @@ class ThreeCompVisualisation:
                  animated: bool = False,
                  detail_annotations: bool = False,
                  basic_annotations: bool = True,
-                 black_and_white: bool = False):
+                 black_and_white: bool = False,
+                 all_outlines: bool = True):
         """
         Whole visualisation setup using given agent's parameters
         :param agent: The agent to be visualised
@@ -31,9 +32,12 @@ class ThreeCompVisualisation:
         :param detail_annotations: If true, tank distances and sizes are annotated as well.
         :param basic_annotations: If true, U, LF, and LS are visible
         :param black_and_white: If true, the visualisation is in black and white
+        :param all_outlines: If true, adds outlines around liquid flow arrows and half of U
         """
         # matplotlib fontsize
         rcParams['font.size'] = 10
+
+        self.__all_outlines = all_outlines
 
         # plot if no axis was assigned
         if axis is None:
@@ -160,7 +164,6 @@ class ThreeCompVisualisation:
                                            (u_width + 0.1, phi_o),
                                            arrowstyle='-|>',
                                            mutation_scale=30,
-                                           lw=2,
                                            color=self.__u_color)
         self._ax1.annotate('$\phi$',
                            xy=(u_width / 2, phi_o),
@@ -187,7 +190,6 @@ class ThreeCompVisualisation:
                                                (self._ann_lf.get_position()[0], 0.0),
                                                arrowstyle='-|>',
                                                mutation_scale=30,
-                                               lw=2,
                                                color=self.__p_color)
 
         self._ax1.annotate('$h$',
@@ -248,7 +250,6 @@ class ThreeCompVisualisation:
                                             (ls_left, gamma_o),
                                             arrowstyle='<|-|>',
                                             mutation_scale=30,
-                                            lw=2,
                                             color=self.__ls_color)
 
         self._ax1.annotate('$\\theta$',
@@ -314,6 +315,13 @@ class ThreeCompVisualisation:
         self._ax1.add_artist(ann_arr_flow)
         # self._ax1.add_artist(ann_p_an)
         # self._ax1.add_artist(ann_p_ae)
+
+
+        if self.__all_outlines:
+            self._arr_power_flow.set_edgecolor("black")
+            self._arr_u_flow.set_edgecolor("black")
+            self._arr_r2_flow.set_edgecolor("black")
+
         self._ax1.axhline(offset, linestyle='--', color=self.__ann_color)
         self._ax1.axhline(1 + offset - 0.001, linestyle='--', color=self.__ann_color)
         self._ax1.add_artist(self._ann_power_flow)
@@ -338,7 +346,6 @@ class ThreeCompVisualisation:
                                            (o_width + 0.1, phi_o),
                                            arrowstyle='simple',
                                            mutation_scale=0,
-                                           ec='white',
                                            fc=self.__u_color)
         self._ann_u_flow = Text(text="flow: ", ha='right', fontsize="large", x=o_width, y=phi_o - 0.05)
 
@@ -347,7 +354,6 @@ class ThreeCompVisualisation:
                                                (self._ann_lf.get_position()[0], 0.0),
                                                arrowstyle='simple',
                                                mutation_scale=0,
-                                               ec='white',
                                                color=self.__p_color)
         self._ann_power_flow = Text(text="flow: ", ha='center', fontsize="large", x=self._ann_lf.get_position()[0],
                                     y=offset - 0.05)
@@ -359,13 +365,17 @@ class ThreeCompVisualisation:
                                             self._arr_r2_l_pos[1],
                                             arrowstyle='simple',
                                             mutation_scale=0,
-                                            ec='white',
                                             color=self.__ls_color)
         self._ann_r2_flow = Text(text="flow: ", ha='left', fontsize="large", x=self._ls.get_x(),
                                  y=gamma_o - 0.05)
 
         # information annotation
         self._ann_time = Text(x=1, y=0.9 + offset, ha="right")
+
+        if self.__all_outlines:
+            self._arr_power_flow.set_edgecolor("black")
+            self._arr_u_flow.set_edgecolor("black")
+            self._arr_r2_flow.set_edgecolor("black")
 
         self._ax1.add_artist(self._ann_power_flow)
         self._ax1.add_artist(self._arr_power_flow)
@@ -398,7 +408,7 @@ class ThreeCompVisualisation:
         phi_o = self._agent.phi + offset
         gamma_o = self._agent.gamma + offset
 
-        # S tank
+        # U tank
         self._u = Rectangle((0.0, phi_o), 0.05, 1 - self._agent.phi, color=self.__u_color, alpha=0.3)
         self._u1 = Rectangle((0.05, phi_o), 0.05, 1 - self._agent.phi, color=self.__u_color, alpha=0.6)
         self._u2 = Rectangle((0.1, phi_o), u_width - 0.1, 1 - self._agent.phi, color=self.__u_color)
@@ -408,6 +418,7 @@ class ThreeCompVisualisation:
         self._ann_u = Text(text="$U$", ha='center', fontsize="xx-large",
                            x=u_width / 2,
                            y=((1 - self._agent.phi) / 2) + phi_o - 0.02)
+
 
         # LF vessel
         self._lf = Rectangle((lf_left, offset), lf_width, 1, fill=False, ec="black")
@@ -467,7 +478,7 @@ class ThreeCompVisualisation:
         phi_o = agent.phi + offset
         gamma_o = agent.gamma + offset
 
-        # S tank
+        # U tank
         self._u.set_bounds(0.0, phi_o, 0.05, 1 - self._agent.phi)
         self._u1.set_bounds(0.05, phi_o, 0.05, 1 - self._agent.phi)
         self._u2.set_bounds(0.1, phi_o, u_width - 0.1, 1 - self._agent.phi)
