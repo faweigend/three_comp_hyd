@@ -193,8 +193,8 @@ class ThreeCompVisualisation:
                                                color=self.__p_color)
 
         self._ax1.annotate('$h$',
-                           xy=(self._ann_lf.get_position()[0] + 0.07, 1 + offset),
-                           xytext=(self._ann_lf.get_position()[0] + 0.07, 1 + offset - 0.30),
+                           xy=(self._ann_lf.get_position()[0] - 0.07, 1 + offset),
+                           xytext=(self._ann_lf.get_position()[0] - 0.07, 1 + offset - 0.30),
                            ha='center',
                            fontsize="xx-large",
                            arrowprops=dict(arrowstyle='-|>',
@@ -202,8 +202,8 @@ class ThreeCompVisualisation:
                                            fc=self.__ann_color)
                            )
         self._ax1.annotate('$h$',
-                           xy=(self._ann_lf.get_position()[0] + 0.07, 1 + offset - 0.55),
-                           xytext=(self._ann_lf.get_position()[0] + 0.07, 1 + offset - 0.30),
+                           xy=(self._ann_lf.get_position()[0] - 0.07, 0.35 + offset),
+                           xytext=(self._ann_lf.get_position()[0] - 0.07, 1 + offset - 0.30),
                            ha='center',
                            fontsize="xx-large",
                            arrowprops=dict(arrowstyle='-|>',
@@ -213,7 +213,7 @@ class ThreeCompVisualisation:
 
         self._h.update(dict(xy=(lf_left, offset),
                             width=lf_width,
-                            height=1 - 0.55,
+                            height=0.35,
                             color=self.__lf_color))
 
         self._ax1.annotate('$g$',
