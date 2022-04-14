@@ -27,7 +27,7 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
     if log_level > 0:
         agent.set_h(h_s)
         agent.set_g(g_s)
-        ThreeCompVisualisation(agent)
+        ThreeCompVisualisation(agent, basic_annotations=False)
 
     func = None
     while t < t_max:
@@ -44,7 +44,7 @@ def tte_test_procedure(p, hz, eps, conf, log_level=0):
             agent.set_h(h)
             agent.set_g(g)
             logging.info("ODE".format(func, t))
-            ThreeCompVisualisation(agent)
+            ThreeCompVisualisation(agent, basic_annotations=False)
 
         func = n_func
         if log_level > 0:
@@ -119,8 +119,14 @@ if __name__ == "__main__":
     # required precision of discrete to differential agent
     eps = 0.01
 
-    example_conf = [15101.24769778409, 86209.27743067988, 252.71702367096788, 363.2970828395908,
-                    38.27073086773415, 0.14892228099402588, 0.3524379644134216, 1.0]
+    example_conf = [11220.356531171583,
+         21516.06360371364,
+         238.17395911833233,
+         57.12368620643582,
+         6.193546462332192,
+         0.242533769054134,
+         0.27055182889336115,
+         0.23158433943054582]
 
     tte_test_procedure(p, hz, eps, example_conf, log_level=1)
 

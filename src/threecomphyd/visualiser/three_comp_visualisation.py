@@ -502,7 +502,7 @@ class ThreeCompVisualisation:
 
         # update levels
         self._h.set_height(1 - self._agent.get_h())
-        self._g.set_height(self._agent.height_ans - self._agent.get_g())
+        self._g.set_height(self._agent.height_ls - self._agent.get_g())
 
     def update_animation_data(self, frame_number):
         """
