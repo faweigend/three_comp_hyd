@@ -34,14 +34,12 @@ class ThreeCompVisualisation:
         :param black_and_white: If true, the visualisation is in black and white
         :param all_outlines: If true, adds outlines around liquid flow arrows and half of U
         """
-        # matplotlib fontsize
-        rcParams['font.size'] = 10
 
         self.__all_outlines = all_outlines
 
         # plot if no axis was assigned
         if axis is None:
-            fig = plt.figure(figsize=(8, 5))
+            fig = plt.figure(figsize=(8, 4.2))
             self._ax1 = fig.add_subplot(1, 1, 1)
         else:
             fig = None
@@ -316,7 +314,6 @@ class ThreeCompVisualisation:
         # self._ax1.add_artist(ann_p_an)
         # self._ax1.add_artist(ann_p_ae)
 
-
         if self.__all_outlines:
             self._arr_power_flow.set_edgecolor("black")
             self._arr_u_flow.set_edgecolor("black")
@@ -418,7 +415,6 @@ class ThreeCompVisualisation:
         self._ann_u = Text(text="$U$", ha='center', fontsize="xx-large",
                            x=u_width / 2,
                            y=((1 - self._agent.phi) / 2) + phi_o - 0.02)
-
 
         # LF vessel
         self._lf = Rectangle((lf_left, offset), lf_width, 1, fill=False, ec="black")
