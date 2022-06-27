@@ -39,7 +39,7 @@ class TwoCompHydAgent(HydAgentBasis):
     @property
     def psi(self):
         """:return psi (distance W' to top)"""
-        return self.__phi
+        return self.__psi
 
     @property
     def m_u(self):
