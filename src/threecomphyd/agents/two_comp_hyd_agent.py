@@ -3,33 +3,36 @@ from threecomphyd.agents.hyd_agent_basis import HydAgentBasis
 
 class TwoCompHydAgent(HydAgentBasis):
 
-    def __init__(self, hz, w_p, m_u, phi, psi: float = 0.0):
+    def __init__(self, an: float, cp: float, phi: float, psi: float = 0.0, hz: int = 10):
         """
-        :param hz: calculations per second
-        :param w_p: cross sectional area of W'
-        :param m_u: maximal flow from O to w'
+        :param an: capacity of An
+        :param cp: maximal flow from Ae to An
         :param phi: phi (distance Ae to bottom)
-        :param phi: psi (distance W' to top)
+        :param phi: psi (distance An to top)
+        :param hz: calculations per second
         """
         super().__init__(hz=hz)
 
         if psi > 1 - phi:
-            raise UserWarning("Top of W\' has to be above or at bottom of Ae (psi > 1 - phi must be False)")
+            if abs(psi - (1 - phi)) < 0.001:
+                psi = 1 - phi
+            else:
+                raise UserWarning("Top of An has to be above or at bottom of Ae (psi > 1 - phi must be False)")
 
         # constants
-        self.__phi = phi
-        self.__psi = psi
-        self.__w_p = w_p  # area of vessel W'
-        self.__m_u = m_u  # max flow from O to P (max aerobic energy consumption i.e. VO2max)
+        self.__phi = phi  # bottom of Ae tank
+        self.__psi = psi  # top of An tank
+        self.__an = an  # capacity of An tank
+        self.__cp = cp  # max flow from Ae to An
 
         # variable parameters
-        self.__h = self.__psi  # state of depletion of vessel W'
-        self.__p_o = 0  # flow through R1 (oxygen pipe)
+        self.__h = 0  # state of depletion of vessel W'
+        self.__p_ae = 0  # flow from Ae
 
     @property
-    def w_p(self):
+    def an(self):
         """:return cross sectional area of W'"""
-        return self.__w_p
+        return self.__an
 
     @property
     def phi(self):
@@ -42,63 +45,75 @@ class TwoCompHydAgent(HydAgentBasis):
         return self.__psi
 
     @property
-    def m_u(self):
+    def cp(self):
         """:return max flow through R1"""
-        return self.__m_u
+        return self.__cp
+
+    def get_w_p_balance(self):
+        """:return remaining energy in W' tank"""
+        return (1 - self.__h) * self.__an
 
     def get_h(self):
         """:return state of depletion of vessel P"""
         return self.__h
 
-    def get_p_o(self):
+    def get_p_ae(self):
         """:return flow through R1"""
-        return self.__p_o
+        return self.__p_ae
 
     def _estimate_possible_power_output(self):
         """
         Update internal capacity estimations by one step.
         :return: the amount of power that the athlete was able to put out
         """
-        p = self._pow
 
-        # determine oxygen energy flow (R1)
-        # level P above pipe exit. Scale contribution according to h level
-        if self.__psi < self.__h <= (1.0 - self.__phi):
-            # contribution through R1 scales with maximal flow capacity
-            self.__p_o = self.__m_u * (self.__h / (1.0 - self.__phi))
-        # at maximum rate because level h of P is below pipe exit of O
-        elif (1.0 - self.__phi) < self.__h <= 1.0:
-            # above aerobic threshold (?) max contribution R1 = m_o
-            self.__p_o = self.__m_u
+        # the change on fill-level of An by flow from tap
+        self.__h += self._pow / self.__an / self._hz
 
-        # the change on level in W' is determined by flow p_o
-        self.__h += ((p - self.__p_o) / self.__w_p) / self._hz
+        # level An above pipe exit. Scale flow according to h level
+        if (self.__h + self.__psi) <= (1.0 - self.__phi):
+            self.__p_ae = self.__cp * (self.__h + self.__psi) / (1.0 - self.__phi)
+
+        # at maximum rate because level h is below pipe exit of p_Ae
+        else:
+            self.__p_ae = self.__cp
+
+        # due to psi there might be pressure on p_ae even though the tap is closed and An is full
+        if self.__p_ae > self._pow:
+            self.__p_ae = self._pow
+
+        # consider hz (delta t)
+        self.__p_ae = self.__p_ae / self._hz
+
+        # the change on fill-level of An by flow from Ae
+        self.__h -= self.__p_ae / self.__an
 
         # also W' cannot be fuller than full
-        if self.__h < self.__psi:
-            self.__h = self.__psi
+        if self.__h < 0:
+            self.__h = 0
+        # ...or emptier than empty
         elif self.__h > 1:
             self.__h = 1
 
         return self._pow
 
-    def is_exhausted(self):
+    def is_exhausted(self) -> bool:
         """
-        exhaustion is reached when level in AnF cannot sustain power demand
+        exhaustion is reached when level in An cannot sustain power demand
         :return: simply returns the exhausted flag
         """
         return self.__h == 1.0
 
-    def is_recovered(self):
+    def is_recovered(self) -> bool:
         """
-        recovery is complete when W' is full again
-        :return: simply returns the recovered flag
+        recovery is complete when An is full again
+        :return: simply returns boolean flag
         """
         return self.__h == self.__psi
 
-    def is_equilibrium(self):
+    def is_equilibrium(self) -> bool:
         """
-        equilibrium is reached when po meets pow
-        :return: boolean 
+        equilibrium is reached when p_ae meets p
+        :return: boolean flag
         """
-        return abs(self.__p_o - self._pow) < 0.1
+        return abs(self.__p_ae - self._pow) < 0.01

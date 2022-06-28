@@ -39,7 +39,7 @@ class TwoCompVisualisation:
 
         # plot if no axis was assigned
         if axis is None:
-            fig = plt.figure(figsize=(6, 4.2))
+            fig = plt.figure(figsize=(4, 4.2))
             self._ax1 = fig.add_subplot(1, 1, 1)
         else:
             fig = None
@@ -63,8 +63,8 @@ class TwoCompVisualisation:
         self._agent = agent
         self.__offset = 0.2
 
-        # U tank with three stripes
-        self.__width_ae = 0.5
+        self.__width_ae = 0.5  # tank with three stripes
+        self.__width_w_p = 0.4
         self._ae = None
         self._ae1 = None
         self._ae2 = None
@@ -103,6 +103,7 @@ class TwoCompVisualisation:
         # add layout for detailed annotations
         # detail annotation add greek letters for distances and positions
         if self.__detail_annotations:
+            self._ann_r1_max_flow = None
             self.__set_detailed_annotations_layout()
             self._ax1.set_xlim(0, 1.05)
             self._ax1.set_ylim(0, 1.2)
@@ -137,8 +138,10 @@ class TwoCompVisualisation:
 
         rcParams['text.usetex'] = True
 
-        self._ann_r1_flow = Text(text="$CP$", ha='right', fontsize="xx-large", x=ae_width + 0.09,
+        self._ann_r1_max_flow = Text(text="$CP$", ha='right', fontsize="xx-large", x=ae_width + 0.09,
                                  y=phi_o - 0.08)
+        self._ann_r1_flow = Text(text="$p_{Ae}$", ha='right', fontsize="xx-large", x=ae_width + 0.09,
+                                 y=phi_o + 0.06)
         self._arr_r1_flow = FancyArrowPatch((ae_width, phi_o),
                                             (ae_width + 0.1, phi_o),
                                             arrowstyle='-|>',
@@ -164,8 +167,10 @@ class TwoCompVisualisation:
                            )
 
         self._ax1.annotate('$\psi$',
-                           xy=(ae_width + 0.2, 1 - self._agent.psi + offset),
-                           xytext=(ae_width + 0.2, 1 - self._agent.psi / 2 + offset - 0.015),
+                           xy=(ae_width + 0.1 + self.__width_w_p/2,
+                               1 - self._agent.psi + offset),
+                           xytext=(ae_width + 0.1 + self.__width_w_p/2,
+                                   1 - self._agent.psi / 2 + offset - 0.015),
                            ha='center',
                            fontsize="xx-large",
                            arrowprops=dict(arrowstyle='-|>',
@@ -173,8 +178,10 @@ class TwoCompVisualisation:
                                            fc=self.__ann_color)
                            )
         self._ax1.annotate('$\psi$',
-                           xy=(ae_width + 0.2, 1 + offset),
-                           xytext=(ae_width + 0.2, 1 - self._agent.psi / 2 + offset - 0.015),
+                           xy=(ae_width + 0.1 + self.__width_w_p/2,
+                               1 + offset),
+                           xytext=(ae_width + 0.1 + self.__width_w_p/2,
+                                   1 - self._agent.psi / 2 + offset - 0.015),
                            ha='center',
                            fontsize="xx-large",
                            arrowprops=dict(arrowstyle='-|>',
@@ -247,6 +254,7 @@ class TwoCompVisualisation:
         self._ax1.add_artist(self._arr_power_flow)
         self._ax1.add_artist(self._arr_r1_flow)
         self._ax1.add_artist(self._ann_r1_flow)
+        self._ax1.add_artist(self._ann_r1_max_flow)
 
     def __set_animation_layout(self):
         """
@@ -257,7 +265,7 @@ class TwoCompVisualisation:
         o_width = self.__width_ae
         phi_o = self._agent.phi + offset
 
-        # U flow (R1)
+        # Ae flow (R1)
         self._arr_r1_flow = FancyArrowPatch((o_width, phi_o),
                                             (o_width + 0.1, phi_o),
                                             arrowstyle='simple',
@@ -310,10 +318,12 @@ class TwoCompVisualisation:
                             y=phi_o + ((1 - self._agent.phi) / 2))
 
         # W' tank
-        self._w_p = Rectangle((0.6, offset), 0.2, 1 - self._agent.psi, fill=False, ec="black")
-        self._h = Rectangle((0.6, offset), 0.2, 1 - self._agent.psi, color=self.__w_p_color)
+        self._w_p = Rectangle((self.__width_ae + 0.1, offset), self.__width_w_p, 1 - self._agent.psi, fill=False,
+                              ec="black")
+        self._h = Rectangle((self.__width_ae + 0.1, offset), self.__width_w_p, 1 - self._agent.psi,
+                            color=self.__w_p_color)
         self._ann_w_p = Text(text="$W^\prime$", ha='center', fontsize="xx-large",
-                             x=0.7,
+                             x=self.__width_ae + 0.1 + self.__width_w_p / 2,
                              y=offset + (1 - self._agent.psi) / 2)
 
         # the basic layout
@@ -350,14 +360,18 @@ class TwoCompVisualisation:
         self._ann_ae.set_position(xy=(width_ae / 2, ((1 - self._agent.phi) / 2) + phi_o - 0.02))
 
         # W' vessel
-        self._w_p.set_bounds(0.6, offset, 0.2, 1 - agent.psi)
-        self._h.set_bounds(0.6, offset, 0.2, 1 - agent.psi)
+        self._w_p.set_bounds(self.__width_ae + 0.1,
+                             offset,
+                             self.__width_w_p,
+                             1 - agent.psi)
+        self._h.set_bounds(self.__width_ae + 0.1,
+                           offset, self.__width_w_p, 1 - agent.psi)
         self._ann_w_p.set_position(xy=(
-            0.6 + (0.2 / 2),
+            self.__width_ae + 0.1 + self.__width_w_p / 2,
             ((1 - agent.psi) / 2) + offset - 0.02))
 
         # update levels
-        self._h.set_height(1 - self._agent.get_h())
+        self._h.set_height(1 - self._agent.psi - self._agent.get_h())
 
     def hide_basic_annotations(self):
         """
@@ -388,15 +402,15 @@ class TwoCompVisualisation:
         self._ann_power_flow.set_text("power: {}".format(round(power)))
         self._arr_power_flow.set_mutation_scale(math.log(power + 1) * 10)
 
-        p_o = round(self._agent.get_p_o())
+        p_o = round(self._agent.get_p_ae())
 
         # oxygen arrow
-        max_str = "(CP)" if p_o == self._agent.m_u else ""
-        self._ann_r1_flow.set_text("flow: {} {}".format(p_o, max_str))
+        max_str = "(CP)" if p_o == self._agent.cp else ""
+        self._ann_r1_flow.set_text("flow: {} {}".format(p_o * self._agent.hz, max_str))
         self._arr_r1_flow.set_mutation_scale(math.log(p_o + 1) * 10)
 
         # update levels
-        self._h.set_height(1 - self._agent.get_h())
+        self._h.set_height(1 - self._agent.psi - self._agent.get_h())
 
         # list of artists to be drawn
         return [self._ann_time,
