@@ -71,10 +71,10 @@ class TwoCompVisualisation:
         self._r1 = None  # line marking flow from Ae to W'
         self._ann_ae = None  # Ae annotation
 
-        # W' tank
-        self._w_p = None
+        # An tank
+        self._an = None
         self._h = None  # fill state
-        self._ann_w_p = None  # annotation
+        self._ann_an = None  # annotation
 
         # finish the basic layout
         self.__set_basic_layout()
@@ -129,8 +129,8 @@ class TwoCompVisualisation:
         """
 
         ae_width = self.__width_ae
-        w_p_left = self._w_p.get_x()
-        w_p_width = self._w_p.get_width()
+        an_left = self._an.get_x()
+        an_width = self._an.get_width()
 
         # some offset to the bottom
         offset = self.__offset
@@ -189,23 +189,23 @@ class TwoCompVisualisation:
                                            fc=self.__ann_color)
                            )
 
-        self._ann_power_flow = Text(text="$p$", ha='center', fontsize="xx-large", x=self._ann_w_p.get_position()[0],
+        self._ann_power_flow = Text(text="$p$", ha='center', fontsize="xx-large", x=self._ann_an.get_position()[0],
                                     y=offset - 0.06)
-        self._arr_power_flow = FancyArrowPatch((self._ann_w_p.get_position()[0], offset - 0.078),
-                                               (self._ann_w_p.get_position()[0], 0.0),
+        self._arr_power_flow = FancyArrowPatch((self._ann_an.get_position()[0], offset - 0.078),
+                                               (self._ann_an.get_position()[0], 0.0),
                                                arrowstyle='-|>',
                                                mutation_scale=30,
                                                color=self.__p_color)
 
-        self._h.update(dict(xy=(w_p_left, offset),
-                            width=w_p_width,
+        self._h.update(dict(xy=(an_left, offset),
+                            width=an_width,
                             height=0.15,
                             color=self.__w_p_color))
 
         self._ax1.annotate('$h$',
-                           xy=(self._ann_w_p.get_position()[0] + 0.07,
+                           xy=(self._ann_an.get_position()[0] + 0.07,
                                1 - self._agent.psi + offset),
-                           xytext=(self._ann_w_p.get_position()[0] + 0.07,
+                           xytext=(self._ann_an.get_position()[0] + 0.07,
                                    (1 - self._agent.psi - self._h.get_height()) / 2 + self._h.get_height() + offset),
                            ha='center',
                            fontsize="xx-large",
@@ -214,9 +214,9 @@ class TwoCompVisualisation:
                                            fc=self.__ann_color)
                            )
         self._ax1.annotate('$h$',
-                           xy=(self._ann_w_p.get_position()[0] + 0.07,
+                           xy=(self._ann_an.get_position()[0] + 0.07,
                                self._h.get_height() + offset),
-                           xytext=(self._ann_w_p.get_position()[0] + 0.07,
+                           xytext=(self._ann_an.get_position()[0] + 0.07,
                                    (1 - self._agent.psi - self._h.get_height()) / 2 + self._h.get_height() + offset),
                            ha='center',
                            fontsize="xx-large",
@@ -274,12 +274,12 @@ class TwoCompVisualisation:
         self._ann_r1_flow = Text(text="flow: ", ha='right', fontsize="large", x=o_width, y=phi_o - 0.05)
 
         # Tap flow (Power)
-        self._arr_power_flow = FancyArrowPatch((self._ann_w_p.get_position()[0], offset - 0.05),
-                                               (self._ann_w_p.get_position()[0], 0.0),
+        self._arr_power_flow = FancyArrowPatch((self._ann_an.get_position()[0], offset - 0.05),
+                                               (self._ann_an.get_position()[0], 0.0),
                                                arrowstyle='simple',
                                                mutation_scale=0,
                                                color=self.__p_color)
-        self._ann_power_flow = Text(text="flow: ", ha='center', fontsize="large", x=self._ann_w_p.get_position()[0],
+        self._ann_power_flow = Text(text="flow: ", ha='center', fontsize="large", x=self._ann_an.get_position()[0],
                                     y=offset - 0.05)
 
         # information annotation
@@ -318,23 +318,23 @@ class TwoCompVisualisation:
                             y=phi_o + ((1 - self._agent.phi) / 2))
 
         # W' tank
-        self._w_p = Rectangle((self.__width_ae + 0.1, offset), self.__width_w_p, 1 - self._agent.psi, fill=False,
-                              ec="black")
+        self._an = Rectangle((self.__width_ae + 0.1, offset), self.__width_w_p, 1 - self._agent.psi, fill=False,
+                             ec="black")
         self._h = Rectangle((self.__width_ae + 0.1, offset), self.__width_w_p, 1 - self._agent.psi,
                             color=self.__w_p_color)
-        self._ann_w_p = Text(text="$W^\prime$", ha='center', fontsize="xx-large",
-                             x=self.__width_ae + 0.1 + self.__width_w_p / 2,
-                             y=offset + (1 - self._agent.psi) / 2)
+        self._ann_an = Text(text="An", ha='center', fontsize="xx-large",
+                            x=self.__width_ae + 0.1 + self.__width_w_p / 2,
+                            y=offset + (1 - self._agent.psi) / 2)
 
         # the basic layout
         self._ax1.add_line(self._r1)
         self._ax1.add_artist(self._ae)
         self._ax1.add_artist(self._ae1)
         self._ax1.add_artist(self._ae2)
-        self._ax1.add_artist(self._w_p)
+        self._ax1.add_artist(self._an)
         self._ax1.add_artist(self._h)
         self._ax1.add_artist(self._ann_ae)
-        self._ax1.add_artist(self._ann_w_p)
+        self._ax1.add_artist(self._ann_an)
 
     def update_basic_layout(self, agent: TwoCompHydAgent):
         """
@@ -359,14 +359,14 @@ class TwoCompVisualisation:
         self._r1.set_ydata([phi_o, phi_o])
         self._ann_ae.set_position(xy=(width_ae / 2, ((1 - self._agent.phi) / 2) + phi_o - 0.02))
 
-        # W' vessel
-        self._w_p.set_bounds(self.__width_ae + 0.1,
-                             offset,
-                             self.__width_w_p,
-                             1 - agent.psi)
+        # An tank
+        self._an.set_bounds(self.__width_ae + 0.1,
+                            offset,
+                            self.__width_w_p,
+                            1 - agent.psi)
         self._h.set_bounds(self.__width_ae + 0.1,
                            offset, self.__width_w_p, 1 - agent.psi)
-        self._ann_w_p.set_position(xy=(
+        self._ann_an.set_position(xy=(
             self.__width_ae + 0.1 + self.__width_w_p / 2,
             ((1 - agent.psi) / 2) + offset - 0.02))
 
@@ -378,7 +378,7 @@ class TwoCompVisualisation:
         Simply hides the S, LF, and LS text
         """
         self._ann_ae.set_text("")
-        self._ann_w_p.set_text("")
+        self._ann_an.set_text("")
 
     def update_animation_data(self, frame_number):
         """
