@@ -9,7 +9,7 @@ if __name__ == "__main__":
                         format="%(asctime)s %(levelname)-5s %(name)s - %(message)s. [file=%(filename)s:%(lineno)d]")
 
     # create two component hydraulic agent with example configuration
-    agent = TwoCompHydAgent(an=28000, cp=240, phi=0.5, psi=0.1, hz=10)
+    agent = TwoCompHydAgent(an=28000, cp=240, phi=0.5, psi=0.4, hz=10)
 
     # run the interactive animation
     ani = TwoCompHydAnimation(agent)

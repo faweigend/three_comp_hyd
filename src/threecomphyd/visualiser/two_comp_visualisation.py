@@ -139,7 +139,7 @@ class TwoCompVisualisation:
         rcParams['text.usetex'] = True
 
         self._ann_r1_max_flow = Text(text="$CP$", ha='right', fontsize="xx-large", x=ae_width + 0.09,
-                                 y=phi_o - 0.08)
+                                     y=phi_o - 0.08)
         self._ann_r1_flow = Text(text="$p_{Ae}$", ha='right', fontsize="xx-large", x=ae_width + 0.09,
                                  y=phi_o + 0.06)
         self._arr_r1_flow = FancyArrowPatch((ae_width, phi_o),
@@ -167,9 +167,9 @@ class TwoCompVisualisation:
                            )
 
         self._ax1.annotate('$\psi$',
-                           xy=(ae_width + 0.1 + self.__width_w_p/2,
+                           xy=(ae_width + 0.1 + self.__width_w_p / 2,
                                1 - self._agent.psi + offset),
-                           xytext=(ae_width + 0.1 + self.__width_w_p/2,
+                           xytext=(ae_width + 0.1 + self.__width_w_p / 2,
                                    1 - self._agent.psi / 2 + offset - 0.015),
                            ha='center',
                            fontsize="xx-large",
@@ -178,9 +178,9 @@ class TwoCompVisualisation:
                                            fc=self.__ann_color)
                            )
         self._ax1.annotate('$\psi$',
-                           xy=(ae_width + 0.1 + self.__width_w_p/2,
+                           xy=(ae_width + 0.1 + self.__width_w_p / 2,
                                1 + offset),
-                           xytext=(ae_width + 0.1 + self.__width_w_p/2,
+                           xytext=(ae_width + 0.1 + self.__width_w_p / 2,
                                    1 - self._agent.psi / 2 + offset - 0.015),
                            ha='center',
                            fontsize="xx-large",

@@ -51,7 +51,7 @@ class TwoCompHydAgent(HydAgentBasis):
 
     def get_w_p_balance(self):
         """:return remaining energy in W' tank"""
-        return (1 - self.__h) * self.__an
+        return (1.0 - self.psi - self.__h) / (1.0 - self.psi) * self.__an
 
     def get_h(self):
         """:return state of depletion of vessel P"""
@@ -68,7 +68,7 @@ class TwoCompHydAgent(HydAgentBasis):
         """
 
         # the change on fill-level of An by flow from tap
-        self.__h += self._pow / self.__an / self._hz
+        self.__h += (1.0 - self.psi) * self._pow / self.__an / self._hz
 
         # level An above pipe exit. Scale flow according to h level
         if (self.__h + self.__psi) <= (1.0 - self.__phi):
@@ -78,22 +78,22 @@ class TwoCompHydAgent(HydAgentBasis):
         else:
             self.__p_ae = self.__cp
 
-        # due to psi there might be pressure on p_ae even though the tap is closed and An is full
-        if self.__p_ae > self._pow:
-            self.__p_ae = self._pow
-
         # consider hz (delta t)
         self.__p_ae = self.__p_ae / self._hz
 
+        # due to psi there might be pressure on p_ae even though the tap is closed and An is full
+        if self.__p_ae > self.get_w_p_balance():
+            self.__p_ae = self.get_w_p_balance()
+
         # the change on fill-level of An by flow from Ae
-        self.__h -= self.__p_ae / self.__an
+        self.__h -= (1.0 - self.psi) * self.__p_ae / self.__an
 
         # also W' cannot be fuller than full
         if self.__h < 0:
             self.__h = 0
         # ...or emptier than empty
-        elif self.__h > 1:
-            self.__h = 1
+        elif self.__h > 1.0 - self.psi:
+            self.__h = 1.0 - self.psi
 
         return self._pow
 
@@ -102,14 +102,14 @@ class TwoCompHydAgent(HydAgentBasis):
         exhaustion is reached when level in An cannot sustain power demand
         :return: simply returns the exhausted flag
         """
-        return self.__h == 1.0
+        return self.__h == 1.0 - self.psi
 
     def is_recovered(self) -> bool:
         """
         recovery is complete when An is full again
         :return: simply returns boolean flag
         """
-        return self.__h == self.__psi
+        return self.__h == 0
 
     def is_equilibrium(self) -> bool:
         """
