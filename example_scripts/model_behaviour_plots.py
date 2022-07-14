@@ -28,7 +28,7 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
     two_p_color = "tab:blue"
 
     # fig sizes to make optimal use of space in paper
-    fig = plt.figure(figsize=(8, 3.4))
+    fig = plt.figure(figsize=(5, 4))
     ax = fig.add_subplot(1, 1, 1)
 
     resolution = 1
@@ -45,7 +45,7 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
     ax.set_yticklabels([])
 
     # small zoomed-in detail window
-    insert_ax = ax.inset_axes([0.3, 0.40, 0.3, 0.45])
+    insert_ax = ax.inset_axes([0.18, 0.40, 0.3, 0.45])
     detail_obs = resolution * 5
     detail_ts = [120, 150, 180, 210]
     detail_ps = []
@@ -86,13 +86,13 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
 
     # label axis and lines
     ax.set_xlabel("time to exhaustion (min)")
-    ax.set_ylabel("intensity (watt)", labelpad=10)
+    ax.set_ylabel("intensity (W)", labelpad=10)
 
     # insert number of models only if more than 1 was plotted
     if len(ps) > 1:
-        ax.plot([], linestyle='-', linewidth=1, color=hyd_color, label="hydraulic model ({})".format(len(ps)))
+        ax.plot([], linestyle='-', linewidth=1, color=hyd_color, label="$\mathrm{hydraulic}_\mathrm{weig}$" + " ({})".format(len(ps)))
     else:
-        ax.plot([], linestyle='-', linewidth=1, color=hyd_color, label="hydraulic model")
+        ax.plot([], linestyle='-', linewidth=1, color=hyd_color, label="$\mathrm{hydraulic}_\mathrm{weig}$")
     ax.legend()
 
     plt.tight_layout()
@@ -125,7 +125,7 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     rec_ps = [cp_33, cp_66]
     rec_ts = [10, 20, 25, 30, 35, 40, 45, 50, 60, 70, 90, 110, 130, 150, 170, 240, 300, 360]
 
-    fig = plt.figure(figsize=(8, 3.4))
+    fig = plt.figure(figsize=(6, 3.4))
     # using combined CP33 and CP66 measures
     # only two plots with combined recovery intensities
     axes = [fig.add_subplot(1, 2, 1), fig.add_subplot(1, 2, 2)]
@@ -167,25 +167,25 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     axes[0].errorbar(caen_combination["P4"][0],
                      caen_combination["P4"][1],
                      caen_combination["P4"][2],
-                     label="Caen et al.",
+                     label="Caen et al. 2019",
                      linestyle='None',
                      marker='o',
                      capsize=3,
                      color=c_color)
-    axes[0].set_title("P4")
+    axes[0].set_title("$P240$")
     axes[1].errorbar(caen_combination["P8"][0],
                      caen_combination["P8"][1],
                      caen_combination["P8"][2],
-                     label="Caen et al.",
+                     label="Caen et al. 2019",
                      linestyle='None',
                      marker='o',
                      capsize=3,
                      color=c_color)
-    axes[1].set_title("P8")
+    axes[1].set_title("$P480$")
 
     # insert number of models only if more than 1 was plotted
     if len(ps) > 1:
-        axes[0].plot([], linestyle='-', linewidth=1, color=hyd_color, label="hydraulic model ({})".format(len(ps)))
+        axes[0].plot([], linestyle='-', linewidth=1, color=hyd_color, label="$\mathrm{hydraulic}_\mathrm{weig}$" + " ({})".format(len(ps)))
     else:
         axes[0].plot([], linestyle='-', linewidth=1, color=hyd_color, label="hydraulic model")
 
@@ -201,7 +201,7 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     fig.text(0.5, 0.04, 'recovery duration (min)', ha='center')
     fig.text(0.01, 0.5, 'recovery (%)', va='center', rotation='vertical')
     plt.tight_layout()
-    plt.subplots_adjust(left=0.09, bottom=0.20, top=0.91)
+    plt.subplots_adjust(left=0.12, bottom=0.20, top=0.91)
 
     plt.show()
     plt.close(fig)

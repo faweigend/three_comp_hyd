@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 import threecomphyd.config as config
 import numpy as np
+from pypermod.utility import PlotLayout
 
 from threecomphyd.evolutionary_fitter.pygmo_three_comp_fitter import PyGMOThreeCompFitter
 from threecomphyd.evolutionary_fitter.three_comp_tools import multi_to_single_objective
@@ -237,7 +238,8 @@ class PyGMOFittingReportCreator(HandlerBase):
 
         v = list(fronts.values())[-1]
 
-        fig = plt.figure(figsize=(8, 5))
+        fig = plt.figure(figsize=(5, 4))
+        PlotLayout.set_rc_params()
         axes = fig.add_subplot(1, 1, 1)
 
         # store the best solution details in here
@@ -274,6 +276,7 @@ class PyGMOFittingReportCreator(HandlerBase):
         axes.set_xlabel("expenditure NRMSE")
         axes.set_ylabel("recovery NRMSE")
 
+        plt.tight_layout()
         plt.savefig(os.path.join(save_path, "best_front_{}".format(len(fronts.values()))))
         plt.close(fig)
 
