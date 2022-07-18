@@ -223,7 +223,7 @@ class ThreeCompHydAgent(HydAgentBasis):
         """
         :return: wp estimation between 0 and 1 for comparison to CP models
         """
-        return (1.0 - self.__h) * (1.0 - self.__g)
+        return 1.0 - self.__h
 
     def get_fill_lf(self):
         """
