@@ -38,6 +38,20 @@ class SimpleTTEMeasures:
         """
         return self.__pairs
 
+    @property
+    def times(self):
+        """
+        :return: first entries of stored pairs
+        """
+        return [x[0] for x in self.__pairs]
+
+    @property
+    def powers(self):
+        """
+        :return: second entries of stored pairs
+        """
+        return [x[1] for x in self.__pairs]
+
     def add_pair(self, t: float, p: float):
         """
         adds a (time,constant power) pair to internal data

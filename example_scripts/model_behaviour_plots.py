@@ -35,7 +35,6 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
 
     ts_ext = np.arange(120, 1801, 20 / resolution)
     ts = [120, 240, 360, 600, 900, 1800]
-    powers = [((w_p + x * cp) / x) for x in ts]
     powers_ext = [((w_p + x * cp) / x) for x in ts_ext]
 
     # mark P4 and P8
