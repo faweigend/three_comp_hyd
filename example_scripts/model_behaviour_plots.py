@@ -28,7 +28,7 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
     two_p_color = "tab:blue"
 
     # fig sizes to make optimal use of space in paper
-    fig = plt.figure(figsize=(5, 4))
+    fig = plt.figure(figsize=(5, 3.5))
     ax = fig.add_subplot(1, 1, 1)
 
     resolution = 1
@@ -85,17 +85,18 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
 
     # label axis and lines
     ax.set_xlabel("time to exhaustion (min)")
-    ax.set_ylabel("intensity (W)", labelpad=10)
+    ax.set_ylabel("power output (W)", labelpad=10)
 
     # insert number of models only if more than 1 was plotted
     if len(ps) > 1:
-        ax.plot([], linestyle='-', linewidth=1, color=hyd_color, label="$\mathrm{hydraulic}_\mathrm{weig}$" + " ({})".format(len(ps)))
+        ax.plot([], linestyle='-', linewidth=1, color=hyd_color,
+                label="$\mathrm{hydraulic}_\mathrm{weig}$" + " ({})".format(len(ps)))
     else:
         ax.plot([], linestyle='-', linewidth=1, color=hyd_color, label="$\mathrm{hydraulic}_\mathrm{weig}$")
     ax.legend()
 
     plt.tight_layout()
-    plt.subplots_adjust(bottom=0.20, top=0.91)
+    plt.subplots_adjust(left=0.071, bottom=0.162, top=0.99, right=0.986)
     plt.show()
     plt.close(fig)
 
@@ -184,7 +185,8 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
 
     # insert number of models only if more than 1 was plotted
     if len(ps) > 1:
-        axes[0].plot([], linestyle='-', linewidth=1, color=hyd_color, label="$\mathrm{hydraulic}_\mathrm{weig}$" + " ({})".format(len(ps)))
+        axes[0].plot([], linestyle='-', linewidth=1, color=hyd_color,
+                     label="$\mathrm{hydraulic}_\mathrm{weig}$" + " ({})".format(len(ps)))
     else:
         axes[0].plot([], linestyle='-', linewidth=1, color=hyd_color, label="hydraulic model")
 
@@ -200,7 +202,7 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     fig.text(0.5, 0.04, 'recovery duration (min)', ha='center')
     fig.text(0.01, 0.5, 'recovery (%)', va='center', rotation='vertical')
     plt.tight_layout()
-    plt.subplots_adjust(left=0.12, bottom=0.20, top=0.91)
+    plt.subplots_adjust(left=0.12, bottom=0.20, top=0.91, right=0.99)
 
     plt.show()
     plt.close(fig)
