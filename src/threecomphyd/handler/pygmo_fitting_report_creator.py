@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 from collections import defaultdict
+from datetime import datetime, timedelta
 
 import matplotlib.pyplot as plt
 
@@ -343,6 +344,8 @@ class PyGMOFittingReportCreator(HandlerBase):
         all_best_confs = defaultdict(list)
         all_best_dists = defaultdict(list)
         all_best_mean_dists = defaultdict(list)
+        all_times = defaultdict(list)
+        all_early_stops = defaultdict(list)
 
         # best performing solutions are determined
         bests = {}
@@ -368,12 +371,20 @@ class PyGMOFittingReportCreator(HandlerBase):
                 # category overview regarding minimal distance and minimal mean distance
                 all_best_dists[k].append(x["dist_min"])
                 all_best_mean_dists[k].append(x["dist_mean"])
+                # "05:02:57"
+                t = datetime.strptime(x["time_elapsed"], "%H:%M:%S")
+                # ...and use datetime's hour, min and sec properties to build a timedelta
+                delta = timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
+                all_times[k].append(delta.total_seconds())
+
+                all_early_stops[k].append(int(x["early_stopping_triggered"] == True))
 
             # all stats merged into one overview
             merged += v
 
         for k in all_stats.keys():
             np_best_dists = np.array(all_best_dists[k])
+            np_times_elapsed = np.array(all_times[k])
 
             b_config = all_best_confs[k][int(np.argmin(np_best_dists))]  # the configuration of the best
             b_config = [round(x, 2) for x in b_config]
@@ -383,6 +394,8 @@ class PyGMOFittingReportCreator(HandlerBase):
             s_config = s_config[:-2]
 
             bests.update({"{}({})".format(k, len(np_best_dists)): {
+                "early_stops" : np.mean(all_early_stops[k]),
+                "mean_time_elapsed": str(timedelta(seconds=int(np.round(np.mean(np_times_elapsed))))),
                 "mean_best_dist": np.mean(np_best_dists),
                 "std_best_dist": np.std(np_best_dists),
                 "min_best_dist": np.min(np_best_dists),
