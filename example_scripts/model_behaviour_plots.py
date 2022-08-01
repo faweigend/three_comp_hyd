@@ -28,14 +28,13 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
     two_p_color = "tab:blue"
 
     # fig sizes to make optimal use of space in paper
-    fig = plt.figure(figsize=(8, 3.4))
+    fig = plt.figure(figsize=(5, 3.5))
     ax = fig.add_subplot(1, 1, 1)
 
     resolution = 1
 
     ts_ext = np.arange(120, 1801, 20 / resolution)
     ts = [120, 240, 360, 600, 900, 1800]
-    powers = [((w_p + x * cp) / x) for x in ts]
     powers_ext = [((w_p + x * cp) / x) for x in ts_ext]
 
     # mark P4 and P8
@@ -45,10 +44,13 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
     ax.set_yticklabels([])
 
     # small zoomed-in detail window
-    insert_ax = ax.inset_axes([0.3, 0.40, 0.3, 0.45])
+    insert_ax = ax.inset_axes([0.18, 0.40, 0.3, 0.45])
     detail_obs = resolution * 5
     detail_ts = [120, 150, 180, 210]
     detail_ps = []
+
+    max_err = 0
+    max_err_t = 0
 
     # plot three comp agents
     for p in ps:
@@ -63,6 +65,13 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
 
         insert_ax.plot(hyd_fitted_times_ext[:detail_obs], hyd_powers_ext[:detail_obs],
                        linestyle='-', linewidth=1, color=hyd_color)
+
+        limit = 100
+        if max(np.abs(np.array(ts_ext) - np.array(hyd_fitted_times_ext))[:limit]) > max_err:
+            max_err = np.max(np.abs(np.array(ts_ext) - np.array(hyd_fitted_times_ext))[:limit])
+            max_err_t = ts_ext[np.argmax(np.abs(np.array(ts_ext) - np.array(hyd_fitted_times_ext))[:limit])]
+
+    print(max_err, max_err_t)
 
     # plot CP curve
     insert_ax.plot(ts_ext[:detail_obs], powers_ext[:detail_obs],
@@ -86,17 +95,18 @@ def multiple_exhaustion_comparison_overview(w_p: float, cp: float, ps: list):
 
     # label axis and lines
     ax.set_xlabel("time to exhaustion (min)")
-    ax.set_ylabel("intensity (watt)", labelpad=10)
+    ax.set_ylabel("power output (W)", labelpad=10)
 
     # insert number of models only if more than 1 was plotted
     if len(ps) > 1:
-        ax.plot([], linestyle='-', linewidth=1, color=hyd_color, label="hydraulic model ({})".format(len(ps)))
+        ax.plot([], linestyle='-', linewidth=1, color=hyd_color,
+                label="$\mathrm{hydraulic}_\mathrm{weig}$" + " ({})".format(len(ps)))
     else:
-        ax.plot([], linestyle='-', linewidth=1, color=hyd_color, label="hydraulic model")
+        ax.plot([], linestyle='-', linewidth=1, color=hyd_color, label="$\mathrm{hydraulic}_\mathrm{weig}$")
     ax.legend()
 
     plt.tight_layout()
-    plt.subplots_adjust(bottom=0.20, top=0.91)
+    plt.subplots_adjust(left=0.071, bottom=0.162, top=0.99, right=0.986)
     plt.show()
     plt.close(fig)
 
@@ -125,7 +135,7 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     rec_ps = [cp_33, cp_66]
     rec_ts = [10, 20, 25, 30, 35, 40, 45, 50, 60, 70, 90, 110, 130, 150, 170, 240, 300, 360]
 
-    fig = plt.figure(figsize=(8, 3.4))
+    fig = plt.figure(figsize=(6, 3.4))
     # using combined CP33 and CP66 measures
     # only two plots with combined recovery intensities
     axes = [fig.add_subplot(1, 2, 1), fig.add_subplot(1, 2, 2)]
@@ -167,25 +177,26 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     axes[0].errorbar(caen_combination["P4"][0],
                      caen_combination["P4"][1],
                      caen_combination["P4"][2],
-                     label="Caen et al.",
+                     label="Caen et al. 2019",
                      linestyle='None',
                      marker='o',
                      capsize=3,
                      color=c_color)
-    axes[0].set_title("P4")
+    axes[0].set_title("$P240$")
     axes[1].errorbar(caen_combination["P8"][0],
                      caen_combination["P8"][1],
                      caen_combination["P8"][2],
-                     label="Caen et al.",
+                     label="Caen et al. 2019",
                      linestyle='None',
                      marker='o',
                      capsize=3,
                      color=c_color)
-    axes[1].set_title("P8")
+    axes[1].set_title("$P480$")
 
     # insert number of models only if more than 1 was plotted
     if len(ps) > 1:
-        axes[0].plot([], linestyle='-', linewidth=1, color=hyd_color, label="hydraulic model ({})".format(len(ps)))
+        axes[0].plot([], linestyle='-', linewidth=1, color=hyd_color,
+                     label="$\mathrm{hydraulic}_\mathrm{weig}$" + " ({})".format(len(ps)))
     else:
         axes[0].plot([], linestyle='-', linewidth=1, color=hyd_color, label="hydraulic model")
 
@@ -201,7 +212,7 @@ def multiple_caen_recovery_overview(w_p: float, cp: float, ps: list):
     fig.text(0.5, 0.04, 'recovery duration (min)', ha='center')
     fig.text(0.01, 0.5, 'recovery (%)', va='center', rotation='vertical')
     plt.tight_layout()
-    plt.subplots_adjust(left=0.09, bottom=0.20, top=0.91)
+    plt.subplots_adjust(left=0.12, bottom=0.20, top=0.91, right=0.99)
 
     plt.show()
     plt.close(fig)
@@ -220,106 +231,26 @@ if __name__ == "__main__":
 
     # all configurations for three component hydraulic agents
     ps = [
-        [
-            19267.32481889428,
-            53448.210634894436,
-            247.71129903795293,
-            105.16070293047284,
-            15.666725105148853,
-            0.7594031586210723,
-            0.01174178885462004,
-            0.21384965007797813
-        ],
-        [
-            18042.056916563655,
-            46718.177938027344,
-            247.39628102450715,
-            106.77042879166977,
-            16.96027055119397,
-            0.715113715965181,
-            0.01777338005017555,
-            0.24959503053279475
-        ],
-        [
-            16663.27479753794,
-            58847.492279822916,
-            247.33216892510987,
-            97.81632336744637,
-            17.60675026641434,
-            0.6982927653365388,
-            0.09473837917127066,
-            0.28511732156368097
-        ],
-        [
-            18122.869259409636,
-            67893.3143320925,
-            248.05526835319083,
-            90.11814418883185,
-            16.70767452536087,
-            0.7239627763005275,
-            0.10788624159437807,
-            0.24269812950697436
-        ],
-        [
-            16442.047054013587,
-            43977.34142455164,
-            246.6580206034908,
-            112.31940101973737,
-            18.851235626075855,
-            0.6825405103462707,
-            0.011882463932316418,
-            0.2859061602516494
-        ],
-        [
-            18241.03024888177,
-            52858.78758906142,
-            247.23306533702817,
-            103.15393367087151,
-            16.753404619019577,
-            0.7323264858183177,
-            0.03138505655373579,
-            0.2448593661774296
-        ],
-        [
-            16851.79305167275,
-            48348.71227226837,
-            246.55295343504088,
-            106.85431134985403,
-            19.123861764063058,
-            0.693498746836151,
-            0.03083991609890696,
-            0.28415132656652087
-        ],
-        [
-            16350.59391699999,
-            40391.18583934175,
-            246.40648185859834,
-            111.34355485406216,
-            19.583788050143703,
-            0.6498660573226038,
-            0.01016029963401485,
-            0.30008300685218803
-        ],
-        [
-            16748.777297458924,
-            41432.324234179905,
-            246.68605949562686,
-            108.72756892117448,
-            19.34245943802004,
-            0.6596009015402553,
-            0.013654881063378194,
-            0.2814663041365496
-        ],
-        [
-            17687.258359719104,
-            51859.254197641196,
-            247.39818147041177,
-            103.37418807409084,
-            17.566017275093582,
-            0.7251325338084225,
-            0.03563558893277309,
-            0.24824817650787334
-        ]
+        [17456.501540851958, 46235.99782887891, 246.8754194575765, 105.0458949192332, 18.61813360834505,
+         0.693542652379417, 0.01997874313126515, 0.2600493216687265],
+        [17571.44900414276, 43402.54960764281, 246.97054379746947, 108.14610069719515, 17.1821984762747,
+         0.6912752767454273, 0.010027987890364522, 0.2645509984088022],
+        [18052.873627292814, 50179.25213290453, 247.47018172193998, 105.62464445309857, 16.23985284036382,
+         0.7290616564998857, 0.028183446547478494, 0.25082072506146275],
+        [16683.592287141386, 44887.58560272133, 246.63457734640542, 112.68272987053999, 18.073084252052254,
+         0.6862224549739296, 0.018586310009923508, 0.2941636955314809],
+        [16852.46273505409, 42909.778724502234, 246.81384076206803, 108.9815702415051, 18.8647120699937,
+         0.6769843873369275, 0.015245173850835667, 0.2787578120456768],
+        [16606.045920840497, 39679.597398728074, 246.8007548653167, 112.23416682274151, 18.476718183869735,
+         0.6555286114289854, 0.010386190778171801, 0.28920487069782524],
+        [16898.924891950985, 41130.49577887294, 246.86360534861495, 109.21040516611954, 18.828103302561843,
+         0.6647849659185002, 0.013486135401909773, 0.2784037171471362],
+        [17531.522855693423, 45987.13199861467, 246.83527483837145, 110.74973247039583, 18.39464657469822,
+         0.7056095369263342, 0.01198807017906641, 0.26591486702753386],
+        [16312.389121504952, 38982.0514065314, 246.68018865065818, 111.63159367625984, 19.378294909372325,
+         0.6445812471142565, 0.010438963567674072, 0.29581431611381087],
+        [16891.005497924867, 45520.8495750172, 246.842373015698, 115.53307266702876, 17.367498696562347,
+         0.7039380779511493, 0.010040967408569901, 0.28745204966698823]
     ]
 
     logging.info("Start Exhaustion Comparison")

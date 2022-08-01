@@ -1,6 +1,7 @@
 class SimpleRecMeasures:
     """
-    Used store W' recovery ratios in a consistent way for evolutionary fitting estimations
+    Used to store W' recovery ratios in a consistent way for evolutionary fitting estimations. Parameters are named
+    according to the WB1->RB->WB2 protocol
     """
 
     def __init__(self, name: str):
@@ -48,3 +49,40 @@ class SimpleRecMeasures:
         :return: the defined name
         """
         return self.__name
+
+    def get_all_wb_rb_combinations(self):
+        """
+        returns all combinations of power that lead to exhaustion (WB) and recovery intensity (RB) that
+        this recovery measure storage contains
+        :return:
+        """
+        combs = []
+        for values in list(self.__measures):
+            comb = (values[0], values[1])
+            if comb not in combs:
+                combs.append(comb)
+        return combs
+
+    def get_all_obs_for_wb_rb_combination(self, p_work, p_rec):
+        """
+        Get all observations for a p_work and p_rec combination.
+        returns times and ratios in two lists.
+        :param p_work: power that lead to exhaustion (WB)
+        :param p_rec: recovery intensity (RB)
+        :return: times, ratios
+        """
+        times, ratios = [], []
+        for values in list(self.__measures):
+            if values[0] == p_work and values[1] == p_rec:
+                times.append(values[2])
+                ratios.append(values[3])
+        return times, ratios
+
+    def get_max_t_rec(self):
+        """
+        :return: maximal recovery time in stored trials
+        """
+        max_t = 0
+        for values in list(self.__measures):
+            max_t = max(max_t, values[2])
+        return max_t

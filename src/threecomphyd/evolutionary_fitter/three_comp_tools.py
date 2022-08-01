@@ -9,14 +9,14 @@ from threecomphyd.simulator.three_comp_hyd_simulator import ThreeCompHydSimulato
 
 # bounds for all parameters of the three comp hydraulic model
 three_comp_parameter_limits = {
-    "lf": [5000, 500000],
-    "ls": [5000, 500000],
-    "m_u": [1, 2000],
-    "m_ls": [1, 2000],
-    "m_lf": [1, 2000],
-    "theta": [0.01, 0.99],  # 0.0 and 1.0 are not possible because equations would divide by 0
-    "gamma": [0.01, 0.99],
-    "phi": [0.01, 0.99]
+    "lf": [1, 500000],
+    "ls": [1, 500000],
+    "m_u": [1, 5000],
+    "m_ls": [1, 5000],
+    "m_lf": [1, 5000],
+    "theta": [0, 1],  # 0.0 and 1.0 are not possible because equations would divide by 0
+    "gamma": [0, 1],
+    "phi": [0, 1]
 }
 
 
@@ -27,21 +27,28 @@ class MultiObjectiveThreeCompUDP:
 
     def __init__(self,
                  ttes: SimpleTTEMeasures,
-                 recovery_measures: SimpleRecMeasures):
+                 recovery_measures: SimpleRecMeasures,
+                 hz: int = 1):
         """
         init needs a couple parameters to be able to call the objective function
         :param ttes: standardised time to exhaustion measures to use
         :param recovery_measures: standardised recovery ratio measures to use
+        :param hz: precision of accuracy estimations
         """
-
-        self.__hz = 1  # hz
-        self.__limits = three_comp_parameter_limits  # limits
+        self.__hz = hz  # hz
         self.__ttes = ttes  # tte_ps
         self.__recs = recovery_measures  # recovery_trials
 
         # transform limits dict into object that returns bounds in expected format
-        self.__bounds = ([x[0] for x in self.__limits.values()],
-                         [x[1] for x in self.__limits.values()])
+        self.__bounds = ([x[0] for x in three_comp_parameter_limits.values()],
+                         [x[1] for x in three_comp_parameter_limits.values()])
+
+    def get_bounds(self):
+        """
+        bounds for config parameters
+        :return: bounds in tuple format
+        """
+        return self.__bounds
 
     def create_educated_initial_guess(self, cp: float = 250.0, w_p: float = 50000.0):
         """
@@ -93,13 +100,6 @@ class MultiObjectiveThreeCompUDP:
 
         # error measures as fitness and constraint
         return [tte_nrmse, rec_nrmse]
-
-    def get_bounds(self):
-        """
-        bounds for config parameters
-        :return: bounds in tuple format
-        """
-        return self.__bounds
 
     def get_additional_info(self):
         """

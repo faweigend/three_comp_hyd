@@ -1,25 +1,27 @@
 import matplotlib.pyplot as plt
 
-from threecomphyd.visualiser.three_comp_visualisation import ThreeCompVisualisation
+from threecomphyd.agents.two_comp_hyd_agent import TwoCompHydAgent
 from threecomphyd.animator.interactive_animation import InteractiveAnimation
-from threecomphyd.agents.three_comp_hyd_agent import ThreeCompHydAgent
+from threecomphyd.visualiser.two_comp_visualisation import TwoCompVisualisation
 
 
-class ThreeCompInteractiveAnimation(InteractiveAnimation, ThreeCompVisualisation):
+class TwoCompHydAnimation(InteractiveAnimation, TwoCompVisualisation):
     """
-    creates an animation to visualise power flow within the three component hydraulics model
+    creates an animation to visualise power flow within the two component
+    hydraulics model
     """
 
-    def __init__(self, agent: ThreeCompHydAgent):
+    def __init__(self, agent: TwoCompHydAgent):
         """
         Whole animation setup using given agent
         """
 
+        # figure layout
         self._fig = plt.figure(figsize=(10, 6))
         ax1 = self._fig.add_subplot(1, 1, 1)
 
         # Three comp base vis
-        ThreeCompVisualisation.__init__(self, axis=ax1, agent=agent, animated=True, basic_annotations=True)
+        TwoCompVisualisation.__init__(self, axis=ax1, agent=agent, animated=True)
 
         # Power control sim
         InteractiveAnimation.__init__(self, figure=self._fig, agent=agent)
@@ -37,4 +39,4 @@ class ThreeCompInteractiveAnimation(InteractiveAnimation, ThreeCompVisualisation
         :param frame_number: frame number
         :return: an iterable of artists
         """
-        ThreeCompVisualisation.update_animation_data(self, frame_number=frame_number)
+        TwoCompVisualisation.update_animation_data(self, frame_number=frame_number)

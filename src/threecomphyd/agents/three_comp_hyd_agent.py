@@ -189,21 +189,21 @@ class ThreeCompHydAgent(HydAgentBasis):
 
         return self._pow
 
-    def is_exhausted(self):
+    def is_exhausted(self) -> bool:
         """
         exhaustion is reached when level in LF cannot sustain power demand
         :return: simply returns the exhausted boolean
         """
         return bool(self.__h >= 1.0)
 
-    def is_recovered(self):
+    def is_recovered(self) -> bool:
         """
         recovery is estimated according to w_p ratio
         :return: simply returns the recovered boolean
         """
         return self.get_w_p_ratio() == 1.0
 
-    def is_equilibrium(self):
+    def is_equilibrium(self) -> bool:
         """
         equilibrium is reached when ph meets pow and LS does not contribute or drain
         :return: boolean
@@ -223,7 +223,7 @@ class ThreeCompHydAgent(HydAgentBasis):
         """
         :return: wp estimation between 0 and 1 for comparison to CP models
         """
-        return (1.0 - self.__h) * (1.0 - self.__g)
+        return 1.0 - self.__h
 
     def get_fill_lf(self):
         """
