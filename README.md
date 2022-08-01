@@ -91,6 +91,6 @@ CPU cores for the grid search approach.
 
 * `evolutionary_fitting.py` Runs 10 fittings on an athlete using the in the script defined parameters for CP, W' and
   recovery rations by Caen et al. The script uses the published set of best fitting parameters (30 generations, 40
-  cycles, 64 population size, 7 islands) to fit the model with the outlined evolutionary computation approach
+  cycles, 64 population size, 7 or 14 islands) to fit the model with the outlined evolutionary computation approach
   (see Appendix B and C). Results are stored into a `data-storage` folder in the root directory of the project.
 
