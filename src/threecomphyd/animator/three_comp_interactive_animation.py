@@ -19,7 +19,7 @@ class ThreeCompInteractiveAnimation(InteractiveAnimation, ThreeCompVisualisation
         ax1 = self._fig.add_subplot(1, 1, 1)
 
         # Three comp base vis
-        ThreeCompVisualisation.__init__(self, axis=ax1, agent=agent, animated=True)
+        ThreeCompVisualisation.__init__(self, axis=ax1, agent=agent, animated=True, basic_annotations=True)
 
         # Power control sim
         InteractiveAnimation.__init__(self, figure=self._fig, agent=agent)

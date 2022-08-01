@@ -1,6 +1,6 @@
 class SimpleRecMeasures:
     """
-    Used store W' recovery ratios in a consistent way for evolutionary fitting estimations. Parameters are named
+    Used to store W' recovery ratios in a consistent way for evolutionary fitting estimations. Parameters are named
     according to the WB1->RB->WB2 protocol
     """
 

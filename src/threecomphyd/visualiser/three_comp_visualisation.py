@@ -507,6 +507,10 @@ class ThreeCompVisualisation:
         self._ann_lf.set_text("")
         self._ann_ls.set_text("")
 
+        # update levels
+        self._h.set_height(1 - self._agent.get_h())
+        self._g.set_height(self._agent.height_ls - self._agent.get_g())
+
     def update_animation_data(self, frame_number):
         """
         For animations and simulations.
