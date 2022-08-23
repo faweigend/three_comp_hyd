@@ -2,8 +2,6 @@
 
 # threecomphyd
 
-[![PyPI](https://img.shields.io/pypi/v/threecomphyd.svg?style=for-the-badge)](https://pypi.python.org/pypi/threecomphyd)
-
 This package provides tools to model performance of athletes. The name `threecomphyd` stands for
 __Three Component Hydraulic__ and describes the performance modeling approach in focus.
 
@@ -40,11 +38,9 @@ we would be grateful if you star the repository and/or cite our paper.
 
 ### Setup
 
-If you simply want to use the package, you may want to install it via `pip3 install threecomphyd` without the need for a
-manual download.
-
-If you downloaded the source files, e.g., from this [GitHub repository](https://github.com/faweigend/three_comp_hyd),
-you can install the project with a similar procedure as a package by running `pip3 install -e <path_to_project_root>`.
+Please use [Conda](https://docs.conda.io/projects/conda/en/latest/) to run and develop this code. 
+Fitting the hydraulic model requires [PyGMO](https://esa.github.io/pygmo2/install.html#packages). 
+It is recommended to install Pygmo with Conda and Python >3.6 and <3.10.
 
 ### Usage Hints
 
