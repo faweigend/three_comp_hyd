@@ -318,6 +318,10 @@ class ThreeCompVisualisation:
             self._arr_power_flow.set_edgecolor("black")
             self._arr_u_flow.set_edgecolor("black")
             self._arr_r2_flow.set_edgecolor("black")
+        else:
+            self._arr_power_flow.set_edgecolor("none")
+            self._arr_u_flow.set_edgecolor("none")
+            self._arr_r2_flow.set_edgecolor("none")
 
         self._ax1.axhline(offset, linestyle='--', color=self.__ann_color)
         self._ax1.axhline(1 + offset - 0.001, linestyle='--', color=self.__ann_color)
@@ -373,6 +377,10 @@ class ThreeCompVisualisation:
             self._arr_power_flow.set_edgecolor("black")
             self._arr_u_flow.set_edgecolor("black")
             self._arr_r2_flow.set_edgecolor("black")
+        else:
+            self._arr_power_flow.set_edgecolor("none")
+            self._arr_u_flow.set_edgecolor("none")
+            self._arr_r2_flow.set_edgecolor("none")
 
         self._ax1.add_artist(self._ann_power_flow)
         self._ax1.add_artist(self._arr_power_flow)
